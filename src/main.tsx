@@ -28,13 +28,13 @@ function ThemedToaster() {
 
 createRoot(document.getElementById('root')!).render(
   <QueryClientProvider client={queryClient}>
-    {/* <ThemeProvider> */}
+    <ThemeProvider>
       <StrictMode>
           <Provider store={store}>
             <RouterProvider router={router} />  
             <ThemedToaster />
           </Provider>
       </StrictMode>
-    {/* </ThemeProvider> */}
+    </ThemeProvider>
   </QueryClientProvider>
 );
