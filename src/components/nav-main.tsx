@@ -47,7 +47,7 @@ export function NavMain({
               tooltip={state === "collapsed" ? "Dashboard" : undefined}
               className={cn(
                 currentPath === "/"
-                  ? "bg-secondary-foreground hover:bg-secondary-foreground/90 text-secondary"
+                  ? "bg-primary hover:bg-primary/90 text-primary-foreground"
                   : ""
               )}
             >
@@ -93,7 +93,7 @@ export function NavMain({
                             asChild
                             className={cn(
                               currentPath.startsWith(subItem.url)
-                                ? "bg-secondary-foreground hover:bg-secondary-foreground/90 text-secondary"
+                                ? "bg-primary hover:bg-primary/90 text-primary-foreground"
                                 : "hover:bg-slate-200 dark:hover:bg-slate-800"
                             )}
                           >

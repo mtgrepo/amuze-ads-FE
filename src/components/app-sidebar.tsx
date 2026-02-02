@@ -2,13 +2,11 @@
 
 import * as React from "react"
 import {
-  AudioWaveform,
   BellRing,
   BriefcaseBusiness,
   ChartNoAxesCombinedIcon,
-  Command,
   Frame,
-  GalleryVerticalEnd,
+  Layers,
   Map,
   Newspaper,
   PieChart,
@@ -37,18 +35,8 @@ const data = {
   teams: [
     {
       name: "Acme Inc",
-      logo: GalleryVerticalEnd,
+      logo: Layers,
       plan: "Enterprise",
-    },
-    {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: Command,
-      plan: "Free",
     },
   ],
   navMain: [
@@ -80,6 +68,10 @@ const data = {
       url: "#",
       icon: Newspaper,
       items: [
+        {
+            title: "Posts",
+            url: "/posts",
+        },
         {
           title: "Ads",
           url: "/ads",
