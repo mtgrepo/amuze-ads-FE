@@ -70,7 +70,7 @@ export function AdvertisersComponent({ data }: AdvertisersProps) {
   });
   const totalRows = table.getFilteredRowModel().rows.length;
   return (
-    <div className="w-full">
+    <div className="w-full mx-auto">
       <div className="flex flex-col gap-4 py-4">
         {/* Filter Section */}
         <div className="rounded-xl border-2 p-5 bg-card shadow-sm">

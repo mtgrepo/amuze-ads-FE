@@ -24,6 +24,8 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
+import { useSelector } from "react-redux"
+import type { RootState } from "../redux/store/store"
 
 // This is sample data.
 const data = {
@@ -141,6 +143,8 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+      const userData = useSelector((state: RootState) => state.auth.user);
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -151,7 +155,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+          {userData && <NavUser user={userData} />}
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

@@ -4,9 +4,20 @@ export interface AdvertisersResponse {
     email: string,
     phone: string,
     status: string,
-    verfied: boolean,
+    verified: boolean,
     password: string,
     last_login: string | null,
-    created_at: string,
-    updated_at: string
+    avatar?: string | null,
+    profiles: {
+        business_name: string,
+        business_no: string,
+        business_type: string,
+        Dica_number: string,
+        website: string,
+        address: string,
+        timezone: string,
+        country: string,
+    }[],
+    createdAt: string,
+    updatedAt: string
 }

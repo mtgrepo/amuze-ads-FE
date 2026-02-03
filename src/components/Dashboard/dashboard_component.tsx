@@ -5,6 +5,11 @@ import {
 } from "@/components/ui/sidebar"
 
 export default function DashboardComponent() {
+//   useEffect(() => {
+//   const raw = decryptAuthData(localStorage.getItem('user')!);
+//   console.log("localStorage raw →", raw?.user);
+// }, []);
+
   return (
     <SidebarProvider
       style={

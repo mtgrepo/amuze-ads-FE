@@ -27,6 +27,9 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { useDispatch } from "react-redux"
+import { logoutAction } from "../redux/auth/authSlice"
+import { toast } from "sonner"
 
 export function NavUser({
   user,
@@ -34,11 +37,16 @@ export function NavUser({
   user: {
     name: string
     email: string
-    avatar: string
+    avatar?: string
   }
 }) {
   const { isMobile } = useSidebar()
-
+  
+  const dispatch = useDispatch();
+  const handleLogout = () => {
+    dispatch(logoutAction());
+    toast.success("Logged out successfully");
+  }
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -50,7 +58,7 @@ export function NavUser({
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg bg-primary-foreground text-primary">CN</AvatarFallback>
+                <AvatarFallback className="rounded-lg bg-primary-foreground text-primary">{user?.email?.slice(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
@@ -69,7 +77,7 @@ export function NavUser({
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg bg-primary-foreground text-primary">CN</AvatarFallback>
+                  <AvatarFallback className="rounded-lg bg-primary-foreground text-primary">{user?.email?.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>
@@ -100,7 +108,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
               Log out
             </DropdownMenuItem>

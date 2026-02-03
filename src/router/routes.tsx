@@ -6,11 +6,17 @@ import Advertisers from "../features/Advertisers/advertisers"
 import LoginPage from "../features/Auth/login"
 import Ads from "../features/Content/Ads/ads"
 import NotFound from "../components/Common/notfound_component"
+import AdvertiserDetailsPage from "../features/Advertisers/advertiser_details"
+import { ProtectedRoute, PublicRoute } from "./guard"
 
 const router = createBrowserRouter([
     {
         path: "/",
-        element: <App />,
+        element: (
+            <ProtectedRoute>
+                <App />
+            </ProtectedRoute>
+        ),
         children: [
             {
                 index: true,
@@ -21,6 +27,16 @@ const router = createBrowserRouter([
                 path: "advertisers",
                 element: <Advertisers />,
                 handle: { crumb: "Advertisers" },
+            },
+            {
+                path: "advertisers/:id",
+                element: <AdvertiserDetailsPage />,
+                handle: {
+                    crumb: [
+                        { label: "Advertisers", href: "/advertisers" },
+                        { label: "Details" }
+                    ]
+                }
             },
             {
                 path: "ads",
@@ -37,7 +53,11 @@ const router = createBrowserRouter([
     // outside layout (no sidebar/header)
     {
         path: "/login",
-        element: <LoginPage />,
+        element: (
+            <PublicRoute>
+                <LoginPage />
+            </PublicRoute>
+        ),
     },
 ])
 

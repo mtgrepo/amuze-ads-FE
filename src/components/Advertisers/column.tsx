@@ -2,6 +2,9 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox"
 import type { AdvertisersResponse } from "../../dto/response/Advertisers/advertisersResponse";
+import AdvertiserActions from "./advertiser_actions";
+import { CircleCheck, XCircle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 const columns: ColumnDef<AdvertisersResponse>[] = [
     {
@@ -51,18 +54,42 @@ const columns: ColumnDef<AdvertisersResponse>[] = [
         accessorKey: "status",
         header: "Status",
         cell: ({ row }) => (
-            <div className="capitalize">{row.getValue("status")}</div>
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <span className="cursor-pointer relative inline-flex">
+                            {row.getValue("status") ? (
+                                <CircleCheck color="green" />
+                            ) : (
+                                <XCircle color="red" />
+                            )}
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" align="center">
+                        {row.getValue("status") ? "Active" : "Inactive"}
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
         ),
     },
     {
-        accessorKey: "verfied",
+        accessorKey: "verified",
         header: "Verified",
         cell: ({ row }) => {
+            const isVerified = row.getValue("verified");
+            // const driver = row.original;
+
             return (
-                <div className="capitalize">
-                    {row.getValue("verfied") ? "Yes" : "No"}
+                <div className="flex items-center gap-2">
+                    {isVerified ? (
+                        <span className="text-green-600">Verified</span>
+                    ) : (
+                        <>
+                            <span className="text-destructive">Not Verified</span>
+                        </>
+                    )}
                 </div>
-            )
+            );
         },
     },
     {
@@ -75,6 +102,17 @@ const columns: ColumnDef<AdvertisersResponse>[] = [
                 <div className="capitalize">
                     {date.toLocaleString()}
                 </div>
+            )
+        },
+    },
+    {
+        id: "actions",
+        enableHiding: false,
+        cell: ({ row }) => {
+            const advertiser = row.original
+
+            return (
+                <AdvertiserActions {...advertiser} />
             )
         },
     },

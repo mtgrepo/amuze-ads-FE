@@ -1,9 +1,11 @@
 import { AdvertisersComponent } from "../../components/Advertisers/advertisers_component";
-import { useAdvertisersQuery } from "../../Composable/Query/useAdvertisersQuery";
+import { useAdvertisersQuery } from "../../Composable/Query/Advertiser/useAdvertisersQuery";
 
 export default function Advertisers() {
-  const { advertisersList } = useAdvertisersQuery();
+  const { advertisersList, isLoading } = useAdvertisersQuery();
   return (
-    <AdvertisersComponent data={advertisersList ?? []}/>
+    <div className="w-full mx-auto px-5 ">
+      {isLoading ? <p className="items-center justify-center text-center my-auto">Loading.....</p> : <AdvertisersComponent data={advertisersList ?? []}/> }
+    </div>
   )
 }
