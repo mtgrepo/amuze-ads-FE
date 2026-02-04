@@ -5,11 +5,11 @@ import {
   BellRing,
   BriefcaseBusiness,
   ChartNoAxesCombinedIcon,
-  Frame,
   Layers,
   Map,
   Newspaper,
   PieChart,
+  UserCog,
   Wallet,
 } from "lucide-react"
 
@@ -125,9 +125,9 @@ const data = {
   ],
   projects: [
     {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
+      name: "Admin Users",
+      url: "/admin-users",
+      icon: UserCog,
     },
     {
       name: "Sales & Marketing",

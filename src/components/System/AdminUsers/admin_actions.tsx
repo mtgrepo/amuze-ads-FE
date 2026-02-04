@@ -7,38 +7,36 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ClipboardPenLine, InfoIcon, MoreHorizontal, Trash2 } from "lucide-react";
-import type { AdvertisersResponse } from "../../dto/response/Advertisers/advertisersResponse";
-import { Button } from "../ui/button";
 import { useNavigate } from "react-router-dom";
 import React, { useState } from "react";
-import DrawerFormLayout from "../Common/Layout/drawer_form_layout";
-import AdvertiserForm from "./advertiser_form";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
-import { useQueryClient } from "@tanstack/react-query";
-import { useAdvertiserDeleteCommand } from "../../Composable/Command/advertiser/useAdvertiserDeleteCommand";
+import type { AdminUserResponse } from "../../../dto/response/System/adminUserResponse";
+import { Button } from "../../ui/button";
+import DrawerFormLayout from "../../Common/Layout/drawer_form_layout";
+import AdminUserForm from "./admin_user_form";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../../ui/dialog";
+import { useAdminUserDeleteCommand } from "../../../Composable/Command/system/useAdminUserDeleteCommand";
 
-
-export default function AdvertiserActions({ id, name, email, phone, status, verified, password }: AdvertisersResponse) {
+export default function AdminActions({ id, name, email, password }: AdminUserResponse) {
     const [editOpen, setEditOpen] = React.useState(false);
     const [deleteOpen, setDeleteOpen] = React.useState(false);
 
-    const [_formData, setFormData] = useState({ id, name, email, phone, status, verified, password });
-    const qc = useQueryClient();
-    const { deleteAdvertiserCommand } = useAdvertiserDeleteCommand();
+    const [_formData, setFormData] = useState({ id, name, email, password });
+
     const handleEditClick = () => {
         setEditOpen(true);
-        setFormData({ id, name, email, phone, status, verified, password });
+        setFormData({ id, name, email, password });
     }
 
-    const navigate = useNavigate();
-    const handleViewDetails = () => {
-        navigate(`/advertisers/${id}`);
-    };
+    // const navigate = useNavigate();
+    // const handleViewDetails = () => {
+    //     navigate(`/advertisers/${id}`);
+    // };
 
+    const { deleteAdminUserCommand } = useAdminUserDeleteCommand();
     const handleDelete = async (id: string) => {
-        await deleteAdvertiserCommand(id);
+        await deleteAdminUserCommand(id);
         setDeleteOpen(false)
-        qc.invalidateQueries({ queryKey: ['advertisers'] })
+        // qc.invalidateQueries({ queryKey: ['advertisers'] })
     }
 
     return (
@@ -52,10 +50,10 @@ export default function AdvertiserActions({ id, name, email, phone, status, veri
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={handleViewDetails}>
+                    {/* <DropdownMenuItem onClick={handleViewDetails}>
                         <InfoIcon /> View Details
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
+                    <DropdownMenuSeparator /> */}
                     <DropdownMenuItem onClick={handleEditClick}>
                         <ClipboardPenLine /> Edit Advertiser
                     </DropdownMenuItem>
@@ -73,15 +71,12 @@ export default function AdvertiserActions({ id, name, email, phone, status, veri
                 title="Edit Advertiser"
                 description="Update advertiser information below."
                 formContent={
-                    <AdvertiserForm
+                    <AdminUserForm
                         mode="edit"
                         defaultValues={{
                             id,
                             name,
                             email,
-                            phone,
-                            status,
-                            verified,
                         }}
 
                         onSuccess={() => setEditOpen(false)}

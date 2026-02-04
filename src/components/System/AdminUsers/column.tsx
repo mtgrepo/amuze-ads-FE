@@ -1,12 +1,12 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox"
-import type { AdvertisersResponse } from "../../dto/response/Advertisers/advertisersResponse";
-import AdvertiserActions from "./advertiser_actions";
 import { CircleCheck, XCircle } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+import type { AdminUserResponse } from "../../../dto/response/System/adminUserResponse";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../ui/tooltip";
+import AdminActions from "./admin_actions";
 
-const columns: ColumnDef<AdvertisersResponse>[] = [
+const columns: ColumnDef<AdminUserResponse>[] = [
     {
         id: "select",
         header: ({ table }) => (
@@ -44,21 +44,14 @@ const columns: ColumnDef<AdvertisersResponse>[] = [
         ),
     },
     {
-        accessorKey: "phone",
-        header: "Phone",
-        cell: ({ row }) => (
-            <div className="capitalize">{row.getValue("phone")}</div>
-        ),
-    },
-    {
-        accessorKey: "status",
-        header: "Status",
+        accessorKey: "isActive",
+        header: "Active",
         cell: ({ row }) => (
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <span className="cursor-pointer relative inline-flex">
-                            {row.getValue("status") === "active" ? (
+                            {row.getValue("isActive") ? (
                                 <CircleCheck color="green" />
                             ) : (
                                 <XCircle color="red" />
@@ -66,31 +59,11 @@ const columns: ColumnDef<AdvertisersResponse>[] = [
                         </span>
                     </TooltipTrigger>
                     <TooltipContent side="right" align="center">
-                        {row.getValue("status") === "active" ? "Active" : "Inactive"}
+                        {row.getValue("isActive") ? "Active" : "Inactive"}
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>
         ),
-    },
-    {
-        accessorKey: "verified",
-        header: "Verified",
-        cell: ({ row }) => {
-            const isVerified = row.getValue("verified");
-            // const driver = row.original;
-
-            return (
-                <div className="flex items-center gap-2">
-                    {isVerified ? (
-                        <span className="text-green-600">Verified</span>
-                    ) : (
-                        <>
-                            <span className="text-destructive">Not Verified</span>
-                        </>
-                    )}
-                </div>
-            );
-        },
     },
     {
         accessorKey: "createdAt",
@@ -109,10 +82,10 @@ const columns: ColumnDef<AdvertisersResponse>[] = [
         id: "actions",
         enableHiding: false,
         cell: ({ row }) => {
-            const advertiser = row.original
+            const admins = row.original
 
             return (
-                <AdvertiserActions {...advertiser} />
+                <AdminActions {...admins} />
             )
         },
     },

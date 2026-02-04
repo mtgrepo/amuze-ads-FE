@@ -27,18 +27,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PageSizeComponent } from "../Common/Pagination/page-number";
-import Paginator from "../Common/Pagination/paginator";
-import type { AdvertisersResponse } from "../../dto/response/Advertisers/advertisersResponse";
 import columns  from "./column";
-import DrawerFormLayout from "../Common/Layout/drawer_form_layout";
-import DrawerButton from "../Common/drawer-button";
-import AdvertiserForm from "./advertiser_form";
-type AdvertisersProps = {
-  data: AdvertisersResponse[];
+import type { AdminUserResponse } from "../../../dto/response/System/adminUserResponse";
+import DrawerFormLayout from "../../Common/Layout/drawer_form_layout";
+import DrawerButton from "../../Common/drawer-button";
+import { PageSizeComponent } from "../../Common/Pagination/page-number";
+import Paginator from "../../Common/Pagination/paginator";
+import AdminUserForm from "./admin_user_form";
+type AdminProps = {
+  data: AdminUserResponse[];
 };
 
-export function AdvertisersComponent({ data }: AdvertisersProps) {
+export function AdminComponent({ data }: AdminProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -109,10 +109,10 @@ export function AdvertisersComponent({ data }: AdvertisersProps) {
           <DrawerFormLayout
             open={open}
             setOpen={setOpen}
-            title="Advertiser Form"
-            description="Add advertiser here."
+            title="Admin user Form"
+            description="Add admin user here."
             formContent={
-              <AdvertiserForm
+              <AdminUserForm
                 mode="add"
                 onSuccess={() => {
                   setOpen(false); //
@@ -125,7 +125,7 @@ export function AdvertisersComponent({ data }: AdvertisersProps) {
               </Button>
             }
             drawerButton={
-              <DrawerButton btn_icon={CirclePlus} title="Add advertiser" />
+              <DrawerButton btn_icon={CirclePlus} title="Add admin user" />
             }
           />
           {/* column filter */}

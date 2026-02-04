@@ -1,5 +1,5 @@
 import { AdvertisersComponent } from "../../components/Advertisers/advertisers_component";
-import { useAdvertisersQuery } from "../../Composable/Query/Advertiser/useAdvertisersQuery";
+import { useAdvertisersQuery } from "../../Composable/Query/advertiser/useAdvertisersQuery";
 
 export default function Advertisers() {
   const { advertisersList, isLoading } = useAdvertisersQuery();
