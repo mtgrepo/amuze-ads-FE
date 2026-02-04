@@ -63,7 +63,7 @@ export default function ImageUpload({ value, onChange, label, accept = "image/*"
                         </button>
                     </div>
                 ) : (
-                    <label className={`${sizeClasses} cursor-pointer flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/50 transition-all group`}>
+                    <label className={`${sizeClasses} cursor-pointer flex flex-col items-center justify-center rounded-lg border-2 border border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/50 transition-all group`}>
                         <Upload className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
                         <span className="mt-2 text-xs text-muted-foreground group-hover:text-primary transition-colors">
                             Click to upload

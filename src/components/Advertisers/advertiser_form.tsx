@@ -36,7 +36,7 @@ const formSchema = z.object({
     verified: z.boolean(),
 })
 
-interface ZoneProps {
+interface AdvertiserProps {
     mode: "add" | "edit"
     defaultValues?: {
         id?: string
@@ -54,7 +54,7 @@ export default function AdvertiserForm({
     mode,
     defaultValues,
     onSuccess,
-}: ZoneProps) {
+}: AdvertiserProps) {
 
     const { createAdvertiserCommand, isPending: createPending } = useAdvertiserCreateCommand();
     const { updateAdvertiserCommand, isPending: updatePending } = useAdvertiserUpdateCommand();
