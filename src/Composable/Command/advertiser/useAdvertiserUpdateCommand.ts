@@ -14,6 +14,7 @@ export const useAdvertiserUpdateCommand = () => {
         onSuccess: () => {
             toast.success("Advertiser updated successfully!");
             qc.invalidateQueries({ queryKey: ["advertisers"] });
+            qc.invalidateQueries({ queryKey: ["advertiser-details",] });
         }
     })
     return {

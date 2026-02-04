@@ -17,20 +17,22 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useQueryClient } from "@tanstack/react-query";
 import { useAdvertiserDeleteCommand } from "../../Composable/Command/advertiser/useAdvertiserDeleteCommand";
 
-
 export default function AdvertiserActions({ id, name, email, phone, status, verified, password }: AdvertisersResponse) {
     const [editOpen, setEditOpen] = React.useState(false);
     const [deleteOpen, setDeleteOpen] = React.useState(false);
 
     const [_formData, setFormData] = useState({ id, name, email, phone, status, verified, password });
+
     const qc = useQueryClient();
+    const navigate = useNavigate();
+
     const { deleteAdvertiserCommand } = useAdvertiserDeleteCommand();
+
     const handleEditClick = () => {
         setEditOpen(true);
         setFormData({ id, name, email, phone, status, verified, password });
     }
 
-    const navigate = useNavigate();
     const handleViewDetails = () => {
         navigate(`/advertisers/${id}`);
     };
@@ -56,6 +58,10 @@ export default function AdvertiserActions({ id, name, email, phone, status, veri
                         <InfoIcon /> View Details
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
+                    {/* <DropdownMenuItem>
+                        <CirclePlus /> Add Advertiser Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator /> */}
                     <DropdownMenuItem onClick={handleEditClick}>
                         <ClipboardPenLine /> Edit Advertiser
                     </DropdownMenuItem>

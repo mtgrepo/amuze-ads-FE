@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import AdvertiserDetails from "../../components/Advertisers/advertiser_details";
+import AdvertiserDetails from "../../components/AdvertiserProfiles/advertiser_details";
 import { useAdvertiserDetailQuery } from "../../Composable/Query/advertiser/useAdvertiserDetailQuery";
 
 export default function AdvertiserDetailsPage() {

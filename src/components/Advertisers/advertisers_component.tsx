@@ -115,7 +115,7 @@ export function AdvertisersComponent({ data }: AdvertisersProps) {
               <AdvertiserForm
                 mode="add"
                 onSuccess={() => {
-                  setOpen(false); //
+                  setOpen(false); 
                 }}
               />
             }

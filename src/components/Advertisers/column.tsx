@@ -77,7 +77,6 @@ const columns: ColumnDef<AdvertisersResponse>[] = [
         header: "Verified",
         cell: ({ row }) => {
             const isVerified = row.getValue("verified");
-            // const driver = row.original;
 
             return (
                 <div className="flex items-center gap-2">

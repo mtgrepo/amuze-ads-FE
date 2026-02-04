@@ -9,14 +9,18 @@ export interface AdvertisersResponse {
     last_login: string | null,
     avatar?: string | null,
     profiles: {
+        advertiser_id: string,
         business_name: string,
         business_no: string,
         business_type: string,
-        Dica_number: string,
+        dica_number: string,
         website: string,
         address: string,
         timezone: string,
+        photo: string,
         country: string,
+        created_at: string,
+        updated_at: string
     }[],
     createdAt: string,
     updatedAt: string

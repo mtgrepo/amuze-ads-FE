@@ -1,6 +1,5 @@
 import { AxiosError } from "axios"
 import axiosInstance from "../../httpClient"
-import type { AdvertiserInput } from "../../../dto/input/advertiser/advertiserInput"
 
 export const getAllAdvertiserProfile = async () => {
     try {
@@ -26,9 +25,13 @@ export const getAdvertiserById = async (id: string) => {
     }
 }
 
-export const createAdvertiserProfile = async (data: AdvertiserInput) => {
+export const createAdvertiserProfile = async (data: FormData) => {
     try {
-        const response = await axiosInstance.post("/advertiser-profile", data)
+        const response = await axiosInstance.post("/advertiser-profiles", data, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        })
         return response.data
     } catch (error) {
         if(error instanceof AxiosError) {
@@ -38,9 +41,13 @@ export const createAdvertiserProfile = async (data: AdvertiserInput) => {
     }
 }
 
-export const updateAdvertiserProfile = async (id: string, data: AdvertiserInput) => {
+export const updateAdvertiserProfile = async (id: string, data: FormData) => {
     try {
-        const response = await axiosInstance.patch(`/advertiser-profile/${id}`, data)
+        const response = await axiosInstance.patch(`/advertiser-profiles/${id}`, data, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        })
         return response.data
     } catch (error) {
         if (error instanceof AxiosError) {

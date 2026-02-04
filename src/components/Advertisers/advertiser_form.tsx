@@ -17,7 +17,6 @@ import { useAdvertiserCreateCommand } from "../../Composable/Command/advertiser/
 import { Spinner } from "../ui/spinner"
 import { useAdvertiserUpdateCommand } from "../../Composable/Command/advertiser/useAdvertiserUpdateCommand"
 
-
 // Validation schema
 const formSchema = z.object({
     name: z.string().min(1, {
@@ -87,7 +86,7 @@ export default function AdvertiserForm({
                     phone: values.phone,
                     status: values.status,
                     verified: values.verified,
-                    password: values.password, // guaranteed string
+                    password: values.password, 
                 })
             } else {
                 if (!defaultValues?.id) {
@@ -98,7 +97,6 @@ export default function AdvertiserForm({
                 form.reset();
                 onSuccess?.()
             }
-
             onSuccess?.()
         } catch (err) {
             console.error(err)

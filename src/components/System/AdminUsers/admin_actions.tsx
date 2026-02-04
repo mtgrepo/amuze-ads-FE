@@ -26,16 +26,10 @@ export default function AdminActions({ id, name, email, password }: AdminUserRes
         setFormData({ id, name, email, password });
     }
 
-    // const navigate = useNavigate();
-    // const handleViewDetails = () => {
-    //     navigate(`/advertisers/${id}`);
-    // };
-
     const { deleteAdminUserCommand } = useAdminUserDeleteCommand();
     const handleDelete = async (id: string) => {
         await deleteAdminUserCommand(id);
         setDeleteOpen(false)
-        // qc.invalidateQueries({ queryKey: ['advertisers'] })
     }
 
     return (
@@ -49,10 +43,6 @@ export default function AdminActions({ id, name, email, password }: AdminUserRes
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    {/* <DropdownMenuItem onClick={handleViewDetails}>
-                        <InfoIcon /> View Details
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator /> */}
                     <DropdownMenuItem onClick={handleEditClick}>
                         <ClipboardPenLine /> Edit Advertiser
                     </DropdownMenuItem>
@@ -91,7 +81,7 @@ export default function AdminActions({ id, name, email, password }: AdminUserRes
             <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
                 <DialogContent className="sm:max-w-100">
                     <DialogHeader>
-                        <DialogTitle>Delete Demand Schedule</DialogTitle>
+                        <DialogTitle>Delete Admin User</DialogTitle>
                         <DialogDescription>
                             Are you sure you want to delete <strong>{name}</strong>?
                             <br />

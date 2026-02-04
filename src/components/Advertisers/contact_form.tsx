@@ -14,13 +14,13 @@ import {
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Switch } from "../ui/switch";
-import {
-    Select, SelectTrigger, SelectContent, SelectItem, SelectValue
-} from "../ui/select";
+import {Select, SelectTrigger, SelectContent, SelectItem, SelectValue} from "../ui/select";
 import { EditIcon, InfoIcon } from "lucide-react";
-
 import type { AdvertisersResponse } from "../../dto/response/Advertisers/advertisersResponse";
 import { Separator } from "../ui/separator";
+import { toast } from "sonner";
+import { useAdvertiserUpdateCommand } from "../../Composable/Command/advertiser/useAdvertiserUpdateCommand";
+import { Spinner } from "../ui/spinner";
 
 const schema = z.object({
     name: z.string().min(2, "Name required"),
@@ -39,8 +39,7 @@ const timezones = ["UTC", "Asia/Yangon"];
 
 export default function ContactForm({ data }: { data: AdvertisersResponse }) {
     const [editing, setEditing] = useState(false);
-    const [loading, setLoading] = useState(false);
-
+    const { updateAdvertiserCommand, isPending } = useAdvertiserUpdateCommand();
     const form = useForm<Values>({
         resolver: zodResolver(schema),
     });
@@ -59,14 +58,17 @@ export default function ContactForm({ data }: { data: AdvertisersResponse }) {
     }, [data, form]);
 
     const onSubmit = async (values: Values) => {
-        setLoading(true);
-        console.log("contact update", values);
+        if (!data?.id) {
+            toast.error("Advertiser ID is missing.")
+            return
+        }
+        await updateAdvertiserCommand({ id: data.id, data: values })
+        form.reset();
         setEditing(false);
-        setLoading(false);
     };
 
     const disabled = !editing;
-    // Convert createdAt to a readable date
+
     const joinedDate = data?.createdAt!
         ? new Date(data.createdAt).toLocaleDateString("en-US", {
             year: "numeric",
@@ -74,20 +76,22 @@ export default function ContactForm({ data }: { data: AdvertisersResponse }) {
             day: "numeric",
         })
         : "-";
+
     return (
         <Card className="rounded-2xl shadow-sm">
             <CardHeader className="flex justify-between items-center">
-                <CardTitle className="flex flex-row gap-3 items-center justify-center text-center text-xl"><InfoIcon size={24} className="text-primary font-bold"/> Contact & Account Status</CardTitle>
-                <Button type="button" size="sm" variant="outline" onClick={() => setEditing(!editing)}>
+                <CardTitle className="flex flex-row gap-3 items-center justify-center text-center text-xl"><InfoIcon size={24} className="text-primary font-bold" /> Contact & Account Status</CardTitle>
+                {!editing && 
+                    <Button type="button" size="sm" variant="outline" onClick={() => setEditing(!editing)}>
                     <EditIcon size={16} /> Edit
                 </Button>
+                }
             </CardHeader>
 
             <CardContent>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)}>
 
-                        {/* 70 / 30 layout */}
                         <div className="grid md:grid-cols-[7fr_3fr] gap-6">
 
                             {/* LEFT → 70% Contact fields */}
@@ -103,8 +107,8 @@ export default function ContactForm({ data }: { data: AdvertisersResponse }) {
 
                             {/* RIGHT → 30% Status panel */}
                             <div className="space-y-4 border border-dashed rounded-xl p-4">
-                                <SwitchField name="status" label="Active" disabled={disabled} />
-                                <SwitchField name="verified" label="Verified" disabled={disabled} />
+                                <SwitchField name="status" label="Active" disabled={disabled} type="status" />
+                                <SwitchField name="verified" label="Verified" disabled={disabled} type="boolean"/>
                                 <Separator />
                                 <div className="flex flex-col gap-3 border-2 rounded-2xl px-4 py-2.5">
                                     <p className="text-sm text-muted-foreground font-bold">METADATA</p>
@@ -126,8 +130,9 @@ export default function ContactForm({ data }: { data: AdvertisersResponse }) {
                                 <Button type="button" variant="outline" onClick={() => setEditing(false)}>
                                     Cancel
                                 </Button>
-                                <Button type="submit" disabled={loading}>
-                                    {loading ? "Updating..." : "Update"}
+                                <Button type="submit" disabled={isPending}>
+                                    {isPending && <Spinner />}
+                                    {isPending ? "Updating..." : "Update"}
                                 </Button>
                             </div>
                         )}
@@ -139,7 +144,6 @@ export default function ContactForm({ data }: { data: AdvertisersResponse }) {
     );
 }
 
-/*  small fields  */
 function Field({ name, label, disabled }: any) {
     return (
         <FormField name={name}
@@ -180,17 +184,38 @@ function SelectField({ name, label, options, disabled }: any) {
     );
 }
 
-function SwitchField({ name, label, disabled }: any) {
-    return (
-        <FormField name={name}
-            render={({ field }) => (
-                <FormItem className="grid grid-cols-2 gap-4 justify-between">
-                    <FormLabel>{label}</FormLabel>
-                    <FormControl>
-                        <Switch checked={field.value} disabled={disabled} onCheckedChange={field.onChange} />
-                    </FormControl>
-                </FormItem>
-            )}
-        />
-    );
+function SwitchField({ name, label, disabled, type }: any) {
+  return (
+    <FormField
+      name={name}
+      render={({ field }) => {
+        let checked: boolean;
+        let onChange: (val: boolean) => void;
+
+        if (type === "status") {
+          // Convert "active"/"inactive" string to boolean
+          checked = field.value === "active";
+          onChange = (val: boolean) => field.onChange(val ? "active" : "inactive");
+        } else {
+          // For boolean fields like verified
+          checked = !!field.value;
+          onChange = field.onChange;
+        }
+
+        return (
+          <FormItem className="grid grid-cols-2 gap-4 justify-between">
+            <FormLabel>{label}</FormLabel>
+            <FormControl>
+              <Switch
+                checked={checked}
+                disabled={disabled}
+                onCheckedChange={onChange}
+              />
+            </FormControl>
+          </FormItem>
+        );
+      }}
+    />
+  );
 }
+
