@@ -276,7 +276,7 @@ export default function ProfileForm({
                                 <Textarea
                                     {...field}
                                     value={field.value}
-                                    onChange={(e: any) => field.onChange(e.target.value)}
+                                    onChange={(e) => field.onChange(e.target.value)}
                                     placeholder="Enter address...."
                                 />
                             </FormControl>

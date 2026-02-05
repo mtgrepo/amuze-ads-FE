@@ -39,9 +39,19 @@ const columns: ColumnDef<PostResponse>[] = [
     {
         accessorKey: "description",
         header: "Description",
-        cell: ({ row }) => (
-            <div>{row.getValue("description")}</div>
-        ),
+        cell: ({ row }) => {
+            const description = row.getValue("description") as string;
+
+            if (!description) return "—";
+
+            return (
+                <div className="max-w-105 truncate">
+                    {description.length > 50
+                        ? `${description.slice(0, 50)}...`
+                        : description}
+                </div>
+            );
+        },
     },
     {
         id: "name",

@@ -81,6 +81,7 @@ const columns: ColumnDef<ProfileResponse>[] = [
         enableHiding: false,
         cell: ({ row }) => {
             const profile = row.original
+            console.log("data in column", profile)
             return (
                 <ProfileActions {...profile} />
             )

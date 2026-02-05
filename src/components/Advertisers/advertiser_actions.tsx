@@ -52,22 +52,27 @@ export default function AdvertiserActions({ id, name, email, phone, status, veri
                         <MoreHorizontal />
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={handleViewDetails}>
-                        <InfoIcon /> View Details
+                <DropdownMenuContent align="end" className="w-44">
+                    <DropdownMenuLabel>Advertiser Actions</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                        onClick={handleViewDetails}
+                        className="cursor-pointer"
+                    >
+                        <InfoIcon /> View
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                        onClick={handleEditClick}
+                        className="cursor-pointer"
+                    >
+                        <ClipboardPenLine /> Edit
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    {/* <DropdownMenuItem>
-                        <CirclePlus /> Add Advertiser Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator /> */}
-                    <DropdownMenuItem onClick={handleEditClick}>
-                        <ClipboardPenLine /> Edit Advertiser
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => setDeleteOpen(true)}>
-                        <Trash2 /> Delete Advertiser
+                    <DropdownMenuItem 
+                        onClick={() => setDeleteOpen(true)}
+                        className="cursor-pointer"
+                    >
+                        <Trash2 className="text-destructive focus:text-destructive "/> Delete
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
