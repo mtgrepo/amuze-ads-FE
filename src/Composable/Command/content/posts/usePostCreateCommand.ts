@@ -13,6 +13,9 @@ export const usePostCreateCommand = () => {
          onSuccess: () => {
             qc.invalidateQueries({ queryKey: ['post-list'] });
             toast.success('Post created successfully.');
+         },
+         onError: (error) => {
+             toast.error( error?.message || 'Post creation failed.');
          }
     })
     return {

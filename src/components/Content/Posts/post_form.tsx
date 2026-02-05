@@ -27,10 +27,10 @@ const formSchema = z.object({
         message: "Advertiser is required.",
     }),
     title: z.string().min(10, {
-        message: "Title is required.",
+        message: "Title must be at least 10 characters.",
     }),
     description: z.string().min(10, {
-        message: "Description is required.",
+        message: "Description must be at least 10 characters.",
     }),
     status: z.string().min(1, {
         message: "Status is required.",
@@ -74,9 +74,9 @@ export default function PostForm({
     const { advertisersList } = useAdvertisersQuery();
 
     const statusOptions = [
-        { value: "active", label: "Active", icon: <CircleCheck className="text-green-500"/> },
-        { value: "disabled", label: "Disabled", icon: <MinusCircle className="text-yellow-500"/> },
-        { value: "rejected", label: "Rejected", icon: <XCircle className="text-red-500"/> },
+        { value: "active", label: "Active", icon: <CircleCheck className="text-green-500" /> },
+        { value: "disabled", label: "Disabled", icon: <MinusCircle className="text-yellow-500" /> },
+        { value: "rejected", label: "Rejected", icon: <XCircle className="text-red-500" /> },
     ];
 
     const { createPostCommand, isPending: createPending } = usePostCreateCommand();
@@ -124,7 +124,7 @@ export default function PostForm({
                 })
                 return
             }
-            await updatePostCommand({id: defaultValues.id, data: formData});
+            await updatePostCommand({ id: defaultValues.id, data: formData });
             form.reset();
             onSuccess?.()
         }
@@ -215,7 +215,7 @@ export default function PostForm({
                                         {statusOptions
                                             ?.map((st: any) => (
                                                 <SelectItem key={st.value} value={String(st.value)}>
-                                                  {st.icon}  {st.label}
+                                                    {st.icon}  {st.label}
                                                 </SelectItem>
                                             ))}
                                     </SelectContent>
