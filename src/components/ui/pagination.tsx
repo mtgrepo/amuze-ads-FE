@@ -6,7 +6,7 @@ import {
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { buttonVariants, type Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
   return (
@@ -38,13 +38,15 @@ function PaginationItem({ ...props }: React.ComponentProps<"li">) {
 }
 
 type PaginationLinkProps = {
-  isActive?: boolean
+  isActive?: boolean,
+  disabled?: boolean
 } & Pick<React.ComponentProps<typeof Button>, "size"> &
   React.ComponentProps<"a">
 
 function PaginationLink({
   className,
   isActive,
+  disabled,  // Add disabled prop
   size = "icon",
   ...props
 }: PaginationLinkProps) {
@@ -58,12 +60,15 @@ function PaginationLink({
           variant: isActive ? "outline" : "ghost",
           size,
         }),
+        disabled ? "cursor-not-allowed opacity-50" : "",  // Apply styles when disabled
         className
       )}
       {...props}
+      onClick={disabled ? (e) => e.preventDefault() : props.onClick} // Prevent click if disabled
     />
-  )
+  );
 }
+
 
 function PaginationPrevious({
   className,

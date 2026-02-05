@@ -3,7 +3,7 @@ import axiosInstance from "../../httpClient"
 
 export const getAllAdvertiserProfile = async () => {
     try {
-        const response = await axiosInstance.get("/advertiser-profile")
+        const response = await axiosInstance.get("/advertiser-profiles")
         return response.data
     } catch (error) {
         if(error instanceof AxiosError) {
@@ -15,7 +15,7 @@ export const getAllAdvertiserProfile = async () => {
 
 export const getAdvertiserById = async (id: string) => {
     try {
-        const response = await axiosInstance.get(`/advertiser-profile/${id}`)
+        const response = await axiosInstance.get(`/advertiser-profiles/${id}`)
         return response.data
     } catch (error) {
         if (error instanceof AxiosError) {
@@ -59,7 +59,7 @@ export const updateAdvertiserProfile = async (id: string, data: FormData) => {
 
 export const deleteAdvertiserProfile = async (id: string) => {
     try {
-        const response = await axiosInstance.delete(`/advertiser-profile/${id}`)
+        const response = await axiosInstance.delete(`/advertiser-profiles/${id}`)
         return response.data
     } catch (error) {
         if (error instanceof AxiosError) {
