@@ -6,9 +6,7 @@ import {
   BriefcaseBusiness,
   ChartNoAxesCombinedIcon,
   Layers,
-  Map,
   Newspaper,
-  PieChart,
   UserCog,
   Wallet,
 } from "lucide-react"
@@ -72,7 +70,7 @@ const data = {
       items: [
         {
             title: "Posts",
-            url: "/posts",
+            url: "/content/posts",
         },
         {
           title: "Ads",
@@ -128,16 +126,6 @@ const data = {
       name: "Admin Users",
       url: "/admin-users",
       icon: UserCog,
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
     },
   ],
 }

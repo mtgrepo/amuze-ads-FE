@@ -1,7 +1,6 @@
 "use client"
 
 import {
-  MoreHorizontal,
   type LucideIcon,
 } from "lucide-react"
 
@@ -46,12 +45,12 @@ export function NavProjects({
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}
-        <SidebarMenuItem>
+        {/* <SidebarMenuItem>
           <SidebarMenuButton className="text-sidebar-foreground/70">
             <MoreHorizontal className="text-sidebar-foreground/70" />
             <span>More</span>
           </SidebarMenuButton>
-        </SidebarMenuItem>
+        </SidebarMenuItem> */}
       </SidebarMenu>
     </SidebarGroup>
   )

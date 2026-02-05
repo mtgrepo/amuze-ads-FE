@@ -16,7 +16,7 @@ import { Button } from "../ui/button";
 import { Switch } from "../ui/switch";
 import {Select, SelectTrigger, SelectContent, SelectItem, SelectValue} from "../ui/select";
 import { EditIcon, InfoIcon } from "lucide-react";
-import type { AdvertisersResponse } from "../../dto/response/Advertisers/advertisersResponse";
+import type { AdvertisersResponse } from "../../dto/response/advertisers/advertisersResponse";
 import { Separator } from "../ui/separator";
 import { toast } from "sonner";
 import { useAdvertiserUpdateCommand } from "../../Composable/Command/advertiser/useAdvertiserUpdateCommand";

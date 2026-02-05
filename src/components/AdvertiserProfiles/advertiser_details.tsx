@@ -4,7 +4,7 @@ import {
   Card,
   CardContent,
 } from "../ui/card";
-import type { AdvertisersResponse } from "../../dto/response/Advertisers/advertisersResponse";
+import type { AdvertisersResponse } from "../../dto/response/advertisers/advertisersResponse";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
   Tooltip,

@@ -13,10 +13,10 @@ import { Button } from "../ui/button";
 import { BriefcaseBusiness, EditIcon } from "lucide-react";
 import ImageUpload from "../Common/image_upload";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "../ui/select";
-import { useAdvertiserProfileUpdateCommand } from "../../Composable/Command/advertiser-profile/useAdvertiserProfileUpdate";
+import { useAdvertiserProfileUpdateCommand } from "../../Composable/Command/advertiser-profile/useAdvertiserProfileUpdateCommand";
 import { Spinner } from "../ui/spinner";
-import type { AdvertiserDetailsResponse } from "../../dto/response/Advertisers/advertiserDetailsResponse";
-import { useAdvertiserProfileCreateCommand } from "../../Composable/Command/advertiser-profile/useAdvertiserProfileCreate";
+import type { AdvertiserDetailsResponse } from "../../dto/response/advertisers/advertiserDetailsResponse";
+import { useAdvertiserProfileCreateCommand } from "../../Composable/Command/advertiser-profile/useAdvertiserProfileCreateCommand";
 
 const schema = z.object({
     business_name: z.string().min(2),

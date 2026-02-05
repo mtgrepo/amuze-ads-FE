@@ -9,6 +9,7 @@ import NotFound from "../components/Common/notfound_component"
 import AdvertiserDetailsPage from "../features/Advertisers/advertiser_details"
 import { ProtectedRoute, PublicRoute } from "./guard"
 import AdminUsers from "../features/System/AdminUsers/admin_users"
+import PostPage from "../features/Content/Posts/post"
 
 const router = createBrowserRouter([
     {
@@ -40,6 +41,11 @@ const router = createBrowserRouter([
                         { label: "Details" }
                     ]
                 }
+            },
+            {
+                path: "content/posts",
+                element: <PostPage />,
+                handle: { crumb: ["Content", "Posts"] },
             },
             // ads
             {

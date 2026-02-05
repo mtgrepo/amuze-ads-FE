@@ -28,7 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import columns  from "./column";
-import type { AdminUserResponse } from "../../../dto/response/System/adminUserResponse";
+import type { AdminUserResponse } from "../../../dto/response/system/adminUserResponse";
 import DrawerFormLayout from "../../Common/Layout/drawer_form_layout";
 import DrawerButton from "../../Common/drawer-button";
 import { PageSizeComponent } from "../../Common/Pagination/page-number";

@@ -7,7 +7,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ClipboardPenLine, InfoIcon, MoreHorizontal, Trash2 } from "lucide-react";
-import type { AdvertisersResponse } from "../../dto/response/Advertisers/advertisersResponse";
+import type { AdvertisersResponse } from "../../dto/response/advertisers/advertisersResponse";
 import { Button } from "../ui/button";
 import { useNavigate } from "react-router-dom";
 import React, { useState } from "react";

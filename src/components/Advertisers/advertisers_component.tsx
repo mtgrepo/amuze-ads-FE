@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/table";
 import { PageSizeComponent } from "../Common/Pagination/page-number";
 import Paginator from "../Common/Pagination/paginator";
-import type { AdvertisersResponse } from "../../dto/response/Advertisers/advertisersResponse";
+import type { AdvertisersResponse } from "../../dto/response/advertisers/advertisersResponse";
 import columns  from "./column";
 import DrawerFormLayout from "../Common/Layout/drawer_form_layout";
 import DrawerButton from "../Common/drawer-button";

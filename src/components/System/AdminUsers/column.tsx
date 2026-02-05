@@ -2,7 +2,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox"
 import { CircleCheck, XCircle } from "lucide-react";
-import type { AdminUserResponse } from "../../../dto/response/System/adminUserResponse";
+import type { AdminUserResponse } from "../../../dto/response/system/adminUserResponse";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../ui/tooltip";
 import AdminActions from "./admin_actions";
 

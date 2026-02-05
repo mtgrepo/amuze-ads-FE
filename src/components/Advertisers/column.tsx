@@ -1,7 +1,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox"
-import type { AdvertisersResponse } from "../../dto/response/Advertisers/advertisersResponse";
+import type { AdvertisersResponse } from "../../dto/response/advertisers/advertisersResponse";
 import AdvertiserActions from "./advertiser_actions";
 import { CircleCheck, XCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
