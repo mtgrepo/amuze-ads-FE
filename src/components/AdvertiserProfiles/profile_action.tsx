@@ -195,9 +195,9 @@ export default function ProfileActions({
           </div>
 
           {/* BODY */}
-          <div className="p-6 space-y-4">
+          <div className="px-6 py-1 space-y-4">
 
-            <h3 className="text-xs uppercase tracking-wider text-muted-foreground">
+            <h3 className="text-xs uppercase tracking-wider text-muted-foreground font-bold">
               Business Information
             </h3>
 
@@ -212,7 +212,7 @@ export default function ProfileActions({
             <InfoRow label="Website" value={website} icon={<Globe className="w-4 h-4" />} type="link" />
             <InfoRow label="Address" value={address} icon={<MapPin className="w-4 h-4" />} />
             <DialogClose asChild>
-              <Button variant="outline" className="w-full rounded-xl mt-2">
+              <Button variant="outline" className="w-full rounded-xl mt-2 mb-5">
                 Close
               </Button>
             </DialogClose>

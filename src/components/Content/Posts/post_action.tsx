@@ -63,16 +63,7 @@ export default function PostActions({
         iconColor = "text-red-600";
     }
 
-    const badgeStyle =
-        statusStyles[status as keyof typeof statusStyles] || statusStyles.default;
-
-    /*  CLEAN INFO ROW  */
-    // const InfoRow = ({ label, value }: { label: string; value?: string }) => (
-    //     <div className="rounded-xl bg-muted/40 p-4">
-    //         <p className="text-xs text-muted-foreground mb-1">{label}</p>
-    //         <p className="text-sm font-medium wrap-break-word">{value || "—"}</p>
-    //     </div>
-    // );
+    const badgeStyle = statusStyles[status as keyof typeof statusStyles] || statusStyles.default;
 
       const InfoRow = ({
         label,
