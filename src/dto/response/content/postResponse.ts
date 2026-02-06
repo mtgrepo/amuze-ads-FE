@@ -5,7 +5,7 @@ export interface PostResponse {
     description: string;
     status: string;
     photo: string;
-    created_at: string;
+    createdAt: string;
     advertiser: {
         name: string
     }

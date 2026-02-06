@@ -6,14 +6,16 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ClipboardPenLine, Info, MoreHorizontal, Trash2 } from "lucide-react";
+import { BriefcaseBusiness, ClipboardPenLine, Info, MoreHorizontal, Settings, Trash2 } from "lucide-react";
 import React from "react";
 import { Button } from "../../ui/button";
 import DrawerFormLayout from "../../Common/Layout/drawer_form_layout";
 import {
     Dialog,
+    DialogClose,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "../../ui/dialog";
@@ -30,6 +32,7 @@ export default function PostActions({
     description,
     status,
     photo,
+    createdAt,
     advertiser: { name },
 }: PostResponse) {
     const [editOpen, setEditOpen] = React.useState(false);
@@ -43,42 +46,80 @@ export default function PostActions({
         setDeleteOpen(false);
     };
 
-    /*  enterprise row  */
-    const InfoRow = ({ label, value }: { label: string; value?: string }) => (
-        <div className="grid grid-cols-3 w-full border-b text-sm">
-            <div className="px-4 py-2 text-muted-foreground font-medium">{label}</div>
-            <div className="col-span-2 px-4 py-2 font-semibold wrap-break-word">
-                {value || "—"}
-            </div>
-        </div>
-    );
+    /*  STATUS STYLES  */
+    const statusStyles = {
+        active: "bg-green-500/10 text-green-600 border-green-200",
+        disabled: "bg-yellow-500/10 text-yellow-600 border-yellow-200",
+        default: "bg-red-500/10 text-red-600 border-red-200",
+    };
 
     let iconColor;
+
     if (status === "active") {
-        iconColor = "text-green-500";
+        iconColor = "text-green-600";
     } else if (status === "disabled") {
-        iconColor = "text-yellow-500";
+        iconColor = "text-yellow-600";
     } else {
-        iconColor = "text-red-500";
+        iconColor = "text-red-600";
     }
+
+    const badgeStyle =
+        statusStyles[status as keyof typeof statusStyles] || statusStyles.default;
+
+    /*  CLEAN INFO ROW  */
+    // const InfoRow = ({ label, value }: { label: string; value?: string }) => (
+    //     <div className="rounded-xl bg-muted/40 p-4">
+    //         <p className="text-xs text-muted-foreground mb-1">{label}</p>
+    //         <p className="text-sm font-medium wrap-break-word">{value || "—"}</p>
+    //     </div>
+    // );
+
+      const InfoRow = ({
+        label,
+        value,
+        icon,
+        type,
+      }: {
+        label: string;
+        value?: string;
+        icon?: React.ReactNode;
+        type?: string;
+      }) => (
+        <div className="flex items-start gap-3 rounded-xl bg-muted/40 p-4">
+          <div className="text-muted-foreground mt-0.5">{icon}</div>
+    
+          <div className="flex flex-col text-sm">
+            <span className="text-xs text-muted-foreground">{label}</span>
+    
+            {type === "status" && value ? (
+              <p className={cn("font-bold wrap-break-word", iconColor)}>{value.toUpperCase()}</p>
+            ) : (
+              <span className="font-medium wrap-break-word">{value || "—"}</span>
+            )}
+          </div>
+        </div>
+      );
 
     return (
         <>
-            {/*  ACTION MENU  */}
+            {/* ACTION MENU */}
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 rounded-md hover:bg-muted"
+                        className="h-8 w-8 rounded-full hover:bg-muted transition"
                     >
                         <MoreHorizontal className="h-4 w-4" />
                     </Button>
                 </DropdownMenuTrigger>
 
-                <DropdownMenuContent align="end" className="w-40 rounded-md border shadow-sm">
+                <DropdownMenuContent
+                    align="end"
+                    className="w-44 rounded-xl shadow-lg"
+                >
                     <DropdownMenuLabel className="text-xs text-muted-foreground">
-                        ACTIONS
+                        Actions
                     </DropdownMenuLabel>
 
                     <DropdownMenuSeparator />
@@ -105,7 +146,7 @@ export default function PostActions({
                 </DropdownMenuContent>
             </DropdownMenu>
 
-            {/*  EDIT DRAWER  */}
+            {/* EDIT DRAWER */}
             <DrawerFormLayout
                 open={editOpen}
                 setOpen={setEditOpen}
@@ -125,66 +166,85 @@ export default function PostActions({
                         onSuccess={() => setEditOpen(false)}
                     />
                 }
-                cancelButton={<Button variant="outline" className="w-full">Cancel</Button>}
+                cancelButton={
+                    <Button variant="outline" className="w-full rounded-xl">
+                        Cancel
+                    </Button>
+                }
             />
 
-            {/*  DELETE  */}
+            {/* DELETE DIALOG */}
             <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-                <DialogContent className="sm:max-w-md rounded-md">
+                <DialogContent className="sm:max-w-md rounded-2xl">
                     <DialogHeader>
-                        <DialogTitle>Delete Post</DialogTitle>
+                        <DialogTitle>Delete post?</DialogTitle>
                         <DialogDescription>
-                            This permanently deletes <strong>{title}</strong>.
+                            This action cannot be undone.
+                            <br />
+                            <span className="font-medium text-foreground">
+                                {title}
+                            </span>{" "}
+                            will be permanently removed.
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="flex justify-end gap-2 mt-6">
+                    <DialogFooter className="gap-2">
                         <Button variant="outline" onClick={() => setDeleteOpen(false)}>
                             Cancel
                         </Button>
                         <Button variant="destructive" onClick={handleDelete}>
                             Delete
                         </Button>
-                    </div>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
 
-            {/*  DETAIL VIEW  */}
+            {/* DETAIL VIEW */}
             <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-                <DialogContent className="max-w-2xl rounded-md p-0 overflow-hidden">
+                <DialogContent className="max-w-2xl p-0 rounded-2xl overflow-hidden shadow-xl">
 
-                    {/* header */}
-                    <div className="flex items-center justify-between border-b bg-muted/40 px-6 py-4">
-                        <div>
-                            <div className="flex flex-row gap-2 justify-center items-center">
-                                <p className="font-semibold">
-                                    {title}
-                                </p>
-                                <Badge variant={'outline'} className={cn(iconColor)}>
-                                    {status?.toUpperCase()}
-                                </Badge>
-                            </div>
-                            <p className="text-xs text-muted-foreground">Post Details</p>
+                    {/* HEADER */}
+                    <div className="px-6 py-5 border-b bg-muted/30 flex items-center justify-between">
+                        <div className="space-y-1">
+                            <h2 className="text-lg font-semibold">{title}</h2>
+                            <p className="text-xs text-muted-foreground">
+                                {new Date(createdAt).toLocaleString()}
+                            </p>
                         </div>
+
+                        <Badge variant="outline" className={cn("capitalize", badgeStyle)}>
+                            {status}
+                        </Badge>
                     </div>
 
-                    {/*  thumbnail */}
+                    {/* IMAGE */}
                     {photo && (
-                        <div className="border-b p-4">
-                            <img
-                                src={photo}
-                                alt={title}
-                                className="max-h-60 w-full rounded-md border object-cover"
-                            />
+                        <img
+                            src={photo}
+                            alt={title}
+                            className="w-full max-h-72 object-cover"
+                        />
+                    )}
+
+                    {/* DESCRIPTION */}
+                    {description && (
+                        <div className="px-6 py-4 text-sm text-muted-foreground leading-relaxed">
+                            {description}
                         </div>
                     )}
 
-                    {/* body (spec layout) */}
-                    <div className="divide-y">
-                        <InfoRow label="Advertiser ID" value={name} />
-                        <InfoRow label="Title" value={title} />
-                        <InfoRow label="Status" value={status} />
-                        <InfoRow label="Description" value={description} />
+                    {/* DETAILS */}
+                    <div className="grid grid-cols-2 gap-4 p-6 pt-0">
+                        <InfoRow label="Advertiser" value={name} icon={<BriefcaseBusiness className="text-primary"/>} />
+                        <InfoRow label="Status" value={status} icon={<Settings className="text-primary"/>} type="status"/>
+                    </div>
+
+                    <div className="px-6 pb-6">
+                        <DialogClose asChild>
+                            <Button className="w-full rounded-xl" variant="outline">
+                                Close
+                            </Button>
+                        </DialogClose>
                     </div>
                 </DialogContent>
             </Dialog>
