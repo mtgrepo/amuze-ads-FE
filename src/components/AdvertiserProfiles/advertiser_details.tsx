@@ -39,8 +39,8 @@ export default function AdvertiserDetails({ data }: Props) {
       photo: data.profiles[0].photo
         ? `https://intl.minio.amuze.com.mm/${data.profiles[0].photo}`
         : "", // default empty string
-      country: data.profiles[0].country ?? "", 
-      timezone: data.profiles[0].timezone ?? "", 
+      country: data.profiles[0].country, 
+      timezone: data.profiles[0].timezone, 
     }
   : undefined;
 

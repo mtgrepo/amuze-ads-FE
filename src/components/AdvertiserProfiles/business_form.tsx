@@ -15,7 +15,7 @@ import ImageUpload from "../Common/image_upload";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "../ui/select";
 import { useAdvertiserProfileUpdateCommand } from "../../Composable/Command/advertiser-profile/useAdvertiserProfileUpdateCommand";
 import { Spinner } from "../ui/spinner";
-import type { AdvertiserDetailsResponse } from "../../dto/response/advertisers/advertiserDetailsResponse";
+import type { AdvertiserDetailsResponse } from "../../dto/response/Advertisers/advertiserDetailsResponse";
 import { useAdvertiserProfileCreateCommand } from "../../Composable/Command/advertiser-profile/useAdvertiserProfileCreateCommand";
 
 const schema = z.object({
@@ -41,6 +41,17 @@ export default function BusinessForm({ profile, advertiser_id }: Props) {
     const [editing, setEditing] = useState(false);
     const form = useForm<Values>({
         resolver: zodResolver(schema),
+        defaultValues: {
+            business_name: profile?.business_name ?? "",
+            business_no: profile?.business_no ?? "",
+            business_type: profile?.business_type ?? "",
+            dica_number: profile?.dica_number ?? "",
+            website: profile?.website ?? "",
+            address: profile?.address ?? "",
+            photo: profile?.photo ?? "",
+            country: profile?.country ?? "",
+            timezone: profile?.timezone ?? "",
+        },
     });
 
     const { updateAdvertiserProfileCommand, isPending } = useAdvertiserProfileUpdateCommand();
