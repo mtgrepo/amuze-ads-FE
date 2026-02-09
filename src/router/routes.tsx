@@ -11,6 +11,8 @@ import { ProtectedRoute, PublicRoute } from "./guard"
 import AdminUsers from "../features/System/AdminUsers/admin_users"
 import PostPage from "../features/Content/Posts/post"
 import ProfilePage from "../features/AdvertiserProfile/profile"
+import AdSetPage from "../features/Content/AdSet/ad_set"
+import CampaignPage from "../features/Content/Campaign/campaign"
 
 const router = createBrowserRouter([
     {
@@ -60,6 +62,17 @@ const router = createBrowserRouter([
                 path: "ads",
                 element: <Ads />,
                 handle: { crumb: ["Content", "Ads"] },
+            },
+            // ad-sets
+            {
+                path: "ad-sets",
+                element: <AdSetPage />,
+                handle: { crumb: ["Content", "Ad Sets"] },
+            },
+            {
+                path: "campaigns",
+                element: <CampaignPage />,
+                handle: { crumb: ["Content", "Campaigns"] },
             },
             // admin users
             {

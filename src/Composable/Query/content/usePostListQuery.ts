@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
-import { getAllPosts } from "../../../../http/apis/Content/Posts/postApi";
-import type { PostResponse } from "../../../../dto/response/content/postResponse";
+import type { PostResponse } from "../../../dto/response/content/postResponse";
+import { getAllPosts } from "../../../http/apis/Content/postApi";
 
 export const usePostListQuery = () => {
     const postListData = useQuery({

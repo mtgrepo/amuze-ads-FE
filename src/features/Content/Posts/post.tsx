@@ -1,5 +1,5 @@
 import { PostComponent } from "../../../components/Content/Posts/post_component";
-import { usePostListQuery } from "../../../Composable/Query/content/posts/usePostListQuery"
+import { usePostListQuery } from "../../../Composable/Query/content/usePostListQuery"
 
 export default function PostPage() {
     const { postListData, isLoading} = usePostListQuery();

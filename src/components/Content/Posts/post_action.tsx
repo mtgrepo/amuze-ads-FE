@@ -110,7 +110,7 @@ export default function PostActions({
                     className="w-44 rounded-xl shadow-lg"
                 >
                     <DropdownMenuLabel className="text-xs text-muted-foreground">
-                        Actions
+                        Post Actions
                     </DropdownMenuLabel>
 
                     <DropdownMenuSeparator />
