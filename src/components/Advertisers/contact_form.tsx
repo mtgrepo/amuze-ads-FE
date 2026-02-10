@@ -14,7 +14,6 @@ import {
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Switch } from "../ui/switch";
-import {Select, SelectTrigger, SelectContent, SelectItem, SelectValue} from "../ui/select";
 import { EditIcon, InfoIcon } from "lucide-react";
 import type { AdvertisersResponse } from "../../dto/response/advertisers/advertisersResponse";
 import { Separator } from "../ui/separator";
@@ -26,16 +25,11 @@ const schema = z.object({
     name: z.string().min(2, "Name required"),
     email: z.string().email(),
     phone: z.string().min(5),
-    country: z.string(),
-    timezone: z.string(),
     status: z.enum(["active", "inactive"]),
     verified: z.boolean(),
 });
 
 type Values = z.infer<typeof schema>;
-
-const countries = ["United States", "United Kingdom", "Myanmar"];
-const timezones = ["UTC", "Asia/Yangon"];
 
 export default function ContactForm({ data }: { data: AdvertisersResponse }) {
     const [editing, setEditing] = useState(false);
@@ -45,13 +39,11 @@ export default function ContactForm({ data }: { data: AdvertisersResponse }) {
     });
 
     useEffect(() => {
-        const profile = data.profiles?.[0];
 
         form.reset({
             name: data.name,
             email: data.email,
-            phone: data.phone, country: profile?.country ?? "",
-            timezone: profile?.timezone ?? "",
+            phone: data.phone,
             status: data.status as any,
             verified: data.verified,
         });
@@ -99,10 +91,6 @@ export default function ContactForm({ data }: { data: AdvertisersResponse }) {
                                 <Field name="name" label="Name" disabled={disabled} />
                                 <Field name="email" label="Email" disabled={disabled} />
                                 <Field name="phone" label="Phone" disabled={disabled} />
-                                <div className="grid grid-cols-2 gap-3">
-                                    <SelectField name="country" label="Country" options={countries} disabled={disabled} />
-                                    <SelectField name="timezone" label="Timezone" options={timezones} disabled={disabled} />
-                                </div>
                             </div>
 
                             {/* RIGHT → 30% Status panel */}
@@ -154,30 +142,6 @@ function Field({ name, label, disabled }: any) {
                         <Input {...field} disabled={disabled} />
                     </FormControl>
                     <FormMessage />
-                </FormItem>
-            )}
-        />
-    );
-}
-
-function SelectField({ name, label, options, disabled }: any) {
-    return (
-        <FormField name={name}
-            render={({ field }) => (
-                <FormItem>
-                    <FormLabel>{label}</FormLabel>
-                    <Select disabled={disabled} onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                            <SelectTrigger className="w-full">
-                                <SelectValue placeholder={`Select ${label}`} />
-                            </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                            {options.map((o: string) => (
-                                <SelectItem key={o} value={o}>{o}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
                 </FormItem>
             )}
         />
