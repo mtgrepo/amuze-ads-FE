@@ -32,13 +32,10 @@ export default function AdvertiserDetails({ data }: Props) {
     const profile = data.profiles?.[0]
   ? {
       ...data.profiles[0],
-      id: data.id,
       advertiser_id: data.id,
       created_at: data.createdAt,
       updated_at: data.updatedAt,
-      photo: data.profiles[0].photo
-        ? `https://intl.minio.amuze.com.mm/${data.profiles[0].photo}`
-        : "", // default empty string
+      photo: data.profiles[0].photo,
       country: data.profiles[0].country ?? "", 
       timezone: data.profiles[0].timezone ?? "", 
     }
@@ -84,7 +81,7 @@ export default function AdvertiserDetails({ data }: Props) {
       </Card>
 
       <ContactForm data={data} />
-      <BusinessForm profile={profile} advertiser_id={data.id} />
+      <BusinessForm profile={profile} advertiser_id={data.id}/>
 
     </div>
 

@@ -220,7 +220,7 @@ export default function AdSetAction({
                                 Gender
                             </label>
 
-                            <div className="flex flex-wrap gap-2">
+                            <div className="grid grid-cols-3 w-full gap-2">
                                 {["all", "male", "female"].map((g) => {
                                     const active = gender?.toLowerCase() === g;
 
@@ -228,10 +228,10 @@ export default function AdSetAction({
                                         <span
                                             key={g}
                                             className={cn(
-                                                "px-4 py-1.5 rounded-full text-xs font-medium border transition-colors capitalize",
+                                                "px-4 py-1.5 rounded-md text-xs font-medium border transition-colors capitalize",
                                                 active
-                                                    ? "bg-primary text-primary-foreground border-primary"
-                                                    : "bg-muted text-muted-foreground border-border hover:bg-accent cursor-default"
+                                                    ? "bg-primary/10 dark:text-primary-foreground text-primary border-primary text-center"
+                                                    : "bg-muted text-muted-foreground border-border hover:bg-accent cursor-default text-center"
                                             )}
                                         >
                                             {g}
@@ -248,7 +248,7 @@ export default function AdSetAction({
                                 Category
                             </label>
 
-                            <span className="inline-flex px-3 py-1.5 rounded-full text-xs font-medium bg-primary/10 text-primary dark:text-primary-foreground border border-border">
+                            <span className="inline-flex px-3 py-1.5 rounded-full text-xs font-medium bg-primary/40 text-primary dark:text-primary-foreground border-primary text-center">
                                 {category}
                             </span>
                         </section>

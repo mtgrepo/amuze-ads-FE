@@ -9,6 +9,7 @@ export interface AdvertisersResponse {
     last_login: string | null,
     avatar?: string | null,
     profiles: {
+        id: string,
         advertiser_id: string,
         business_name: string,
         business_no: string,

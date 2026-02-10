@@ -30,6 +30,12 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
+    //unauthorized
+    if(error?.response?.status === 401) {
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+    }
+
     // Global error handling
     console.error('API error:', error.response || error.message);
     return Promise.reject(error);

@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "../ui/form";
 import { Input } from "../ui/input";
@@ -61,7 +60,7 @@ export default function BusinessForm({ profile, advertiser_id }: Props) {
     }, [profile, form]);
 
     const disabled = !editing;
-
+    console.log("Profile data", profile)
     const onSubmit = async (values: Values) => {
         const formData = new FormData();
         const imageFields = ["photo"];
@@ -88,6 +87,8 @@ export default function BusinessForm({ profile, advertiser_id }: Props) {
 
         if (profile?.id) {
             formData.append("advertiser_id", profile.advertiser_id);
+            // console.log("profile id", profile?.id)
+            // console.log("ad id", advertiser_id)
             await updateAdvertiserProfileCommand({ id: profile.id, data: formData });
         } else {
             formData.append("advertiser_id", advertiser_id!);
