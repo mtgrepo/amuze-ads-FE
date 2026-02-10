@@ -13,6 +13,7 @@ import PostPage from "../features/Content/Posts/post"
 import ProfilePage from "../features/AdvertiserProfile/profile"
 import AdSetPage from "../features/Content/AdSet/ad_set"
 import CampaignPage from "../features/Content/Campaign/campaign"
+import NotificationsPage from "../features/Notifications/notifications"
 
 const router = createBrowserRouter([
     {
@@ -73,6 +74,12 @@ const router = createBrowserRouter([
                 path: "campaigns",
                 element: <CampaignPage />,
                 handle: { crumb: ["Content", "Campaigns"] },
+            },
+            // Notifications 
+            {
+                path: "notifications",
+                element: <NotificationsPage />,
+                handle: { crumb: ["Notifications"] },
             },
             // admin users
             {

@@ -6,7 +6,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ClipboardPenLine, Info, MoreHorizontal, Tags, Trash2, UserSearch, VenusAndMars } from "lucide-react";
+import { ClipboardPenLine, Info, MapPin, MoreHorizontal, Tags, Trash2, UserSearch, VenusAndMars } from "lucide-react";
 import React from "react";
 import { Button } from "../../ui/button";
 import DrawerFormLayout from "../../Common/Layout/drawer_form_layout";
@@ -22,7 +22,6 @@ import { usePostDeleteCommand } from "../../../Composable/Command/content/posts/
 import type { AdSetResponse } from "../../../dto/response/content/adSetResponse";
 import AdSetForm from "./ad_set_form";
 import { cn } from "../../../lib/utils";
-import { Separator } from "../../ui/separator";
 
 export default function AdSetAction({
     id,
@@ -148,44 +147,43 @@ export default function AdSetAction({
             {/* DETAIL VIEW */}
             <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
                 <DialogContent
-                    className="max-w-2xl p-0 rounded-2xl overflow-hidden flex flex-col max-h-[90vh]"
+                    className="max-w-2xl p-0 rounded-2xl bg-background overflow-hidden flex flex-col max-h-[90vh]"
                 >
-                    {/*  HEADER  */}
-                    <div className="px-8 py-4 my-4 border-b border-[#283339]">
-                        <div className="flex flex-row gap-2 ">
-                            <Info className="items-center justify-center my-auto text-primary" />
-                            <h2 className="text-2xl font-bold tracking-tight">
+                    {/* HEADER */}
+                    <div className="px-8 py-5 border-b border-border bg-muted/30">
+                        <div className="flex items-center gap-2">
+                            <Info className="h-5 w-5 text-primary" />
+                            <h2 className="text-xl font-semibold tracking-tight text-foreground">
                                 Ad Set Info
                             </h2>
                         </div>
 
-                        <p className="text-slate-400 text-sm mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                             {/* Created {new Date(createdAt).toLocaleDateString()} */}
                         </p>
                     </div>
 
-                    {/*  BODY  */}
-                    <div className="flex-1 overflow-y-auto px-8  space-y-8">
+                    {/* BODY */}
+                    <div className="flex-1 overflow-y-auto px-8 py-8 space-y-5">
 
-                        {/*  AGE  */}
-                        <section className="space-y-3">
+                        {/* AGE */}
+                        <section className="space-y-4 pb-8 border-b border-border">
                             <div className="flex items-center justify-between">
-                                <label className="flex flex-row gap-2 text-sm font-semibold items-center ">
-                                  <UserSearch className="text-primary"/>  Age Range
+                                <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                    <UserSearch className="h-4 w-4 text-primary" />
+                                    Age Range
                                 </label>
 
-                                <div className="text-primary font-bold text-sm bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
+                                <span className="text-primary font-medium text-xs bg-primary/10 px-3 py-1 rounded-full border border-border">
                                     {ageMin} – {ageMax} years
-                                </div>
+                                </span>
                             </div>
 
-                            {/* visual range bar */}
+                            {/* Range bar */}
                             <div className="space-y-3">
+                                <div className="relative h-2 bg-muted rounded-full">
 
-                                {/* BAR + DOTS */}
-                                <div className="relative h-2 bg-slate-800 rounded-full overflow-visible">
-
-                                    {/* filled range */}
+                                    {/* filled */}
                                     <div
                                         className="absolute h-full bg-primary rounded-full"
                                         style={{
@@ -194,35 +192,32 @@ export default function AdSetAction({
                                         }}
                                     />
 
-                                    {/* MIN DOT */}
+                                    {/* dots */}
                                     <div
-                                        className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 bg-white border-2 border-primary rounded-full shadow-lg"
+                                        className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-background border border-primary"
                                         style={{ left: `${(ageMin / 65) * 100}%` }}
                                     />
 
-                                    {/* MAX DOT */}
                                     <div
-                                        className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 bg-white border-2 border-primary rounded-full shadow-lg"
+                                        className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-background border border-primary"
                                         style={{ left: `${(ageMax / 65) * 100}%` }}
                                     />
                                 </div>
 
-                                {/* SCALE NUMBERS */}
-                                <div className="flex justify-between text-[10px] font-bold uppercase text-slate-500 px-1">
+                                {/* scale */}
+                                <div className="flex justify-between text-[10px] font-medium text-muted-foreground px-1">
                                     {[0, 10, 20, 30, 40, 50, 60, "65+"].map((n, i) => (
                                         <span key={i}>{n}</span>
                                     ))}
                                 </div>
-
                             </div>
                         </section>
 
-                        <Separator />
-
-                        {/*  GENDER  */}
-                        <section className="space-y-3">
-                            <label className="text-sm font-semibold flex flex-row gap-2">
-                               <VenusAndMars className="my-auto items-center justify-center font-bold text-primary/80"/> Gender
+                        {/* GENDER */}
+                        <section className="space-y-4 pb-8 border-b border-border">
+                            <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                <VenusAndMars className="h-4 w-4 text-primary" />
+                                Gender
                             </label>
 
                             <div className="flex flex-wrap gap-2">
@@ -233,10 +228,10 @@ export default function AdSetAction({
                                         <span
                                             key={g}
                                             className={cn(
-                                                "px-5 py-2 mt-3 rounded-xl text-xs font-bold border border-dashed transition",
+                                                "px-4 py-1.5 rounded-full text-xs font-medium border transition-colors capitalize",
                                                 active
-                                                    ? "border-primary text-white shadow-lg shadow-primary/20"
-                                                    : " text-slate-400 border-[#283339]"
+                                                    ? "bg-primary text-primary-foreground border-primary"
+                                                    : "bg-muted text-muted-foreground border-border hover:bg-accent cursor-default"
                                             )}
                                         >
                                             {g}
@@ -246,22 +241,44 @@ export default function AdSetAction({
                             </div>
                         </section>
 
-                        <Separator />
-
-                        {/*  CATEGORY  */}
-                        <section className="space-y-3">
-                            <label className="flex flex-row gap-2 text-sm font-semibold">
-                              <Tags className="my-auto items-center justify-center font-bold text-primary/80"/>  Category
+                        {/* CATEGORY */}
+                        <section className="space-y-4 pb-8 border-b border-border">
+                            <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                <Tags className="h-4 w-4 text-primary" />
+                                Category
                             </label>
 
-                            <div className="w-full flex flex-wrap gap-2 my-3 border-dashed">
-                                <span className="px-3 py-2 rounded-xl text-xs font-bold border border-dashed border-primary text-white shadow-lg shadow-primary/20">{category}</span>
-                            </div>
+                            <span className="inline-flex px-3 py-1.5 rounded-full text-xs font-medium bg-primary/10 text-primary dark:text-primary-foreground border border-border">
+                                {category}
+                            </span>
                         </section>
-                    </div>
 
+                        {/* LOCATION */}
+                        <section className="space-y-4">
+                            <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                <MapPin className="h-4 w-4 text-primary" />
+                                Location
+                            </label>
+
+                            <input
+                                value={location}
+                                readOnly
+                                disabled
+                                aria-readonly
+                                className="
+            w-full rounded-md px-3 py-2 text-sm
+            bg-background text-foreground
+            border border-input
+            cursor-not-allowed
+            focus:outline-none
+          "
+                            />
+                        </section>
+
+                    </div>
                 </DialogContent>
             </Dialog>
+
         </>
     );
 }

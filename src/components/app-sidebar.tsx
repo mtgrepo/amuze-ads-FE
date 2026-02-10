@@ -99,18 +99,6 @@ const data = {
           title: "Daily ads status",
           url: "/daily-ads-status",
         },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
       ],
     },
     {
