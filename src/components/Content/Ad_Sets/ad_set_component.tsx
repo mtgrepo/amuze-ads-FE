@@ -34,6 +34,7 @@ import { PageSizeComponent } from "../../Common/Pagination/page-number";
 import Paginator from "../../Common/Pagination/paginator";
 import type { AdSetResponse } from "../../../dto/response/content/adSetResponse";
 import AdSetForm from "./ad_set_form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
 type AdSetProps = {
     data: AdSetResponse[];
 };
@@ -73,6 +74,11 @@ export function AdSetComponent({ data }: AdSetProps) {
         },
     });
     const totalRows = table.getFilteredRowModel().rows.length;
+    const gender = [
+        { label: "Male", value: "male" },
+        { label: "Female", value: "female" },
+    ]
+
     return (
         <div className="w-full mx-auto">
             <div className="flex flex-col gap-4 py-4">
@@ -101,6 +107,34 @@ export function AdSetComponent({ data }: AdSetProps) {
                                 }
                                 className="border-2 rounded-lg"
                             />
+                        </div>
+                        <div className="relative">
+                            <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground z-10">
+                                Gender
+                            </label>
+                            <Select
+                                value={
+                                    (table.getColumn("gender")?.getFilterValue() as string) ?? "all"
+                                }
+                                onValueChange={(value) =>
+                                    table.getColumn("gender")?.setFilterValue(
+                                        value === "all" ? undefined : value
+                                    )
+                                }
+                            >
+                                <SelectTrigger className="w-full border-2 rounded-lg">
+                                    <SelectValue placeholder="Select type..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All</SelectItem>
+                                    {gender
+                                        ?.map((st: any) => (
+                                            <SelectItem key={st.value} value={String(st.value)}>
+                                                {st.label}
+                                            </SelectItem>
+                                        ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
                 </div>

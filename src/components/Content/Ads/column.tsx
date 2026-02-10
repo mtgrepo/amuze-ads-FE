@@ -1,12 +1,11 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox"
-import type { AdSetResponse } from "../../../dto/response/content/adSetResponse";
-import AdSetAction from "./ad_set_action";
-import { Mars, Venus, VenusAndMars } from "lucide-react";
+import { CircleCheck, ClockFading, Mars, Venus, VenusAndMars } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../ui/tooltip";
+import type { AdResponse } from "../../../dto/response/content/adResponse";
 
-const columns: ColumnDef<AdSetResponse>[] = [
+const columns: ColumnDef<AdResponse>[] = [
     {
         id: "select",
         header: ({ table }) => (
@@ -30,31 +29,26 @@ const columns: ColumnDef<AdSetResponse>[] = [
         enableHiding: false,
     },
     {
-        id: "name",
-        accessorFn: (row) => row.campaign.name,
-        header: "Camapaign",
+        id: "campaign",
+        accessorFn: (row) => row.adSet.campaign.name,
+        header: "Campaign",
         cell: ({ row }) => (
-            <div className="capitalize">{row.getValue("name")}</div>
+            <div className="capitalize">{row.getValue("campaign")}</div>
         ),
     },
     {
-        accessorKey: "ageMin",
-        header: "Age(Min)",
+        id: "objective",
+        accessorFn: (row) => row.adSet.campaign.objective,
+        header: "Objective",
         cell: ({ row }) => (
-            <div className="capitalize">{row.getValue("ageMin")}</div>
+            <div className="capitalize">{row.getValue("objective")}</div>
         ),
     },
     {
-        accessorKey: "ageMax",
-        header: "Age(Max)",
-        cell: ({ row }) => (
-            <div className="capitalize">{row.getValue("ageMax")}</div>
-        ),
-    },
-    {
-        accessorKey: "gender",
+        id: "gender",
+        accessorFn: (row) => row.adSet.gender,
         header: "Gender",
-        filterFn: (row, id, filterValue) => {
+                filterFn: (row, id, filterValue) => {
             if (!filterValue) return true; // "all" or undefined
             return row.getValue(id) === filterValue; // exact match
         },
@@ -66,11 +60,11 @@ const columns: ColumnDef<AdSetResponse>[] = [
 
             switch (gender) {
                 case "male":
-                    IconComponent = <Mars color="blue" />;
+                    IconComponent = <Mars color="blue" />; 
                     tooltipText = "Male";
                     break;
                 case "female":
-                    IconComponent = <Venus color="#ff297e" />;
+                    IconComponent = <Venus color="#ff297e" />; 
                     tooltipText = "Female";
                     break;
                 case "all":
@@ -96,17 +90,33 @@ const columns: ColumnDef<AdSetResponse>[] = [
         },
     },
     {
-        accessorKey: "location",
-        header: "Location",
-        cell: ({ row }) => (
-            <div className="capitalize">{row.getValue("location")}</div>
-        ),
-    },
-    {
-        accessorKey: "category",
+        id: "category",
+        accessorFn: (row) => row.adSet.category,
         header: "Category",
         cell: ({ row }) => (
             <div className="capitalize">{row.getValue("category")}</div>
+        ),
+    },
+    {
+        accessorKey: "status",
+        header: "Status",
+        cell: ({ row }) => (
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <span className="cursor-pointer relative inline-flex">
+                            {row.getValue("status") === 'active' ? (
+                                <CircleCheck color="green" />
+                            ) : (
+                                <ClockFading color="yellow" />
+                            )}
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" align="center">
+                        {row.getValue("status") === "active" ? "Active" : "Paused"}
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
         ),
     },
     {
@@ -119,16 +129,6 @@ const columns: ColumnDef<AdSetResponse>[] = [
                 <div className="capitalize">
                     {date.toLocaleString()}
                 </div>
-            )
-        },
-    },
-    {
-        id: "actions",
-        enableHiding: false,
-        cell: ({ row }) => {
-            const adSet = row.original
-            return (
-                <AdSetAction {...adSet} />
             )
         },
     },

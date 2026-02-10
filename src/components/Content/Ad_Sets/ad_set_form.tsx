@@ -76,7 +76,6 @@ export default function AdSetForm({
     const { campaignList } = useCampaignListQuery();
 
     const onSubmit = async (values: Values) => {
-        alert("enter on submit")
         if (mode === "add") {
             if (!values.campaignId) {
                 form.setError("campaignId", {

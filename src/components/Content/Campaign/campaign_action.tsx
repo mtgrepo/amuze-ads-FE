@@ -220,17 +220,17 @@ export default function CampaignActions({
                                 {/* Daily Budget */}
                                 <div className="flex flex-col gap-1 rounded-lg p-5 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
                                     <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wide">Daily Budget</p>
-                                    <p className="text-slate-900 dark:text-white text-2xl font-bold leading-tight">${dailyBudget.toLocaleString()}</p>
+                                    <p className="text-slate-900 dark:text-white text-2xl font-bold leading-tight">{dailyBudget.toLocaleString()}</p>
                                 </div>
                                 {/* Total Budget */}
                                 <div className="flex flex-col gap-1 rounded-lg p-5 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
                                     <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wide">Total Budget</p>
-                                    <p className="text-slate-900 dark:text-white text-2xl font-bold leading-tight">${totalBudget.toLocaleString()}</p>
+                                    <p className="text-slate-900 dark:text-white text-2xl font-bold leading-tight">{totalBudget.toLocaleString()}</p>
                                 </div>
                                 {/* Spent */}
                                 <div className="flex flex-col gap-1 rounded-lg p-5 bg-primary/5 dark:bg-primary/10 border border-primary/20">
                                     <p className="text-primary dark:text-primary text-xs font-medium uppercase tracking-wide">Spent Amount</p>
-                                    <p className="text-primary dark:text-primary text-2xl font-bold leading-tight">${spentAmount.toLocaleString()}</p>
+                                    <p className="text-primary dark:text-primary text-2xl font-bold leading-tight">{spentAmount.toLocaleString()}</p>
                                     <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full mt-2 overflow-hidden">
                                         <div className="bg-primary h-full rounded-full" style={{ width: `${spentPercent}%` }}></div>
                                     </div>

@@ -1,3 +1,5 @@
+import type { AdvertisersResponse } from "../advertisers/advertisersResponse"
+
 export interface CampaignResponse {
     id: string,
     name: string,
@@ -10,9 +12,7 @@ export interface CampaignResponse {
     status: string,
     created_at: string,
     updated_at: string,
-    advertiser: {
-        name: string
-    },
+    advertiser: AdvertisersResponse,
     createdAt: Date,
     advertiserId: string,
     postId: string,
