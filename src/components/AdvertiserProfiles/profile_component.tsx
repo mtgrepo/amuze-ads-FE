@@ -34,6 +34,7 @@ import Paginator from "../Common/Pagination/paginator";
 import DrawerFormLayout from "../Common/Layout/drawer_form_layout";
 import DrawerButton from "../Common/drawer-button";
 import ProfileForm from "./profile_form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 type ProfileProps = {
     data: ProfileResponse[];
 };
@@ -104,6 +105,35 @@ export function ProfileComponent
                                 }
                                 className="border-2 rounded-lg"
                             />
+                        </div>
+                        <div className="relative">
+                            <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground z-10">
+                                Business Type
+                            </label>
+                            <Select
+                                value={
+                                    (table.getColumn("business_type")?.getFilterValue() as string) ?? "all"
+                                }
+                                onValueChange={(value) =>
+                                    table.getColumn("business_type")?.setFilterValue(
+                                        value === "all" ? undefined : value
+                                    )
+                                }
+                            >
+                                <SelectTrigger className="w-full border-2 rounded-lg">
+                                    <SelectValue placeholder="Select service..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All</SelectItem>
+                                    {[...new Set(data.map((item) => item.business_type))].map(
+                                        (service) => (
+                                            <SelectItem key={service} value={service}>
+                                                {service}
+                                            </SelectItem>
+                                        )
+                                    )}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="relative">
                             <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground">

@@ -30,10 +30,11 @@ import {
 import { PageSizeComponent } from "../Common/Pagination/page-number";
 import Paginator from "../Common/Pagination/paginator";
 import type { AdvertisersResponse } from "../../dto/response/advertisers/advertisersResponse";
-import columns  from "./column";
+import columns from "./column";
 import DrawerFormLayout from "../Common/Layout/drawer_form_layout";
 import DrawerButton from "../Common/drawer-button";
 import AdvertiserForm from "./advertiser_form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 type AdvertisersProps = {
   data: AdvertisersResponse[];
 };
@@ -50,7 +51,7 @@ export function AdvertisersComponent({ data }: AdvertisersProps) {
     pageIndex: 0,
     pageSize: 10,
   });
-  const [open , setOpen] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
 
   const table = useReactTable({
     data,
@@ -73,6 +74,18 @@ export function AdvertisersComponent({ data }: AdvertisersProps) {
     },
   });
   const totalRows = table.getFilteredRowModel().rows.length;
+
+  const statusOptions = [
+    { value: "active", label: "Active" },
+    { value: "suspended", label: "Suspended" },
+    { value: "banned", label: "Banned" },
+  ];
+
+  const verifiedOptions = [
+    { value: true, label: "Verified" },
+    { value: false, label: "Not Verified" },
+  ];
+
   return (
     <div className="w-full mx-auto">
       <div className="flex flex-col gap-4 py-4">
@@ -82,7 +95,7 @@ export function AdvertisersComponent({ data }: AdvertisersProps) {
             <div className="flex items-center gap-3">
               <h3 className="text-base font-semibold">Search Filters</h3>
               <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
-                1 filter
+                3 filters
               </span>
             </div>
           </div>
@@ -102,6 +115,62 @@ export function AdvertisersComponent({ data }: AdvertisersProps) {
                 className="border-2 rounded-lg"
               />
             </div>
+            <div className="relative">
+              <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground z-10">
+                Status
+              </label>
+              <Select
+                value={
+                  (table.getColumn("status")?.getFilterValue() as string) ?? "all"
+                }
+                onValueChange={(value) =>
+                  table.getColumn("status")?.setFilterValue(
+                    value === "all" ? undefined : value
+                  )
+                }
+              >
+                <SelectTrigger className="w-full border-2 rounded-lg">
+                  <SelectValue placeholder="Select type..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  {statusOptions
+                    ?.map((st: any) => (
+                      <SelectItem key={st.value} value={String(st.value)}>
+                        {st.label}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="relative">
+              <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground z-10">
+                Verified Status
+              </label>
+              <Select
+                value={
+                  (table.getColumn("verified")?.getFilterValue() as string) ?? "all"
+                }
+                onValueChange={(value) =>
+                  table.getColumn("verified")?.setFilterValue(
+                    value === "all" ? undefined : value
+                  )
+                }
+              >
+                <SelectTrigger className="w-full border-2 rounded-lg">
+                  <SelectValue placeholder="Select type..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  {verifiedOptions
+                    ?.map((st: any) => (
+                      <SelectItem key={st.value} value={st.value}>
+                        {st.label}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
         <div className="flex flex-row gap-3 justify-end">
@@ -115,7 +184,7 @@ export function AdvertisersComponent({ data }: AdvertisersProps) {
               <AdvertiserForm
                 mode="add"
                 onSuccess={() => {
-                  setOpen(false); 
+                  setOpen(false);
                 }}
               />
             }

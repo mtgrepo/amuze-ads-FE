@@ -18,7 +18,6 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -92,19 +91,33 @@ export function AdComponent
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="relative">
-              <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground">
-                Title
+              <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground z-10">
+                Category
               </label>
-              <Input
-                placeholder="Enter title..."
+              <Select
                 value={
-                  (table.getColumn("title")?.getFilterValue() as string) ?? ""
+                  (table.getColumn("category")?.getFilterValue() as string) ?? "all"
                 }
-                onChange={(event) =>
-                  table.getColumn("title")?.setFilterValue(event.target.value)
+                onValueChange={(value) =>
+                  table.getColumn("category")?.setFilterValue(
+                    value === "all" ? undefined : value
+                  )
                 }
-                className="border-2 rounded-lg"
-              />
+              >
+                <SelectTrigger className="w-full border-2 rounded-lg">
+                  <SelectValue placeholder="Select service..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  {[...new Set(data.map((item) => item.adSet.category))].map(
+                    (service) => (
+                      <SelectItem key={service} value={service}>
+                        {service}
+                      </SelectItem>
+                    )
+                  )}
+                </SelectContent>
+              </Select>
             </div>
             <div className="relative">
               <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground z-10">

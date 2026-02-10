@@ -76,9 +76,9 @@ export function PostComponent
     });
     const totalRows = table.getFilteredRowModel().rows.length;
     const statusOptions = [
-        { value: "active", label: "Active", icon: <CircleCheck className="text-green-500" /> },
-        { value: "disabled", label: "Disabled", icon: <MinusCircle className="text-yellow-500" /> },
-        { value: "rejected", label: "Rejected", icon: <XCircle className="text-red-500" /> },
+        { value: "active", label: "Active" },
+        { value: "disabled", label: "Disabled"},
+        { value: "rejected", label: "Rejected" },
     ];
     return (
         <div className="w-full mx-auto">
@@ -146,7 +146,7 @@ export function PostComponent
                                     {statusOptions
                                         ?.map((st: any) => (
                                             <SelectItem key={st.value} value={String(st.value)}>
-                                                {st.icon}  {st.label}
+                                                {st.label}
                                             </SelectItem>
                                         ))}
                                 </SelectContent>
