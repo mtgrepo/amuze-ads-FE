@@ -7,6 +7,7 @@ import {
   ChartNoAxesCombinedIcon,
   Layers,
   Newspaper,
+  Settings,
   UserCog,
   Wallet,
 } from "lucide-react"
@@ -130,6 +131,11 @@ const data = {
       name: "Admin Users",
       url: "/admin-users",
       icon: UserCog,
+    },
+    {
+      name: "System Configs",
+      url: "/system-configs",
+      icon: Settings,
     },
   ],
 }

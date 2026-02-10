@@ -9,6 +9,7 @@ import NotFound from "../components/Common/notfound_component"
 import AdvertiserDetailsPage from "../features/Advertisers/advertiser_details"
 import { ProtectedRoute, PublicRoute } from "./guard"
 import AdminUsers from "../features/System/AdminUsers/admin_users"
+import SystemConfigs from "../features/System/SystemConfigs/system_configs"
 import PostPage from "../features/Content/Posts/post"
 import ProfilePage from "../features/AdvertiserProfile/profile"
 
@@ -66,6 +67,12 @@ const router = createBrowserRouter([
                 path: "/admin-users",
                 element: <AdminUsers />,
                 handle: { crumb: ["System", "Admin Users"] },
+            },
+            // system configs
+            {
+                path: "system-configs",
+                element: <SystemConfigs />,
+                handle: { crumb: ["System", "System Configs"] },
             },
             {
                 path: "*",
