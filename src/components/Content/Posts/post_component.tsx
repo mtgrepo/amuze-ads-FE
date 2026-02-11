@@ -10,7 +10,7 @@ import {
 import type { SortingState } from "@tanstack/react-table";
 import type { VisibilityState } from "@tanstack/react-table";
 import type { ColumnFiltersState } from "@tanstack/react-table";
-import { ChevronDown, CircleCheck, CirclePlus, MinusCircle, XCircle } from "lucide-react";
+import { ChevronDown,CirclePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
