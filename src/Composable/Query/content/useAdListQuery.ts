@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { getAllAds } from "../../../http/apis/Content/adApi";
+import { getAllAds } from "../../../http/apis/content/adApi";
 
 export const useAdListQuery = () => {
     const adListData = useQuery({

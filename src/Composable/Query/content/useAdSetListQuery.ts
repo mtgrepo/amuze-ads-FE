@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import type { AdSetResponse } from "../../../dto/response/content/adSetResponse";
-import { getAllAdSet } from "../../../http/apis/Content/adSetApi";
+import { getAllAdSet } from "../../../http/apis/content/adSetApi";
 
 export const useAdSetListQuery = () => {
     const adSetData = useQuery({

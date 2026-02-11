@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { getAllCampaign } from "../../../http/apis/Content/campaignApi";
+import { getAllCampaign } from "../../../http/apis/content/campaignApi";
 
 export const useCampaignListQuery = () => {
     const campaignList = useQuery({
