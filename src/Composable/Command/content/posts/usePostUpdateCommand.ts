@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner";
-import { updatePost } from "../../../../http/apis/Content/postApi";
+import { updatePost } from "../../../../http/apis/content/postApi";
 
 export const usePostUpdateCommand = () => {
     const qc = useQueryClient();

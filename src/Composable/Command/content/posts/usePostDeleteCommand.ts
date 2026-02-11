@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner";
-import { deletePost } from "../../../../http/apis/Content/postApi";
+import { deletePost } from "../../../../http/apis/content/postApi";
 
 export const usePostDeleteCommand = () => {
     const qc = useQueryClient();
