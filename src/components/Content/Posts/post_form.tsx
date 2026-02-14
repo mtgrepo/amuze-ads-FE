@@ -16,7 +16,7 @@ import ImageUpload from "../../Common/image_upload"
 import { useAdvertisersQuery } from "../../../Composable/Query/advertiser/useAdvertisersQuery"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
 import type { AdvertisersResponse } from "../../../dto/response/advertisers/advertisersResponse"
-import { CircleCheck, MinusCircle, XCircle } from "lucide-react"
+import { CircleCheck, CircleCheckBig, ClockFading, MinusCircle, XCircle } from "lucide-react"
 import { usePostCreateCommand } from "../../../Composable/Command/content/posts/usePostCreateCommand"
 import { Spinner } from "../../ui/spinner"
 import { usePostUpdateCommand } from "../../../Composable/Command/content/posts/usePostUpdateCommand"
@@ -74,8 +74,10 @@ export default function PostForm({
     const { advertisersList } = useAdvertisersQuery();
 
     const statusOptions = [
+        { value : "approved", label: "Approved", icon: <CircleCheckBig className="text-green-500" />},
+        { value: "pending", label: "Pending", icon: <ClockFading className="text-yellow-500" />},
         { value: "active", label: "Active", icon: <CircleCheck className="text-green-500" /> },
-        { value: "disabled", label: "Disabled", icon: <MinusCircle className="text-yellow-500" /> },
+        { value: "disabled", label: "Disabled", icon: <MinusCircle className="text-gray-500" /> },
         { value: "rejected", label: "Rejected", icon: <XCircle className="text-red-500" /> },
     ];
 
