@@ -6,7 +6,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowRight, BriefcaseBusiness, Calendar1, ClipboardPenLine, Gift, Info, LetterText, MoreHorizontal, Trash2, UserStarIcon, Wallet } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, Calendar1, ClipboardPenLine, Info, LetterText, Megaphone, MoreHorizontal, Trash2, UserStarIcon, Wallet } from "lucide-react";
 import React from "react";
 import { Button } from "../../ui/button";
 import DrawerFormLayout from "../../Common/Layout/drawer_form_layout";
@@ -185,7 +185,7 @@ export default function CampaignActions({
                     <div className="px-8 pt-8 pb-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start">
                         <div>
                             <div className="flex flex-row gap-2">
-                                <Gift className="my-auto justify-center text-center text-primary"/>
+                                <Megaphone className="my-auto justify-center text-center text-primary"/>
                                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
                                     {name}
                                 </h2>
