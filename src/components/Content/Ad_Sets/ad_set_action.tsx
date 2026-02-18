@@ -112,7 +112,7 @@ export default function AdSetAction({
                     />
                 }
                 cancelButton={
-                    <Button variant="outline" className="w-full rounded-xl">
+                    <Button variant="outline" className="w-full rounded-lg">
                         Cancel
                     </Button>
                 }

@@ -6,10 +6,9 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowRight, BriefcaseBusiness, Calendar1, ClipboardPenLine, Info, LetterText, Megaphone, MoreHorizontal, Trash2, UserStarIcon, Wallet } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, Calendar1, CheckCircle, Info, LetterText, Megaphone, MoreHorizontal, Trash2, UserStarIcon, Wallet } from "lucide-react";
 import React from "react";
 import { Button } from "../../ui/button";
-import DrawerFormLayout from "../../Common/Layout/drawer_form_layout";
 import {
     Dialog,
     DialogContent,
@@ -21,12 +20,10 @@ import {
 import { usePostDeleteCommand } from "../../../Composable/Command/content/posts/usePostDeleteCommand";
 import { cn } from "../../../lib/utils";
 import type { CampaignResponse } from "../../../dto/response/content/campaignResponse";
-import CampaignForm from "./campaign_form";
 
 export default function CampaignActions({
     id,
     name,
-    objective,
     dailyBudget,
     totalBudget,
     spentAmount,
@@ -34,12 +31,9 @@ export default function CampaignActions({
     endDate,
     status,
     createdAt,
-    advertiserId,
-    postId,
     advertiser,
     post
 }: CampaignResponse) {
-    const [editOpen, setEditOpen] = React.useState(false);
     const [deleteOpen, setDeleteOpen] = React.useState(false);
     const [detailOpen, setDetailOpen] = React.useState(false);
 
@@ -101,9 +95,9 @@ export default function CampaignActions({
                         View
                     </DropdownMenuItem>
 
-                    <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                        <ClipboardPenLine className="mr-2 h-4 w-4" />
-                        Edit
+                    <DropdownMenuItem>
+                        <CheckCircle className="mr-2 h-4 w-4" />
+                        Approve
                     </DropdownMenuItem>
 
                     <DropdownMenuSeparator />
@@ -118,37 +112,6 @@ export default function CampaignActions({
                 </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* EDIT DRAWER */}
-            <DrawerFormLayout
-                open={editOpen}
-                setOpen={setEditOpen}
-                title="Edit Post"
-                description="Update post information"
-                formContent={
-                    <CampaignForm
-                        mode="edit"
-                        defaultValues={{
-                            id,
-                            name,
-                            advertiserId,
-                            postId,
-                            objective,
-                            dailyBudget,
-                            totalBudget,
-                            spentAmount,
-                            startDate,
-                            endDate,
-                            status,
-                        }}
-                        onSuccess={() => setEditOpen(false)}
-                    />
-                }
-                cancelButton={
-                    <Button variant="outline" className="w-full rounded-xl">
-                        Cancel
-                    </Button>
-                }
-            />
 
             {/* DELETE DIALOG */}
             <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>

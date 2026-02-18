@@ -6,10 +6,9 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { BriefcaseBusiness, ClipboardPenLine, Info, MoreHorizontal, Settings, Trash2 } from "lucide-react";
+import { BriefcaseBusiness, CheckCircle, Info, MoreHorizontal, Settings, Trash2 } from "lucide-react";
 import React from "react";
 import { Button } from "../../ui/button";
-import DrawerFormLayout from "../../Common/Layout/drawer_form_layout";
 import {
     Dialog,
     DialogClose,
@@ -20,14 +19,12 @@ import {
     DialogTitle,
 } from "../../ui/dialog";
 import type { PostResponse } from "../../../dto/response/content/postResponse";
-import PostForm from "./post_form";
 import { usePostDeleteCommand } from "../../../Composable/Command/content/posts/usePostDeleteCommand";
 import { Badge } from "../../ui/badge";
 import { cn } from "../../../lib/utils";
 
 export default function PostActions({
     id,
-    advertiser_id,
     title,
     description,
     status,
@@ -35,7 +32,6 @@ export default function PostActions({
     createdAt,
     advertiser: { name },
 }: PostResponse) {
-    const [editOpen, setEditOpen] = React.useState(false);
     const [deleteOpen, setDeleteOpen] = React.useState(false);
     const [detailOpen, setDetailOpen] = React.useState(false);
 
@@ -51,6 +47,7 @@ export default function PostActions({
         active: "bg-green-500/10 text-green-600 border-green-200",
         disabled: "bg-yellow-500/10 text-yellow-600 border-yellow-200",
         default: "bg-red-500/10 text-red-600 border-red-200",
+        approved: "bg-blue-500/10 text-blue-600 border-blue-200",
     };
 
     let iconColor;
@@ -59,37 +56,40 @@ export default function PostActions({
         iconColor = "text-green-600";
     } else if (status === "disabled") {
         iconColor = "text-yellow-600";
-    } else {
+    } else if (status === "approved") {
+        iconColor = "text-blue-600";
+    } 
+    else {
         iconColor = "text-red-600";
     }
 
     const badgeStyle = statusStyles[status as keyof typeof statusStyles] || statusStyles.default;
 
-      const InfoRow = ({
+    const InfoRow = ({
         label,
         value,
         icon,
         type,
-      }: {
+    }: {
         label: string;
         value?: string;
         icon?: React.ReactNode;
         type?: string;
-      }) => (
+    }) => (
         <div className="flex items-start gap-3 rounded-xl bg-muted/40 p-4">
-          <div className="text-muted-foreground mt-0.5">{icon}</div>
-    
-          <div className="flex flex-col text-sm">
-            <span className="text-xs text-muted-foreground">{label}</span>
-    
-            {type === "status" && value ? (
-              <p className={cn("font-bold wrap-break-word", iconColor)}>{value.toUpperCase()}</p>
-            ) : (
-              <span className="font-medium wrap-break-word">{value || "—"}</span>
-            )}
-          </div>
+            <div className="text-muted-foreground mt-0.5">{icon}</div>
+
+            <div className="flex flex-col text-sm">
+                <span className="text-xs text-muted-foreground">{label}</span>
+
+                {type === "status" && value ? (
+                    <p className={cn("font-bold wrap-break-word", iconColor)}>{value.toUpperCase()}</p>
+                ) : (
+                    <span className="font-medium wrap-break-word">{value || "—"}</span>
+                )}
+            </div>
         </div>
-      );
+    );
 
     return (
         <>
@@ -120,9 +120,14 @@ export default function PostActions({
                         View
                     </DropdownMenuItem>
 
-                    <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                    {/* <DropdownMenuItem onClick={() => setEditOpen(true)}>
                         <ClipboardPenLine className="mr-2 h-4 w-4" />
                         Edit
+                    </DropdownMenuItem> */}
+
+                    <DropdownMenuItem >
+                        <CheckCircle className="mr-2 h-4 w-4" />
+                        Approve
                     </DropdownMenuItem>
 
                     <DropdownMenuSeparator />
@@ -136,33 +141,6 @@ export default function PostActions({
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
-
-            {/* EDIT DRAWER */}
-            <DrawerFormLayout
-                open={editOpen}
-                setOpen={setEditOpen}
-                title="Edit Post"
-                description="Update post information"
-                formContent={
-                    <PostForm
-                        mode="edit"
-                        defaultValues={{
-                            id,
-                            advertiser_id,
-                            title,
-                            description,
-                            status,
-                            photo,
-                        }}
-                        onSuccess={() => setEditOpen(false)}
-                    />
-                }
-                cancelButton={
-                    <Button variant="outline" className="w-full rounded-xl">
-                        Cancel
-                    </Button>
-                }
-            />
 
             {/* DELETE DIALOG */}
             <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
@@ -226,8 +204,8 @@ export default function PostActions({
 
                     {/* DETAILS */}
                     <div className="grid grid-cols-2 gap-4 p-6 pt-0">
-                        <InfoRow label="Advertiser" value={name} icon={<BriefcaseBusiness className="text-primary"/>} />
-                        <InfoRow label="Status" value={status} icon={<Settings className="text-primary"/>} type="status"/>
+                        <InfoRow label="Advertiser" value={name} icon={<BriefcaseBusiness className="text-primary" />} />
+                        <InfoRow label="Status" value={status} icon={<Settings className="text-primary" />} type="status" />
                     </div>
 
                     <div className="px-6 pb-6">
