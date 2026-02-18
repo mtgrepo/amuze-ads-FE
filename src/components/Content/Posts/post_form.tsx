@@ -76,7 +76,7 @@ export default function PostForm({
     const statusOptions = [
         { value: "pending", label: "Pending", icon: <CircleCheck className="text-yellow-500" /> },
         { value: "active", label: "Active", icon: <CircleCheck className="text-green-500" /> },
-        { value: "disabled", label: "Disabled", icon: <MinusCircle className="text-yellow-500" /> },
+        { value: "disabled", label: "Disabled", icon: <MinusCircle className="text-gray-500" /> },
         { value: "rejected", label: "Rejected", icon: <XCircle className="text-red-500" /> },
     ];
 

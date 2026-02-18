@@ -1,7 +1,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox"
-import { CircleCheck, MinusCircle, XCircle } from "lucide-react";
+import { CircleCheck, CircleCheckBig, ClockFadingIcon, MinusCircle, XCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../ui/tooltip";
 import type { PostResponse } from "../../../dto/response/content/postResponse";
 import PostActions from "./post_action";
@@ -66,12 +66,23 @@ const columns: ColumnDef<PostResponse>[] = [
         header: "Status",
         cell: ({ row }) => {
             const status = row.getValue("status");
-            //  icon and color based on status
             let icon;
-            if (status === "active") icon = <CircleCheck color="green" />;
-            else if (status === "disabled") icon = <MinusCircle color="yellow" />;
-            else icon = <XCircle color="red" />;
 
+            switch (status) {
+                case 'active' : icon = <CircleCheck color='green' />
+                break;
+                case 'approved' : icon = <CircleCheckBig color='green' />
+                break;
+                case 'pending' : icon = <ClockFadingIcon color='yellow' />
+                break;
+                case 'disabled' : icon = <MinusCircle color="gray" />
+                break;
+                case 'rejected' : icon = <XCircle color='red' />
+                break;
+                default : <XCircle color='red'/>
+                break;
+            }
+        
             return (
                 <TooltipProvider>
                     <Tooltip>
