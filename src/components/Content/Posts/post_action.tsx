@@ -6,7 +6,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { BriefcaseBusiness, CheckCircle, ClipboardPenLine, Info, MoreHorizontal, Settings, Trash2 } from "lucide-react";
+import { BriefcaseBusiness, CheckCircle, ClipboardPenLine, Info, MoreHorizontal, Settings, Trash2, XCircle, BanIcon } from "lucide-react";
 import React from "react";
 import { Button } from "../../ui/button";
 import DrawerFormLayout from "../../Common/Layout/drawer_form_layout";
@@ -39,6 +39,8 @@ export default function PostActions({
     const [editOpen, setEditOpen] = React.useState(false);
     const [deleteOpen, setDeleteOpen] = React.useState(false);
     const [approveOpen, setApproveOpen] = React.useState(false);
+    const [rejectOpen, setRejectOpen] = React.useState(false);
+    const [disableOpen, setDisableOpen] = React.useState(false);
     const [detailOpen, setDetailOpen] = React.useState(false);
 
     const { deletePostCommand } = usePostDeleteCommand();
@@ -52,6 +54,16 @@ export default function PostActions({
     const handleApprove = async () => {
         await updatePostStatusCommand({ id, status: "active" });
         setApproveOpen(false);
+    };
+
+    const handleReject = async () => {
+        await updatePostStatusCommand({ id, status: "rejected" });
+        setRejectOpen(false);
+    };
+
+    const handleDisable = async () => {
+        await updatePostStatusCommand({ id, status: "disabled" });
+        setDisableOpen(false);
     };
 
     /*  STATUS STYLES  */
@@ -133,11 +145,24 @@ export default function PostActions({
                         Edit
                     </DropdownMenuItem>
 
-                    {status !== "active" && (
-                        <DropdownMenuItem onClick={() => setApproveOpen(true)}>
-                            <CheckCircle className="mr-2 h-4 w-4" />
-                            Approve
+                    {status === "active" && (
+                        <DropdownMenuItem onClick={() => setDisableOpen(true)} className="text-yellow-600 focus:text-yellow-600">
+                            <BanIcon className="mr-2 h-4 w-4" />
+                            Disable
                         </DropdownMenuItem>
+                    )}
+
+                    {status === "pending" && (
+                        <>
+                            <DropdownMenuItem onClick={() => setApproveOpen(true)}>
+                                <CheckCircle className="mr-2 h-4 w-4" />
+                                Approve
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setRejectOpen(true)} className="text-destructive focus:text-destructive">
+                                <XCircle className="mr-2 h-4 w-4" />
+                                Reject
+                            </DropdownMenuItem>
+                        </>
                     )}
 
                     <DropdownMenuSeparator />
@@ -225,6 +250,56 @@ export default function PostActions({
                         </Button>
                         <Button onClick={handleApprove}>
                             Approve
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* REJECT DIALOG */}
+            <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
+                <DialogContent className="sm:max-w-md rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Reject post?</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to reject{" "}
+                            <span className="font-medium text-foreground">
+                                {title}
+                            </span>
+                            ? This will set the post status to rejected.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <DialogFooter className="gap-2">
+                        <Button variant="outline" onClick={() => setRejectOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button variant="destructive" onClick={handleReject}>
+                            Reject
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* DISABLE DIALOG */}
+            <Dialog open={disableOpen} onOpenChange={setDisableOpen}>
+                <DialogContent className="sm:max-w-md rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Disable post?</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to disable{" "}
+                            <span className="font-medium text-foreground">
+                                {title}
+                            </span>
+                            ? This will set the post status to disabled.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <DialogFooter className="gap-2">
+                        <Button variant="outline" onClick={() => setDisableOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button variant="secondary" className="text-yellow-600 border border-yellow-300" onClick={handleDisable}>
+                            Disable
                         </Button>
                     </DialogFooter>
                 </DialogContent>
