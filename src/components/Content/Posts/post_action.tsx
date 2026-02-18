@@ -41,6 +41,7 @@ export default function PostActions({
     const [approveOpen, setApproveOpen] = React.useState(false);
     const [rejectOpen, setRejectOpen] = React.useState(false);
     const [disableOpen, setDisableOpen] = React.useState(false);
+    const [activateOpen, setActivateOpen] = React.useState(false);
     const [detailOpen, setDetailOpen] = React.useState(false);
 
     const { deletePostCommand } = usePostDeleteCommand();
@@ -64,6 +65,11 @@ export default function PostActions({
     const handleDisable = async () => {
         await updatePostStatusCommand({ id, status: "disabled" });
         setDisableOpen(false);
+    };
+
+    const handleActivate = async () => {
+        await updatePostStatusCommand({ id, status: "active" });
+        setActivateOpen(false);
     };
 
     /*  STATUS STYLES  */
@@ -149,6 +155,13 @@ export default function PostActions({
                         <DropdownMenuItem onClick={() => setDisableOpen(true)} className="text-yellow-600 focus:text-yellow-600">
                             <BanIcon className="mr-2 h-4 w-4" />
                             Disable
+                        </DropdownMenuItem>
+                    )}
+
+                    {status === "disabled" && (
+                        <DropdownMenuItem onClick={() => setActivateOpen(true)} className="text-green-600 focus:text-green-600">
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Activate
                         </DropdownMenuItem>
                     )}
 
@@ -300,6 +313,31 @@ export default function PostActions({
                         </Button>
                         <Button variant="secondary" className="text-yellow-600 border border-yellow-300" onClick={handleDisable}>
                             Disable
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* ACTIVATE DIALOG */}
+            <Dialog open={activateOpen} onOpenChange={setActivateOpen}>
+                <DialogContent className="sm:max-w-md rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Activate post?</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to activate{" "}
+                            <span className="font-medium text-foreground">
+                                {title}
+                            </span>
+                            ? This will set the post status to active.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <DialogFooter className="gap-2">
+                        <Button variant="outline" onClick={() => setActivateOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleActivate}>
+                            Activate
                         </Button>
                     </DialogFooter>
                 </DialogContent>
