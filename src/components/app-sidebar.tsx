@@ -85,19 +85,9 @@ const data = {
           title: "Ads",
           url: "/ads",
         },        
-<<<<<<< HEAD
-        // {
-        //   title: "Ad Sets",
-        //   url: "/ad-sets",
-        // },
-        {
-          title: "Campaigns",
-          url: "/campaigns",
-=======
         {
           title: "Ad Sets",
           url: "/ad-sets",
->>>>>>> 408c127 (Remove add and edit from post and campaign)
         },
       ],
     },
