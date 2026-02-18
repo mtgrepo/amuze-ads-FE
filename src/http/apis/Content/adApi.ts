@@ -12,3 +12,15 @@ export const getAllAds = async () => {
         throw new Error("An unexpected error occurred")
     }
 }
+
+export const updateAdStatus = async (adId: string, status: string) => {
+    try {
+        const response = await axiosInstance.patch(`/ads/${adId}/status`, { status })
+        return response.data
+    } catch (error) {
+        if(error instanceof AxiosError) {
+            throw new Error(error.response?.data.message || "Failed to update ad status")
+        }
+        throw new Error("An unexpected error occurred")
+    }
+}

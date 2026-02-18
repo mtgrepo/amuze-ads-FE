@@ -72,6 +72,7 @@ export function PostComponent
     });
     const totalRows = table.getFilteredRowModel().rows.length;
     const statusOptions = [
+        { value: "pending", label: "Pending" },
         { value: "active", label: "Active" },
         { value: "disabled", label: "Disabled"},
         { value: "rejected", label: "Rejected" },

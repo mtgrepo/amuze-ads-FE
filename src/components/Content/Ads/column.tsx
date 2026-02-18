@@ -4,6 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { CircleCheck, ClockFading, Mars, Venus, VenusAndMars } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../ui/tooltip";
 import type { AdResponse } from "../../../dto/response/content/adResponse";
+import AdsActions from "./ads_actions";
 
 const columns: ColumnDef<AdResponse>[] = [
     {
@@ -130,6 +131,14 @@ const columns: ColumnDef<AdResponse>[] = [
                     {date.toLocaleString()}
                 </div>
             )
+        },
+    },
+    {
+        id: "actions",
+        enableHiding: false,
+        cell: ({ row }) => {
+            const ad = row.original;
+            return <AdsActions id={ad.id} status={ad.status} />;
         },
     },
 ]

@@ -50,6 +50,18 @@ export const updateCampaign = async (id: string, data: CampaignInput) => {
     }
 }
 
+export const changeCampaignStatus = async (id: string, status: string) => {
+    try {
+        const response = await axiosInstance.patch(`/campaigns/${id}/change-status`, { status })
+        return response.data
+    } catch (error) {
+        if(error instanceof AxiosError) {
+            throw new Error(error.response?.data.message || "Failed to change campaign status")
+        }
+        throw new Error ("An unexpected error occurred")
+    }
+}
+
 export const deleteCamapign = async (id: string) => {
     try {
         const response = await axiosInstance.delete(`/campaigns/${id}`) 

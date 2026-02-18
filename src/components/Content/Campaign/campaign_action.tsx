@@ -18,6 +18,7 @@ import {
     DialogTitle,
 } from "../../ui/dialog";
 import { usePostDeleteCommand } from "../../../Composable/Command/content/posts/usePostDeleteCommand";
+import { useCampaignApproveCommand } from "../../../Composable/Command/content/campaign/useCampaignApproveCommand";
 import { cn } from "../../../lib/utils";
 import type { CampaignResponse } from "../../../dto/response/content/campaignResponse";
 
@@ -36,12 +37,19 @@ export default function CampaignActions({
 }: CampaignResponse) {
     const [deleteOpen, setDeleteOpen] = React.useState(false);
     const [detailOpen, setDetailOpen] = React.useState(false);
+    const [approveOpen, setApproveOpen] = React.useState(false);
 
     const { deletePostCommand } = usePostDeleteCommand();
+    const { approveCampaignCommand, isPending: isApproving } = useCampaignApproveCommand();
 
     const handleDelete = async () => {
         await deletePostCommand(id!);
         setDeleteOpen(false);
+    };
+
+    const handleApprove = async () => {
+        await approveCampaignCommand(id!);
+        setApproveOpen(false);
     };
 
     /*  STATUS STYLES  */
@@ -100,6 +108,13 @@ export default function CampaignActions({
                         Approve
                     </DropdownMenuItem>
 
+                    {status?.toLowerCase() === 'pending' && (
+                        <DropdownMenuItem onClick={() => setApproveOpen(true)} className="text-green-600 focus:text-green-600">
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Approve
+                        </DropdownMenuItem>
+                    )}
+
                     <DropdownMenuSeparator />
 
                     <DropdownMenuItem
@@ -139,6 +154,36 @@ export default function CampaignActions({
                 </DialogContent>
             </Dialog>
 
+
+            {/* APPROVE DIALOG */}
+            <Dialog open={approveOpen} onOpenChange={setApproveOpen}>
+                <DialogContent className="sm:max-w-md rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Approve campaign?</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to approve this campaign?
+                            <br />
+                            <span className="font-medium text-foreground">
+                                {name}
+                            </span>{" "}
+                            will be set to active.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <DialogFooter className="gap-2">
+                        <Button variant="outline" onClick={() => setApproveOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                            onClick={handleApprove}
+                            disabled={isApproving}
+                        >
+                            {isApproving ? 'Approving...' : 'Approve'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* DETAIL VIEW */}
             <Dialog open={detailOpen} onOpenChange={setDetailOpen}>

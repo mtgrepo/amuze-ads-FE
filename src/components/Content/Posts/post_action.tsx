@@ -20,6 +20,7 @@ import {
 } from "../../ui/dialog";
 import type { PostResponse } from "../../../dto/response/content/postResponse";
 import { usePostDeleteCommand } from "../../../Composable/Command/content/posts/usePostDeleteCommand";
+import { useUpdatePostStatusCommand } from "../../../Composable/Command/content/posts/useUpdatePostStatusCommand";
 import { Badge } from "../../ui/badge";
 import { cn } from "../../../lib/utils";
 
@@ -33,13 +34,20 @@ export default function PostActions({
     advertiser: { name },
 }: PostResponse) {
     const [deleteOpen, setDeleteOpen] = React.useState(false);
+    const [approveOpen, setApproveOpen] = React.useState(false);
     const [detailOpen, setDetailOpen] = React.useState(false);
 
     const { deletePostCommand } = usePostDeleteCommand();
+    const { updatePostStatusCommand } = useUpdatePostStatusCommand();
 
     const handleDelete = async () => {
         await deletePostCommand(id);
         setDeleteOpen(false);
+    };
+
+    const handleApprove = async () => {
+        await updatePostStatusCommand({ id, status: "active" });
+        setApproveOpen(false);
     };
 
     /*  STATUS STYLES  */
@@ -120,15 +128,12 @@ export default function PostActions({
                         View
                     </DropdownMenuItem>
 
-                    {/* <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                        <ClipboardPenLine className="mr-2 h-4 w-4" />
-                        Edit
-                    </DropdownMenuItem> */}
-
-                    <DropdownMenuItem >
-                        <CheckCircle className="mr-2 h-4 w-4" />
-                        Approve
-                    </DropdownMenuItem>
+                    {status !== "active" && (
+                        <DropdownMenuItem onClick={() => setApproveOpen(true)}>
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Approve
+                        </DropdownMenuItem>
+                    )}
 
                     <DropdownMenuSeparator />
 
@@ -163,6 +168,31 @@ export default function PostActions({
                         </Button>
                         <Button variant="destructive" onClick={handleDelete}>
                             Delete
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* APPROVE DIALOG */}
+            <Dialog open={approveOpen} onOpenChange={setApproveOpen}>
+                <DialogContent className="sm:max-w-md rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Approve post?</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to approve{" "}
+                            <span className="font-medium text-foreground">
+                                {title}
+                            </span>
+                            ? This will set the post status to active.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <DialogFooter className="gap-2">
+                        <Button variant="outline" onClick={() => setApproveOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleApprove}>
+                            Approve
                         </Button>
                     </DialogFooter>
                 </DialogContent>
