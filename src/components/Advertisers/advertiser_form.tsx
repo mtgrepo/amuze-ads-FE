@@ -64,9 +64,9 @@ export default function AdvertiserForm({
             name: "",
             email: "",
             phone: "",
-            status: "",
+            status: "active",
             password: "",
-            verified: false,
+            verified: true,
         },
     })
 
@@ -166,7 +166,7 @@ export default function AdvertiserForm({
                     )}
                 />
                 {/* Status */}
-                <FormField
+                {/* <FormField
                     control={form.control}
                     name="status"
                     render={({ field }) => (
@@ -192,10 +192,10 @@ export default function AdvertiserForm({
                             <FormMessage />
                         </FormItem>
                     )}
-                />
+                /> */}
 
                 {/* Verified */}
-                <FormField
+                {/* <FormField
                     control={form.control}
                     name="verified"
                     render={({ field }) => (
@@ -221,7 +221,7 @@ export default function AdvertiserForm({
                             <FormMessage />
                         </FormItem>
                     )}
-                />
+                /> */}
 
                 {mode === "add" && (
                     <FormField

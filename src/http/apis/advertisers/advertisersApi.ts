@@ -50,6 +50,30 @@ export const updateAdvertiser = async (id: string, data: AdvertiserInput) => {
     }
 }
 
+export const verifyAdvertiser = async (id: string, verified: boolean) => {
+    try {
+        const response = await axiosInstance.patch(`/advertisers/${id}/verify`, { verified });
+        return response.data;
+    } catch (error) {
+        if ( error instanceof AxiosError ) {
+            throw new Error(error.response?.data.message || "An error occurred while verifying advertiser.");
+        }
+        throw new Error("An unexpected error occurred.");
+    }
+}
+
+export const updateAdvertiserStatus = async (id: string, status: string) => {
+    try {
+        const response = await axiosInstance.patch(`/advertisers/${id}/status`, { status });
+        return response.data;
+    } catch (error) {
+        if ( error instanceof AxiosError ) {
+            throw new Error(error.response?.data.message || "An error occurred while updating advertiser status.");
+        }
+        throw new Error("An unexpected error occurred.");
+    }
+}
+
 export const deleteAdvertiser = async (id: string) => {
     try {
         const response = await axiosInstance.delete(`/advertisers/${id}`);
