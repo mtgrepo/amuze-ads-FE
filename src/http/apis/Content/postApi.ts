@@ -57,6 +57,20 @@ export const updatePost = async (id: string, data: FormData) => {
     }
 }
 
+export const updatePostStatus = async (id: string, status: string) => {
+    try {
+        const response = await axiosInstance.patch(`/advertiser-posts/${id}/status`, {
+            status: status
+        })
+        return response.data
+    } catch (error) {
+        if (error instanceof AxiosError) {
+            throw new Error(error.response?.data.message || "An error occurred while updating post.")
+        }
+        throw new Error("An unexpected error occurred.")
+    }
+}
+
 export const deletePost = async (id: string) => {
     try {
         const response = await axiosInstance.delete(`/advertiser-posts/${id}`);

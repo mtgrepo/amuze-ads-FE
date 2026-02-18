@@ -6,7 +6,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { BriefcaseBusiness, ClipboardPenLine, Info, MoreHorizontal, Settings, Trash2 } from "lucide-react";
+import { BriefcaseBusiness, CheckCircle, ClipboardPenLine, Info, MoreHorizontal, Settings, Trash2 } from "lucide-react";
 import React from "react";
 import { Button } from "../../ui/button";
 import DrawerFormLayout from "../../Common/Layout/drawer_form_layout";
@@ -22,6 +22,7 @@ import {
 import type { PostResponse } from "../../../dto/response/content/postResponse";
 import PostForm from "./post_form";
 import { usePostDeleteCommand } from "../../../Composable/Command/content/posts/usePostDeleteCommand";
+import { useUpdatePostStatusCommand } from "../../../Composable/Command/content/posts/useUpdatePostStatusCommand";
 import { Badge } from "../../ui/badge";
 import { cn } from "../../../lib/utils";
 
@@ -37,13 +38,20 @@ export default function PostActions({
 }: PostResponse) {
     const [editOpen, setEditOpen] = React.useState(false);
     const [deleteOpen, setDeleteOpen] = React.useState(false);
+    const [approveOpen, setApproveOpen] = React.useState(false);
     const [detailOpen, setDetailOpen] = React.useState(false);
 
     const { deletePostCommand } = usePostDeleteCommand();
+    const { updatePostStatusCommand } = useUpdatePostStatusCommand();
 
     const handleDelete = async () => {
         await deletePostCommand(id);
         setDeleteOpen(false);
+    };
+
+    const handleApprove = async () => {
+        await updatePostStatusCommand({ id, status: "active" });
+        setApproveOpen(false);
     };
 
     /*  STATUS STYLES  */
@@ -125,6 +133,13 @@ export default function PostActions({
                         Edit
                     </DropdownMenuItem>
 
+                    {status !== "active" && (
+                        <DropdownMenuItem onClick={() => setApproveOpen(true)}>
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Approve
+                        </DropdownMenuItem>
+                    )}
+
                     <DropdownMenuSeparator />
 
                     <DropdownMenuItem
@@ -185,6 +200,31 @@ export default function PostActions({
                         </Button>
                         <Button variant="destructive" onClick={handleDelete}>
                             Delete
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* APPROVE DIALOG */}
+            <Dialog open={approveOpen} onOpenChange={setApproveOpen}>
+                <DialogContent className="sm:max-w-md rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Approve post?</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to approve{" "}
+                            <span className="font-medium text-foreground">
+                                {title}
+                            </span>
+                            ? This will set the post status to active.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <DialogFooter className="gap-2">
+                        <Button variant="outline" onClick={() => setApproveOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleApprove}>
+                            Approve
                         </Button>
                     </DialogFooter>
                 </DialogContent>
