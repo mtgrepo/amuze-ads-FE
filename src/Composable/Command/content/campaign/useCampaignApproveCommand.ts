@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner";
-import { changeCampaignStatus } from "../../../../http/apis/Content/campaignApi";
+import { changeCampaignStatus } from "../../../../http/apis/content/campaignApi";
 
 export const useCampaignApproveCommand = () => {
     const qc = useQueryClient();

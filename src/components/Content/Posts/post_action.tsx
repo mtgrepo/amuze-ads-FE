@@ -55,7 +55,6 @@ export default function PostActions({
         active: "bg-green-500/10 text-green-600 border-green-200",
         disabled: "bg-yellow-500/10 text-yellow-600 border-yellow-200",
         default: "bg-red-500/10 text-red-600 border-red-200",
-        approved: "bg-blue-500/10 text-blue-600 border-blue-200",
     };
 
     let iconColor;
@@ -64,8 +63,6 @@ export default function PostActions({
         iconColor = "text-green-600";
     } else if (status === "disabled") {
         iconColor = "text-yellow-600";
-    } else if (status === "approved") {
-        iconColor = "text-blue-600";
     } 
     else {
         iconColor = "text-red-600";

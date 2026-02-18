@@ -70,13 +70,10 @@ const columns: ColumnDef<PostResponse>[] = [
             if (status === "active") icon = <CircleCheck color="green" />;
             else if (status === "disabled") icon = <MinusCircle color="gray" />;
             else if (status === "pending") icon = <ClockFading color="yellow" />;
-            else if (status === "approved") icon = <CheckCircle color="blue" />;
             else icon = <XCircle color="red" />;
 
             switch (status) {
                 case 'active' : icon = <CircleCheck color='green' />
-                break;
-                case 'approved' : icon = <CircleCheckBig color='green' />
                 break;
                 case 'pending' : icon = <ClockFadingIcon color='yellow' />
                 break;
