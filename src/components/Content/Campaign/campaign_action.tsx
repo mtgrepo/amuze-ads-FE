@@ -103,11 +103,6 @@ export default function CampaignActions({
                         View
                     </DropdownMenuItem>
 
-                    <DropdownMenuItem>
-                        <CheckCircle className="mr-2 h-4 w-4" />
-                        Approve
-                    </DropdownMenuItem>
-
                     {status?.toLowerCase() === 'pending' && (
                         <DropdownMenuItem onClick={() => setApproveOpen(true)} className="text-green-600 focus:text-green-600">
                             <CheckCircle className="mr-2 h-4 w-4" />
