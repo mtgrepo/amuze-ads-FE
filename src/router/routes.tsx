@@ -15,6 +15,7 @@ import ProfilePage from "../features/AdvertiserProfile/profile"
 import AdSetPage from "../features/Content/AdSet/ad_set"
 import CampaignPage from "../features/Content/Campaign/campaign"
 import NotificationsPage from "../features/Notifications/notifications"
+import DailyAdStats from "@/features/Performance/daily_ad_stats"
 
 const router = createBrowserRouter([
     {
@@ -93,6 +94,12 @@ const router = createBrowserRouter([
                 path: "system-configs",
                 element: <SystemConfigs />,
                 handle: { crumb: ["System", "System Configs"] },
+            },
+            // daily ads stats
+            {
+                path: "daily-ads-status",
+                element: <DailyAdStats />,
+                handle: { crumb: ["Performance", "Daily Ads Stats"] },
             },
             {
                 path: "*",
