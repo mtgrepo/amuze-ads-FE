@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner";
-import { updateAdStatus } from "@/http/apis/Content/adApi";
+import { updateAdStatus } from "../../../../http/apis/content/adApi";
 
 export const useUpdateAdStatusCommand = () => {
     const qc = useQueryClient();

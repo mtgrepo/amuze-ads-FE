@@ -1,7 +1,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox"
-import { CheckCircle, CircleCheck, CircleCheckBig, ClockFading, ClockFadingIcon, MinusCircle, XCircle } from "lucide-react";
+import { CircleCheck, ClockFading, ClockFadingIcon, MinusCircle, XCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../ui/tooltip";
 import type { PostResponse } from "../../../dto/response/content/postResponse";
 import PostActions from "./post_action";
