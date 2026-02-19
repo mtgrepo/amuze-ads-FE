@@ -74,8 +74,12 @@ const data = {
       icon: Newspaper,
       items: [
         {
-            title: "Posts",
-            url: "/content/posts",
+          title: "Posts",
+          url: "/content/posts",
+        },
+        {
+          title: "Campaigns",
+          url: "/campaigns",
         },
         {
           title: "Ads",
@@ -85,10 +89,6 @@ const data = {
         //   title: "Ad Sets",
         //   url: "/ad-sets",
         // },
-        {
-          title: "Campaigns",
-          url: "/campaigns",
-        },
       ],
     },
     {
