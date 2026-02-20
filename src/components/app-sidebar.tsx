@@ -82,17 +82,9 @@ const data = {
           url: "/campaigns",
         },
         {
-          title: "Campaigns",
-          url: "/campaigns",
-        },
-        {
           title: "Ads",
           url: "/ads",
         },        
-        // {
-        //   title: "Ad Sets",
-        //   url: "/ad-sets",
-        // },
       ],
     },
     {
