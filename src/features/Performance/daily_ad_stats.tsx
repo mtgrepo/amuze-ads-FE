@@ -2,11 +2,6 @@ import { useState } from "react";
 import {
     AreaChart,
     Area,
-    BarChart,
-    Bar,
-    PieChart,
-    Pie,
-    Cell,
     XAxis,
     YAxis,
     CartesianGrid,
@@ -18,20 +13,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import {
     Eye,
     MousePointer2,
-    DollarSign,
     Monitor,
     TrendingUp,
-    BarChart3,
     PieChart as PieChartIcon,
     Trophy,
+    Zap,
 } from "lucide-react";
+import { PieChart, Pie, Cell } from "recharts";
 import {
     useAdminOverviewQuery,
     useAdminTrendQuery,
     usePricingDistributionQuery,
     useTopAdsQuery,
+    useAdvertisersQuery,
 } from "../../Composable/Query/dailyAdStats/useDailyAdStatsQuery";
 
 const PRICING_COLORS: Record<string, string> = {
@@ -42,7 +45,7 @@ const PRICING_COLORS: Record<string, string> = {
 };
 
 const DAY_OPTIONS = [7, 14, 30] as const;
-type TopMetric = "clicks" | "impressions" | "spent" | "engagements";
+type TopMetric = "clicks" | "impressions" | "engagements";
 
 function formatNumber(n: number): string {
     if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -88,11 +91,13 @@ function ChartSkeleton({ height = 280 }: { height?: number }) {
 export default function DailyAdStats() {
     const [days, setDays] = useState<7 | 14 | 30>(7);
     const [topMetric, setTopMetric] = useState<TopMetric>("clicks");
+    const [advertiserId, setAdvertiserId] = useState<string | undefined>(undefined);
 
-    const { overviewData, isLoading: overviewLoading } = useAdminOverviewQuery();
-    const { trendData, isLoading: trendLoading } = useAdminTrendQuery(days);
-    const { pricingData } = usePricingDistributionQuery();
-    const { topAdsData } = useTopAdsQuery(5, topMetric);
+    const { advertisers } = useAdvertisersQuery();
+    const { overviewData, isLoading: overviewLoading } = useAdminOverviewQuery(advertiserId);
+    const { trendData, isLoading: trendLoading } = useAdminTrendQuery(days, advertiserId);
+    const { pricingData } = usePricingDistributionQuery(advertiserId);
+    const { topAdsData } = useTopAdsQuery(5, topMetric, advertiserId);
 
     const ctr =
         overviewData && overviewData.totalImpressions > 0
@@ -107,75 +112,88 @@ export default function DailyAdStats() {
         }),
     }));
 
-    const formattedTopAds = topAdsData.map((ad) => ({
-        label: ad.adId.slice(0, 8) + "…",
-        value:
-            topMetric === "clicks"
-                ? ad.totalClicks
-                : topMetric === "impressions"
-                ? ad.totalImpressions
-                : topMetric === "engagements"
-                ? ad.totalEngagements
-                : ad.totalSpent,
-    }));
-
     const pieFallback = [{ pricingMode: "No Data", count: 1 }];
     const pieData = pricingData.length > 0 ? pricingData : pieFallback;
 
+    const selectedAdvertiserName =
+        advertiserId ? advertisers.find((a) => a.id === advertiserId)?.name : undefined;
+
     return (
-        <div className="w-full mx-auto px-5 py-4 space-y-6">
+        <div className="w-full mx-auto px-5 py-4 space-y-5">
             {/* Page Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">Daily Ad Performance</h1>
                     <p className="text-sm text-muted-foreground">
-                        Aggregate stats across all active ads
+                        {selectedAdvertiserName
+                            ? `Showing stats for ${selectedAdvertiserName}`
+                            : "Aggregate stats across all advertisers"}
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground mr-1">Trend range:</span>
-                    {DAY_OPTIONS.map((d) => (
-                        <Button
-                            key={d}
-                            variant={days === d ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setDays(d)}
-                        >
-                            {d}D
-                        </Button>
-                    ))}
+                <div className="flex items-center gap-3 flex-wrap">
+                    {/* Advertiser Filter */}
+                    <Select
+                        value={advertiserId ?? "all"}
+                        onValueChange={(v) => setAdvertiserId(v === "all" ? undefined : v)}
+                    >
+                        <SelectTrigger className="w-48">
+                            <SelectValue placeholder="All Advertisers" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Advertisers</SelectItem>
+                            {advertisers.map((adv) => (
+                                <SelectItem key={adv.id} value={adv.id}>
+                                    {adv.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+
+                    {/* Day Range */}
+                    <div className="flex items-center gap-1">
+                        {DAY_OPTIONS.map((d) => (
+                            <Button
+                                key={d}
+                                variant={days === d ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setDays(d)}
+                            >
+                                {d}D
+                            </Button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
             {/* KPI Cards */}
             {overviewLoading ? (
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    {Array.from({ length: 4 }).map((_, i) => (
+                    {Array.from({ length: 5 }).map((_, i) => (
                         <Skeleton key={i} className="h-28 rounded-xl" />
                     ))}
                 </div>
             ) : (
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <StatCard
-                        title="Total Impressions"
+                        title="Impressions"
                         value={formatNumber(overviewData?.totalImpressions ?? 0)}
                         sub="Today"
                         icon={Eye}
                         accent="bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400"
                     />
                     <StatCard
-                        title="Total Clicks"
+                        title="Clicks"
                         value={formatNumber(overviewData?.totalClicks ?? 0)}
                         sub={`CTR: ${ctr}%`}
                         icon={MousePointer2}
                         accent="bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400"
                     />
                     <StatCard
-                        title="Total Spent"
-                        value={`$${formatNumber(overviewData?.totalSpent ?? 0)}`}
-                        sub={`Budget: $${formatNumber(overviewData?.totalBudget ?? 0)}`}
-                        icon={DollarSign}
-                        accent="bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400"
+                        title="Engagements"
+                        value={formatNumber(overviewData?.totalEngagements ?? 0)}
+                        sub="Today"
+                        icon={Zap}
+                        accent="bg-yellow-100 text-yellow-600 dark:bg-yellow-950 dark:text-yellow-400"
                     />
                     <StatCard
                         title="Active Ads"
@@ -187,151 +205,124 @@ export default function DailyAdStats() {
                 </div>
             )}
 
-            {/* Performance Trend - Area Chart */}
-            <Card>
-                <CardHeader className="px-6">
-                    <CardTitle className="flex items-center gap-2 text-base">
-                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                        Performance Trend — Last {days} Days
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="px-6 pb-4">
-                    {trendLoading ? (
-                        <ChartSkeleton height={280} />
-                    ) : (
-                        <ResponsiveContainer width="100%" height={280}>
-                            <AreaChart data={formattedTrend} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
-                                <defs>
-                                    <linearGradient id="gradImpressions" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25} />
-                                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                                    </linearGradient>
-                                    <linearGradient id="gradClicks" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#22c55e" stopOpacity={0.25} />
-                                        <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                                <YAxis tick={{ fontSize: 12 }} width={50} />
-                                <Tooltip
-                                    contentStyle={{ borderRadius: "8px", fontSize: "13px" }}
-                                    formatter={(value: number | undefined) => formatNumber(value ?? 0)}
-                                />
-                                <Legend wrapperStyle={{ fontSize: "13px" }} />
-                                <Area
-                                    type="monotone"
-                                    dataKey="impressions"
-                                    stroke="#3b82f6"
-                                    fill="url(#gradImpressions)"
-                                    strokeWidth={2}
-                                    dot={false}
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="clicks"
-                                    stroke="#22c55e"
-                                    fill="url(#gradClicks)"
-                                    strokeWidth={2}
-                                    dot={false}
-                                />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    )}
-                </CardContent>
-            </Card>
-
-            {/* Budget vs Spent + Pricing Mode */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                {/* Budget vs Spent - Bar Chart (3/5 width) */}
-                <Card className="lg:col-span-3">
+            {/* Split Panel: Trend Chart (left) + Sidebar (right) */}
+            <div className="grid grid-cols-1 lg:grid-cols-7 gap-5">
+                {/* Performance Trend - Area Chart (4/7) */}
+                <Card className="lg:col-span-4">
                     <CardHeader className="px-6">
                         <CardTitle className="flex items-center gap-2 text-base">
-                            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                            Daily Budget vs Spent
+                            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                            Performance Trend — Last {days} Days
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="px-6 pb-4">
                         {trendLoading ? (
-                            <ChartSkeleton height={240} />
+                            <ChartSkeleton height={300} />
                         ) : (
-                            <ResponsiveContainer width="100%" height={240}>
-                                <BarChart
+                            <ResponsiveContainer width="100%" height={300}>
+                                <AreaChart
                                     data={formattedTrend}
                                     margin={{ top: 4, right: 16, left: 0, bottom: 0 }}
-                                    barCategoryGap="30%"
                                 >
+                                    <defs>
+                                        <linearGradient id="gradImpressions" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
+                                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                        </linearGradient>
+                                        <linearGradient id="gradClicks" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#22c55e" stopOpacity={0.2} />
+                                            <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                                        </linearGradient>
+                                        <linearGradient id="gradEngagements" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.2} />
+                                            <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                                     <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                                    <YAxis tick={{ fontSize: 11 }} width={50} />
+                                    <YAxis tick={{ fontSize: 11 }} width={50} tickFormatter={(v) => formatNumber(v)} />
                                     <Tooltip
                                         contentStyle={{ borderRadius: "8px", fontSize: "13px" }}
-                                        formatter={(value: number | undefined) => `$${formatNumber(value ?? 0)}`}
+                                        formatter={(value: number | undefined) => formatNumber(value ?? 0)}
                                     />
                                     <Legend wrapperStyle={{ fontSize: "13px" }} />
-                                    <Bar
-                                        dataKey="budget"
-                                        fill="#cbd5e1"
-                                        radius={[4, 4, 0, 0]}
-                                        name="Budget"
+                                    <Area
+                                        type="monotone"
+                                        dataKey="impressions"
+                                        stroke="#3b82f6"
+                                        fill="url(#gradImpressions)"
+                                        strokeWidth={2}
+                                        dot={false}
                                     />
-                                    <Bar
-                                        dataKey="spent"
-                                        fill="#f97316"
-                                        radius={[4, 4, 0, 0]}
-                                        name="Spent"
+                                    <Area
+                                        type="monotone"
+                                        dataKey="clicks"
+                                        stroke="#22c55e"
+                                        fill="url(#gradClicks)"
+                                        strokeWidth={2}
+                                        dot={false}
                                     />
-                                </BarChart>
+                                    <Area
+                                        type="monotone"
+                                        dataKey="engagements"
+                                        stroke="#f59e0b"
+                                        fill="url(#gradEngagements)"
+                                        strokeWidth={2}
+                                        dot={false}
+                                    />
+                                </AreaChart>
                             </ResponsiveContainer>
                         )}
                     </CardContent>
                 </Card>
 
-                {/* Pricing Mode Donut (2/5 width) */}
-                <Card className="lg:col-span-2">
-                    <CardHeader className="px-6">
-                        <CardTitle className="flex items-center gap-2 text-base">
-                            <PieChartIcon className="h-4 w-4 text-muted-foreground" />
-                            Pricing Mode — Today
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="px-6 pb-4">
-                        <ResponsiveContainer width="100%" height={240}>
-                            <PieChart>
-                                <Pie
-                                    data={pieData}
-                                    dataKey="count"
-                                    nameKey="pricingMode"
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={65}
-                                    outerRadius={95}
-                                    paddingAngle={3}
-                                >
-                                    {pieData.map((entry) => (
-                                        <Cell
-                                            key={entry.pricingMode}
-                                            fill={
-                                                PRICING_COLORS[entry.pricingMode] ?? "#94a3b8"
-                                            }
-                                        />
-                                    ))}
-                                </Pie>
-                                <Tooltip
-                                    contentStyle={{ borderRadius: "8px", fontSize: "13px" }}
-                                    formatter={(value: number | undefined, name: string | undefined) => [
-                                        `${value ?? 0} ad${(value ?? 0) !== 1 ? "s" : ""}`,
-                                        name ?? "",
-                                    ]}
-                                />
-                                <Legend wrapperStyle={{ fontSize: "13px" }} />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </CardContent>
-                </Card>
+                {/* Right Sidebar (3/7): Pricing Donut + Budget Utilization */}
+                <div className="lg:col-span-3 flex flex-col gap-5">
+                    {/* Pricing Mode Donut */}
+                    <Card className="flex-1">
+                        <CardHeader className="px-6">
+                            <CardTitle className="flex items-center gap-2 text-base">
+                                <PieChartIcon className="h-4 w-4 text-muted-foreground" />
+                                Pricing Mode — Today
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="px-6 pb-4">
+                            <ResponsiveContainer width="100%" height={180}>
+                                <PieChart>
+                                    <Pie
+                                        data={pieData}
+                                        dataKey="count"
+                                        nameKey="pricingMode"
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={50}
+                                        outerRadius={75}
+                                        paddingAngle={3}
+                                    >
+                                        {pieData.map((entry) => (
+                                            <Cell
+                                                key={entry.pricingMode}
+                                                fill={PRICING_COLORS[entry.pricingMode] ?? "#94a3b8"}
+                                            />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip
+                                        contentStyle={{ borderRadius: "8px", fontSize: "13px" }}
+                                        formatter={(value: number | undefined, name: string | undefined) => [
+                                            `${value ?? 0} ad${(value ?? 0) !== 1 ? "s" : ""}`,
+                                            name ?? "",
+                                        ]}
+                                    />
+                                    <Legend wrapperStyle={{ fontSize: "12px" }} />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </CardContent>
+                    </Card>
+
+                </div>
             </div>
 
-            {/* Top 5 Ads - Horizontal Bar */}
+            {/* Top 5 Ads — Table */}
             <Card>
                 <CardHeader className="px-6">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -340,58 +331,63 @@ export default function DailyAdStats() {
                             Top 5 Ads
                         </CardTitle>
                         <div className="flex gap-2">
-                            {(["clicks", "impressions", "engagements", "spent"] as TopMetric[]).map(
-                                (m) => (
-                                    <Button
-                                        key={m}
-                                        variant={topMetric === m ? "default" : "outline"}
-                                        size="sm"
-                                        onClick={() => setTopMetric(m)}
-                                        className="capitalize text-xs"
-                                    >
-                                        {m}
-                                    </Button>
-                                )
-                            )}
+                            {(["clicks", "impressions", "engagements"] as TopMetric[]).map((m) => (
+                                <Button
+                                    key={m}
+                                    variant={topMetric === m ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => setTopMetric(m)}
+                                    className="capitalize text-xs"
+                                >
+                                    {m}
+                                </Button>
+                            ))}
                         </div>
                     </div>
                 </CardHeader>
                 <CardContent className="px-6 pb-4">
                     {topAdsData.length === 0 ? (
-                        <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">
-                            No ad data available for today.
+                        <div className="h-32 flex items-center justify-center text-muted-foreground text-sm">
+                            No ad data available.
                         </div>
                     ) : (
-                        <ResponsiveContainer width="100%" height={220}>
-                            <BarChart
-                                data={formattedTopAds}
-                                layout="vertical"
-                                margin={{ top: 4, right: 24, left: 0, bottom: 0 }}
-                            >
-                                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" horizontal={false} />
-                                <XAxis
-                                    type="number"
-                                    tick={{ fontSize: 11 }}
-                                    tickFormatter={(v) => formatNumber(v)}
-                                />
-                                <YAxis
-                                    dataKey="label"
-                                    type="category"
-                                    width={80}
-                                    tick={{ fontSize: 11 }}
-                                />
-                                <Tooltip
-                                    contentStyle={{ borderRadius: "8px", fontSize: "13px" }}
-                                    formatter={(value: number | undefined) => [formatNumber(value ?? 0), topMetric]}
-                                />
-                                <Bar
-                                    dataKey="value"
-                                    fill="#3b82f6"
-                                    radius={[0, 4, 4, 0]}
-                                    name={topMetric}
-                                />
-                            </BarChart>
-                        </ResponsiveContainer>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b text-muted-foreground">
+                                        <th className="text-left py-2 pr-4 font-medium w-8">#</th>
+                                        <th className="text-left py-2 pr-4 font-medium">Campaign</th>
+                                        <th className="text-right py-2 pr-4 font-medium">Clicks</th>
+                                        <th className="text-right py-2 pr-4 font-medium">Impressions</th>
+                                        <th className="text-right py-2 font-medium">Engagements</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {topAdsData.map((ad, index) => (
+                                        <tr
+                                            key={index}
+                                            className="border-b last:border-0 hover:bg-muted/40 transition-colors"
+                                        >
+                                            <td className="py-3 pr-4 text-muted-foreground font-medium">
+                                                {index + 1}
+                                            </td>
+                                            <td className="py-3 pr-4 font-medium">
+                                                {ad.campaignName}
+                                            </td>
+                                            <td className="py-3 pr-4 text-right tabular-nums">
+                                                {formatNumber(ad.totalClicks)}
+                                            </td>
+                                            <td className="py-3 pr-4 text-right tabular-nums">
+                                                {formatNumber(ad.totalImpressions)}
+                                            </td>
+                                            <td className="py-3 text-right tabular-nums">
+                                                {formatNumber(ad.totalEngagements)}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     )}
                 </CardContent>
             </Card>

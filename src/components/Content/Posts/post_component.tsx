@@ -152,7 +152,29 @@ export function PostComponent
                     </div>
                 </div>
                 <div className="flex flex-row gap-3 justify-end">
-
+                    {/* drawer */}
+                    {/* <DrawerFormLayout
+                        open={open}
+                        setOpen={setOpen}
+                        title="Post Form"
+                        description="Add new post here."
+                        formContent={
+                            <PostForm
+                                mode="add"
+                                onSuccess={() => {
+                                    setOpen(false); //
+                                }}
+                            />
+                        }
+                        cancelButton={
+                            <Button variant="outline" className="w-full my-3">
+                                Cancel
+                            </Button>
+                        }
+                        drawerButton={
+                            <DrawerButton btn_icon={CirclePlus} title="Add post" />
+                        }
+                    /> */}
                     {/* column filter */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
