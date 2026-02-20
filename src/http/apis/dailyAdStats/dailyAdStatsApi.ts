@@ -1,9 +1,10 @@
 import { AxiosError } from "axios";
 import axiosInstance from "../../httpClient";
 
-export const getAdminOverview = async () => {
+export const getAdminOverview = async (advertiserId?: string) => {
     try {
-        const response = await axiosInstance.get("/daily-ad-stats/admin/overview");
+        const params = advertiserId ? `?advertiserId=${advertiserId}` : "";
+        const response = await axiosInstance.get(`/daily-ad-stats/admin/overview${params}`);
         return response.data;
     } catch (error) {
         if (error instanceof AxiosError) {
@@ -13,9 +14,11 @@ export const getAdminOverview = async () => {
     }
 };
 
-export const getAdminTrend = async (days: number) => {
+export const getAdminTrend = async (days: number, advertiserId?: string) => {
     try {
-        const response = await axiosInstance.get(`/daily-ad-stats/admin/trend?days=${days}`);
+        const params = new URLSearchParams({ days: String(days) });
+        if (advertiserId) params.set("advertiserId", advertiserId);
+        const response = await axiosInstance.get(`/daily-ad-stats/admin/trend?${params}`);
         return response.data;
     } catch (error) {
         if (error instanceof AxiosError) {
@@ -25,9 +28,10 @@ export const getAdminTrend = async (days: number) => {
     }
 };
 
-export const getPricingDistribution = async () => {
+export const getPricingDistribution = async (advertiserId?: string) => {
     try {
-        const response = await axiosInstance.get("/daily-ad-stats/admin/pricing-distribution");
+        const params = advertiserId ? `?advertiserId=${advertiserId}` : "";
+        const response = await axiosInstance.get(`/daily-ad-stats/admin/pricing-distribution${params}`);
         return response.data;
     } catch (error) {
         if (error instanceof AxiosError) {
@@ -37,9 +41,11 @@ export const getPricingDistribution = async () => {
     }
 };
 
-export const getTopAds = async (limit: number, metric: string) => {
+export const getTopAds = async (limit: number, metric: string, advertiserId?: string) => {
     try {
-        const response = await axiosInstance.get(`/daily-ad-stats/admin/top-ads?limit=${limit}&metric=${metric}`);
+        const params = new URLSearchParams({ limit: String(limit), metric });
+        if (advertiserId) params.set("advertiserId", advertiserId);
+        const response = await axiosInstance.get(`/daily-ad-stats/admin/top-ads?${params}`);
         return response.data;
     } catch (error) {
         if (error instanceof AxiosError) {

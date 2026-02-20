@@ -157,7 +157,7 @@ export function PostComponent
                 </div>
                 <div className="flex flex-row gap-3 justify-end">
                     {/* drawer */}
-                    <DrawerFormLayout
+                    {/* <DrawerFormLayout
                         open={open}
                         setOpen={setOpen}
                         title="Post Form"
@@ -178,7 +178,7 @@ export function PostComponent
                         drawerButton={
                             <DrawerButton btn_icon={CirclePlus} title="Add post" />
                         }
-                    />
+                    /> */}
                     {/* column filter */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
