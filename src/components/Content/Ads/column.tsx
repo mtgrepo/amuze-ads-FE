@@ -1,7 +1,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox"
-import { CircleCheck, ClockFading, Mars, Venus, VenusAndMars } from "lucide-react";
+import { CircleCheck, ClockFading, Mars, PauseCircle, Venus, VenusAndMars } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../ui/tooltip";
 import type { AdResponse } from "../../../dto/response/content/adResponse";
 import AdsActions from "./ads_actions";
@@ -49,7 +49,7 @@ const columns: ColumnDef<AdResponse>[] = [
         id: "gender",
         accessorFn: (row) => row.adSet.gender,
         header: "Gender",
-                filterFn: (row, id, filterValue) => {
+        filterFn: (row, id, filterValue) => {
             if (!filterValue) return true; // "all" or undefined
             return row.getValue(id) === filterValue; // exact match
         },
@@ -61,11 +61,11 @@ const columns: ColumnDef<AdResponse>[] = [
 
             switch (gender) {
                 case "male":
-                    IconComponent = <Mars color="blue" />; 
+                    IconComponent = <Mars color="blue" />;
                     tooltipText = "Male";
                     break;
                 case "female":
-                    IconComponent = <Venus color="#ff297e" />; 
+                    IconComponent = <Venus color="#ff297e" />;
                     tooltipText = "Female";
                     break;
                 case "all":
@@ -101,24 +101,38 @@ const columns: ColumnDef<AdResponse>[] = [
     {
         accessorKey: "status",
         header: "Status",
-        cell: ({ row }) => (
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <span className="cursor-pointer relative inline-flex">
-                            {row.getValue("status") === 'active' ? (
-                                <CircleCheck color="green" />
-                            ) : (
-                                <ClockFading color="yellow" />
-                            )}
-                        </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" align="center">
-                        {row.getValue("status") === "active" ? "Active" : "Paused"}
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-        ),
+        cell: ({ row }) => {
+            let icon;
+
+            switch (row.getValue("status")) {
+                case "active":
+                    icon = <CircleCheck color="green" />;
+                    break;
+                case "paused":
+                    icon = <PauseCircle color="gray" />;
+                    break;
+                case "pending":
+                    icon = <ClockFading color="yellow" />;
+                    break;
+                default:
+                    icon = null;
+            }
+
+            return (
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <span className="cursor-pointer relative inline-flex">
+                                {icon}
+                            </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" align="center">
+                            {row.getValue("status")}
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            );
+        },
     },
     {
         accessorKey: "createdAt",
