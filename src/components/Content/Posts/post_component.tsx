@@ -10,7 +10,7 @@ import {
 import type { SortingState } from "@tanstack/react-table";
 import type { VisibilityState } from "@tanstack/react-table";
 import type { ColumnFiltersState } from "@tanstack/react-table";
-import { ChevronDown,CirclePlus } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -28,12 +28,9 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import columns from "./column";
-import DrawerFormLayout from "../../Common/Layout/drawer_form_layout";
-import DrawerButton from "../../Common/drawer-button";
 import { PageSizeComponent } from "../../Common/Pagination/page-number";
 import Paginator from "../../Common/Pagination/paginator";
 import type { PostResponse } from "../../../dto/response/content/postResponse";
-import PostForm from "./post_form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
 type PostProps = {
     data: PostResponse[];
@@ -52,7 +49,6 @@ export function PostComponent
         pageIndex: 0,
         pageSize: 10,
     });
-    const [open, setOpen] = React.useState(false);
 
     const table = useReactTable({
         data,
@@ -78,7 +74,7 @@ export function PostComponent
     const statusOptions = [
         { value: "pending", label: "Pending" },
         { value: "active", label: "Active" },
-        { value: "disabled", label: "Disabled"},
+        { value: "disabled", label: "Disabled" },
         { value: "rejected", label: "Rejected" },
     ];
     return (
@@ -111,19 +107,33 @@ export function PostComponent
                             />
                         </div>
                         <div className="relative">
-                            <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground">
-                                Advertieser
+                            <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground z-10">
+                                Advertiser
                             </label>
-                            <Input
-                                placeholder="Enter advertiser name..."
+                            <Select
                                 value={
-                                    (table.getColumn("name")?.getFilterValue() as string) ?? ""
+                                    (table.getColumn("name")?.getFilterValue() as string) ?? "all"
                                 }
-                                onChange={(event) =>
-                                    table.getColumn("name")?.setFilterValue(event.target.value)
+                                onValueChange={(value) =>
+                                    table.getColumn("name")?.setFilterValue(
+                                        value === "all" ? undefined : value
+                                    )
                                 }
-                                className="border-2 rounded-lg"
-                            />
+                            >
+                                <SelectTrigger className="w-full border-2 rounded-lg">
+                                    <SelectValue placeholder="Select service..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All</SelectItem>
+                                    {[...new Set(data.map((item) => item.advertiser.name))].map(
+                                        (service) => (
+                                            <SelectItem key={service} value={service}>
+                                                {service}
+                                            </SelectItem>
+                                        )
+                                    )}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="relative">
                             <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground z-10">

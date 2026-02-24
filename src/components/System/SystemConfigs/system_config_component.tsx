@@ -17,7 +17,6 @@ import {
   CollapsibleTrigger,
   CollapsibleContent,
 } from "@/components/ui/collapsible";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -30,8 +29,8 @@ import {
 import DrawerFormLayout from "../../Common/Layout/drawer_form_layout";
 import DrawerButton from "../../Common/drawer-button";
 import SystemConfigForm from "./system_config_form";
-import type { SystemConfigResponse } from "../../../dto/response/System/systemConfigResponse";
 import { useSystemConfigActiveCommand } from "../../../Composable/Command/system/useSystemConfigInactiveCommand";
+import type { SystemConfigResponse } from "../../../dto/response/system/systemConfigResponse";
 
 type SystemConfigProps = {
   data: SystemConfigResponse[];

@@ -76,6 +76,11 @@ export function AdComponent
     { label: "Male", value: "male" },
     { label: "Female", value: "female" },
   ]
+  const statusOptions = [
+    { label: "Active", value: "active" },
+    { label: "Paused", value: "paused" },
+    { label: "Pending", value: "pending" },
+  ];
   return (
     <div className="w-full mx-auto">
       <div className="flex flex-col gap-4 py-4">
@@ -85,11 +90,39 @@ export function AdComponent
             <div className="flex items-center gap-3">
               <h3 className="text-base font-semibold">Search Filters</h3>
               <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
-                2 filters
+                3 filters
               </span>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="relative">
+              <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground z-10">
+                Gender
+              </label>
+              <Select
+                value={
+                  (table.getColumn("gender")?.getFilterValue() as string) ?? "all"
+                }
+                onValueChange={(value) =>
+                  table.getColumn("gender")?.setFilterValue(
+                    value === "all" ? undefined : value
+                  )
+                }
+              >
+                <SelectTrigger className="w-full border-2 rounded-lg">
+                  <SelectValue placeholder="Select type..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  {gender
+                    ?.map((st: any) => (
+                      <SelectItem key={st.value} value={String(st.value)}>
+                        {st.label}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="relative">
               <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground z-10">
                 Category
@@ -121,14 +154,14 @@ export function AdComponent
             </div>
             <div className="relative">
               <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground z-10">
-                Gender
+                Status
               </label>
               <Select
                 value={
-                  (table.getColumn("gender")?.getFilterValue() as string) ?? "all"
+                  (table.getColumn("status")?.getFilterValue() as string) ?? "all"
                 }
                 onValueChange={(value) =>
-                  table.getColumn("gender")?.setFilterValue(
+                  table.getColumn("status")?.setFilterValue(
                     value === "all" ? undefined : value
                   )
                 }
@@ -138,7 +171,7 @@ export function AdComponent
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All</SelectItem>
-                  {gender
+                  {statusOptions
                     ?.map((st: any) => (
                       <SelectItem key={st.value} value={String(st.value)}>
                         {st.label}

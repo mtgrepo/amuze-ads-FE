@@ -85,10 +85,6 @@ const data = {
           title: "Ads",
           url: "/ads",
         },        
-        // {
-        //   title: "Ad Sets",
-        //   url: "/ad-sets",
-        // },
       ],
     },
     {

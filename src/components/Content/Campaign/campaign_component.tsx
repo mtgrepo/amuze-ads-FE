@@ -10,7 +10,7 @@ import {
 import type { SortingState } from "@tanstack/react-table";
 import type { VisibilityState } from "@tanstack/react-table";
 import type { ColumnFiltersState } from "@tanstack/react-table";
-import { ChevronDown, CirclePlus } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -18,7 +18,6 @@ import {
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import {
     Table,
     TableBody,
@@ -28,12 +27,9 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import columns from "./column";
-import DrawerFormLayout from "../../Common/Layout/drawer_form_layout";
-import DrawerButton from "../../Common/drawer-button";
 import { PageSizeComponent } from "../../Common/Pagination/page-number";
 import Paginator from "../../Common/Pagination/paginator";
 import type { CampaignResponse } from "../../../dto/response/content/campaignResponse";
-import CampaignForm from "./campaign_form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
 type CampaignProps = {
     data: CampaignResponse[];
@@ -52,7 +48,6 @@ export function CampaignComponent
         pageIndex: 0,
         pageSize: 10,
     });
-    const [open, setOpen] = React.useState(false);
 
     const table = useReactTable({
         data,
@@ -77,12 +72,17 @@ export function CampaignComponent
     const totalRows = table.getFilteredRowModel().rows.length;
     const statusOptions = [
         { value: "draft", label: "Draft" },
-        { value: "active", label: "Active"},
+        { value: "active", label: "Active" },
         { value: "pending", label: "Pending" },
-        { value: "paused", label: "Paused"},
-        { value: "completed", label: "Completed"},
-        { value: "rejected", label: "Rejected"},
+        { value: "paused", label: "Paused" },
+        { value: "completed", label: "Completed" },
+        { value: "rejected", label: "Rejected" },
     ];
+        const objectiveOptions = [
+        { value: "reach", label: "Reach" },
+        { value: "traffic", label: "Traffic"},
+        { value: "engagement", label: "Engagement"},
+    ]
     return (
         <div className="w-full mx-auto">
             <div className="flex flex-col gap-4 py-4">
@@ -97,35 +97,63 @@ export function CampaignComponent
                         </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
                         <div className="relative">
-                            <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground">
-                                Name
+                            <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground z-10">
+                                Advertiser
                             </label>
-                            <Input
-                                placeholder="Enter name..."
+                            <Select
                                 value={
-                                    (table.getColumn("name")?.getFilterValue() as string) ?? ""
+                                    (table.getColumn("name")?.getFilterValue() as string) ?? "all"
                                 }
-                                onChange={(event) =>
-                                    table.getColumn("name")?.setFilterValue(event.target.value)
+                                onValueChange={(value) =>
+                                    table.getColumn("name")?.setFilterValue(
+                                        value === "all" ? undefined : value
+                                    )
                                 }
-                                className="border-2 rounded-lg"
-                            />
+                            >
+                                <SelectTrigger className="w-full border-2 rounded-lg">
+                                    <SelectValue placeholder="Select service..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All</SelectItem>
+                                    {[...new Set(data.map((item) => item.advertiser.name))].map(
+                                        (service) => (
+                                            <SelectItem key={service} value={service}>
+                                                {service}
+                                            </SelectItem>
+                                        )
+                                    )}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="relative">
-                            <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground">
-                                Advertieser
+                            <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground z-10">
+                                Objective
                             </label>
-                            <Input
-                                placeholder="Enter advertiser name..."
+                            <Select
                                 value={
-                                    (table.getColumn("name")?.getFilterValue() as string) ?? ""
+                                    (table.getColumn("objective")?.getFilterValue() as string) ?? "all"
                                 }
-                                onChange={(event) =>
-                                    table.getColumn("name")?.setFilterValue(event.target.value)
+                                onValueChange={(value) =>
+                                    table.getColumn("objective")?.setFilterValue(
+                                        value === "all" ? undefined : value
+                                    )
                                 }
-                                className="border-2 rounded-lg"
-                            />
+                            >
+                                <SelectTrigger className="w-full border-2 rounded-lg">
+                                    <SelectValue placeholder="Select type..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All</SelectItem>
+                                    {objectiveOptions
+                                        ?.map((ob: any) => (
+                                            <SelectItem key={ob.value} value={String(ob.value)}>
+                                               {ob.label}
+                                            </SelectItem>
+                                        ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="relative">
                             <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground z-10">

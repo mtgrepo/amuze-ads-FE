@@ -3,6 +3,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox"
 import type { CampaignResponse } from "../../../dto/response/content/campaignResponse";
 import CampaignActions from "./campaign_action";
+import { cn } from "../../../lib/utils";
 
 const columns: ColumnDef<CampaignResponse>[] = [
     {
@@ -93,9 +94,33 @@ const columns: ColumnDef<CampaignResponse>[] = [
         accessorKey: "status",
         header: "Status",
         cell: ({ row }) => {
+            let statusColor ;
+            switch (row.getValue("status")) {
+                case "active":
+                    statusColor = "text-green-500"
+                    break;
+                case "paused":
+                    statusColor = "text-yellow-500"
+                    break;
+                case "pending":
+                    statusColor = "text-yellow-500"
+                    break;
+                case "completed":
+                    statusColor = "text-blue-500"
+                    break;
+                case "draft": 
+                    statusColor = "text-gray-500"
+                    break;
+                case "rejected":
+                    statusColor = "text-red-500"
+                    break;
+                default:
+                    statusColor = "text-gray-500"
+                    break;
+            }
             const status = row.getValue("status");
             return (
-                <div >
+                <div className={cn(statusColor)}>
                     {status as string}
                 </div>
             );

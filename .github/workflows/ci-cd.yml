@@ -1,0 +1,176 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  ci:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+  deploy-develop:
+    name: Deploy to Development Server
+    runs-on: ubuntu-latest
+    needs: ci
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEV_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.DEV_SERVER_HOST }} >> ~/.ssh/known_hosts || echo "Warning: ssh-keyscan failed, but continuing..."
+
+      - name: Deploy to development server via git pull
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            ${{ secrets.DEV_SERVER_USER }}@${{ secrets.DEV_SERVER_HOST }} << 'EOF'
+          echo "Switching to root user and running commands..."
+          sudo -i <<'ROOTEOF'
+          set -e
+
+          echo "Navigating to project directory..."
+          cd ${{ secrets.DEV_DEPLOY_PATH }}
+
+          echo "Mark Git directory as safe and pull latest code..."
+          git config --global --add safe.directory ${{ secrets.DEV_DEPLOY_PATH }}
+          git pull origin develop
+
+          echo "Loading Node.js environment..."
+          # Detect and load nvm if installed for root or ubuntu user
+          if [ -d "/root/.nvm" ]; then
+            export NVM_DIR="/root/.nvm"
+          elif [ -d "/home/ubuntu/.nvm" ]; then
+            export NVM_DIR="/home/ubuntu/.nvm"
+          elif [ -d "/home/ec2-user/.nvm" ]; then
+            export NVM_DIR="/home/ec2-user/.nvm"
+          fi
+
+          # Load nvm if found
+          if [ -s "$NVM_DIR/nvm.sh" ]; then
+            . "$NVM_DIR/nvm.sh"
+            echo "NVM loaded from $NVM_DIR"
+          fi
+
+          # Ensure Node.js exists
+          if ! command -v npm &> /dev/null; then
+            echo "npm not found! Installing Node.js via nvm..."
+            nvm install --lts
+          fi
+
+          echo "Installing dependencies..."
+          npm install
+
+          echo "Building application..."
+          npm run build
+
+          echo "Reloading Nginx..."
+          systemctl reload nginx || echo 'Nginx reload skipped'
+
+          echo "Deployment completed!"
+          ROOTEOF
+          EOF
+
+      - name: Cleanup
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
+
+      - name: Deployment notification
+        if: success()
+        run: echo "Deployment completed successfully to Development Server (${{ secrets.DEV_SERVER_HOST }})"
+
+  deploy-production:
+    name: Deploy to Production Server
+    runs-on: ubuntu-latest
+    needs: ci
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.PROD_SERVER_HOST }} >> ~/.ssh/known_hosts || echo "Warning: ssh-keyscan failed, but continuing..."
+
+      - name: Deploy to production server via git pull
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            ${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }} << 'EOF'
+          echo "Switching to root user and running commands..."
+          sudo -i <<'ROOTEOF'
+          set -e
+
+          echo "Navigating to project directory..."
+          cd ${{ secrets.PROD_DEPLOY_PATH }}
+
+          echo "Mark Git directory as safe and pull latest code..."
+          git config --global --add safe.directory ${{ secrets.PROD_DEPLOY_PATH }}
+          git pull origin main
+
+          echo "Loading Node.js environment..."
+          # Detect and load nvm if installed for root or ubuntu user
+          if [ -d "/root/.nvm" ]; then
+            export NVM_DIR="/root/.nvm"
+          elif [ -d "/home/ubuntu/.nvm" ]; then
+            export NVM_DIR="/home/ubuntu/.nvm"
+          elif [ -d "/home/ec2-user/.nvm" ]; then
+            export NVM_DIR="/home/ec2-user/.nvm"
+          fi
+
+          # Load nvm if found
+          if [ -s "$NVM_DIR/nvm.sh" ]; then
+            . "$NVM_DIR/nvm.sh"
+            echo "NVM loaded from $NVM_DIR"
+          fi
+
+          # Ensure Node.js exists
+          if ! command -v npm &> /dev/null; then
+            echo "npm not found! Installing Node.js via nvm..."
+            nvm install --lts
+          fi
+
+          echo "Installing dependencies..."
+          npm install
+
+          echo "Building application..."
+          npm run build
+
+          echo "Reloading Nginx..."
+          systemctl reload nginx || echo 'Nginx reload skipped'
+
+          echo "Deployment completed!"
+          ROOTEOF
+          EOF
+
+      - name: Cleanup
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
+
+      - name: Deployment notification
+        if: success()
+        run: echo "Deployment completed successfully to Production Server (${{ secrets.PROD_SERVER_HOST }})"

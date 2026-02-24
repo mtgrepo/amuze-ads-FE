@@ -12,7 +12,6 @@ import {
     FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useAdvertiserCreateCommand } from "../../Composable/Command/advertiser/useAdvertiserCreateCommand"
 import { Spinner } from "../ui/spinner"
 import { useAdvertiserUpdateCommand } from "../../Composable/Command/advertiser/useAdvertiserUpdateCommand"
@@ -176,7 +175,7 @@ export default function AdvertiserForm({
                                 <RadioGroup
                                     onValueChange={field.onChange}
                                     defaultValue={field.value}
-                                    className="flex gap-4"
+                                    className="flex gap-4 bg-[#141416] border border-primary-muted-foreground rounded-md p-2"
                                 >
                                     <div className="flex items-center space-x-2">
                                         <RadioGroupItem value="active" id="active" />
@@ -205,7 +204,7 @@ export default function AdvertiserForm({
                                 <RadioGroup
                                     onValueChange={(val) => field.onChange(val === "true")}
                                     defaultValue={String(field.value)}
-                                    className="flex gap-4"
+                                    className="flex gap-4 bg-[#141416] border border-primary-muted-foreground rounded-md p-2"
                                 >
                                     <div className="flex items-center space-x-2">
                                         <RadioGroupItem value="true" id="yes" />
