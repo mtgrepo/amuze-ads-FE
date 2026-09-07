@@ -1,0 +1,242 @@
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { Button } from "@/components/ui/button"
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
+import ImageUpload from "../../Common/image_upload"
+import { Spinner } from "../../ui/spinner"
+import { useAdvertisersQuery } from "../../../Composable/Query/advertiser/useAdvertisersQuery"
+import { useCreateFullCampaignCommand } from "../../../Composable/Command/content/campaign/useCreateFullCampaignCommand"
+import type { AdvertisersResponse } from "../../../dto/response/advertisers/advertisersResponse"
+
+const formSchema = z.object({
+    advertiserId: z.string().min(1, { message: "Advertiser is required." }),
+    name: z.string().min(1, { message: "Campaign name is required." }),
+    objective: z.string().min(1, { message: "Objective is required." }),
+    dailyBudget: z.number().min(1, { message: "Daily budget is required." }),
+    totalBudget: z.number().min(1, { message: "Total budget is required." }),
+    startDate: z.string().min(1, { message: "Start date is required." }),
+    paymentMethod: z.string().min(1, { message: "Payment method is required." }),
+    creativeName: z.string().min(1, { message: "Creative name is required." }),
+    assetType: z.string().min(1, { message: "Asset type is required." }),
+    destinationLink: z.string().min(1, { message: "Destination link is required." }),
+    asset: z.any().refine((v) => v instanceof File, { message: "An image or video is required." }),
+    ageMin: z.number().min(1, { message: "Age min is required." }),
+    ageMax: z.number().min(1, { message: "Age max is required." }),
+    gender: z.string().min(1, { message: "Gender is required." }),
+    location: z.string().min(1, { message: "Location is required." }),
+    category: z.string().min(1, { message: "Category is required." }),
+    adType: z.string().min(1, { message: "Ad type is required." }),
+    placementKey: z.string().min(1, { message: "Placement is required." }),
+})
+
+type Values = z.infer<typeof formSchema>;
+
+export default function CreateAdForm({ onSuccess }: { onSuccess?: () => void }) {
+    const form = useForm<Values>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            advertiserId: "",
+            name: "",
+            objective: "",
+            dailyBudget: 1,
+            totalBudget: 1,
+            startDate: "",
+            paymentMethod: "",
+            creativeName: "",
+            assetType: "",
+            destinationLink: "",
+            asset: undefined,
+            ageMin: 1,
+            ageMax: 1,
+            gender: "",
+            location: "",
+            category: "",
+            adType: "",
+            placementKey: "",
+        },
+    })
+
+    const { advertisersList } = useAdvertisersQuery();
+    const { createFullCampaignCommand, isPending } = useCreateFullCampaignCommand();
+
+    const onSubmit = async (values: Values) => {
+        const formData = new FormData();
+        Object.entries(values).forEach(([key, value]) => {
+            if (value === null || value === undefined) return;
+            if (value instanceof File) {
+                formData.append(key, value);
+            } else {
+                formData.append(key, String(value));
+            }
+        });
+
+        await createFullCampaignCommand(formData);
+        form.reset();
+        onSuccess?.();
+    };
+
+    return (
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Advertiser</h3>
+                <FormField
+                    control={form.control}
+                    name="advertiserId"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Advertiser</FormLabel>
+                            <FormControl>
+                                <Select value={field.value} onValueChange={field.onChange}>
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Select Advertiser" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {advertisersList?.map((a: AdvertisersResponse) => (
+                                            <SelectItem key={a.id} value={String(a.id)}>{a.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide pt-4">Campaign</h3>
+                <FormField control={form.control} name="name" render={({ field }) => (
+                    <FormItem><FormLabel>Campaign Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField control={form.control} name="objective" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Objective</FormLabel>
+                        <FormControl>
+                            <Select value={field.value} onValueChange={field.onChange}>
+                                <SelectTrigger className="w-full"><SelectValue placeholder="Select objective" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="reach">Reach</SelectItem>
+                                    <SelectItem value="traffic">Traffic</SelectItem>
+                                    <SelectItem value="engagement">Engagement</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )} />
+                <FormField control={form.control} name="dailyBudget" render={({ field }) => (
+                    <FormItem><FormLabel>Daily Budget</FormLabel><FormControl>
+                        <Input type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                    </FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField control={form.control} name="totalBudget" render={({ field }) => (
+                    <FormItem><FormLabel>Total Budget</FormLabel><FormControl>
+                        <Input type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                    </FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField control={form.control} name="startDate" render={({ field }) => (
+                    <FormItem><FormLabel>Start Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField control={form.control} name="paymentMethod" render={({ field }) => (
+                    <FormItem><FormLabel>Payment Method</FormLabel><FormControl><Input {...field} placeholder="manual, kbzpay, wave..." /></FormControl><FormMessage /></FormItem>
+                )} />
+
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide pt-4">Creative</h3>
+                <FormField control={form.control} name="creativeName" render={({ field }) => (
+                    <FormItem><FormLabel>Creative Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField control={form.control} name="assetType" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Asset Type</FormLabel>
+                        <FormControl>
+                            <Select value={field.value} onValueChange={field.onChange}>
+                                <SelectTrigger className="w-full"><SelectValue placeholder="Select asset type" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="image">Image</SelectItem>
+                                    <SelectItem value="video">Video</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )} />
+                <FormField control={form.control} name="destinationLink" render={({ field }) => (
+                    <FormItem><FormLabel>Destination Link</FormLabel><FormControl><Input {...field} placeholder="https://..." /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField name="asset" render={({ field }) => (
+                    <ImageUpload value={field.value} onChange={field.onChange} label="Creative Asset" accept="image/*,video/*" />
+                )} />
+
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide pt-4">Targeting</h3>
+                <FormField control={form.control} name="ageMin" render={({ field }) => (
+                    <FormItem><FormLabel>Age Min</FormLabel><FormControl>
+                        <Input type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                    </FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField control={form.control} name="ageMax" render={({ field }) => (
+                    <FormItem><FormLabel>Age Max</FormLabel><FormControl>
+                        <Input type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                    </FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField control={form.control} name="gender" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Gender</FormLabel>
+                        <FormControl>
+                            <Select value={field.value} onValueChange={field.onChange}>
+                                <SelectTrigger className="w-full"><SelectValue placeholder="Select gender" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="male">Male</SelectItem>
+                                    <SelectItem value="female">Female</SelectItem>
+                                    <SelectItem value="all">All</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )} />
+                <FormField control={form.control} name="location" render={({ field }) => (
+                    <FormItem><FormLabel>Location</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField control={form.control} name="category" render={({ field }) => (
+                    <FormItem><FormLabel>Category</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide pt-4">Ad Type &amp; Placement</h3>
+                <FormField control={form.control} name="adType" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Ad Type</FormLabel>
+                        <FormControl>
+                            <Select value={field.value} onValueChange={field.onChange}>
+                                <SelectTrigger className="w-full"><SelectValue placeholder="Select ad type" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="banner">Banner</SelectItem>
+                                    <SelectItem value="interstitial">Interstitial</SelectItem>
+                                    <SelectItem value="reward_video">Reward Video</SelectItem>
+                                    <SelectItem value="native">Native</SelectItem>
+                                    <SelectItem value="splash">Splash</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )} />
+                <FormField control={form.control} name="placementKey" render={({ field }) => (
+                    <FormItem><FormLabel>Placement</FormLabel><FormControl><Input {...field} placeholder="home_page, comic, novel..." /></FormControl><FormMessage /></FormItem>
+                )} />
+
+                <Button type="submit" className="w-full" disabled={isPending}>
+                    {isPending && <Spinner />}
+                    Create Ad
+                </Button>
+            </form>
+        </Form>
+    )
+}
