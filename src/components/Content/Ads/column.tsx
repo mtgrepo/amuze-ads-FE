@@ -152,7 +152,7 @@ const columns: ColumnDef<AdResponse>[] = [
         enableHiding: false,
         cell: ({ row }) => {
             const ad = row.original;
-            return <AdsActions id={ad.id} status={ad.status} />;
+            return <AdsActions {...ad} />;
         },
     },
 ]
