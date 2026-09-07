@@ -62,6 +62,42 @@ export const changeCampaignStatus = async (id: string, status: string) => {
     }
 }
 
+export const approveCampaign = async (id: string) => {
+    try {
+        const response = await axiosInstance.post(`/campaigns/${id}/approve`)
+        return response.data
+    } catch (error) {
+        if(error instanceof AxiosError) {
+            throw new Error(error.response?.data.message || "Failed to approve campaign")
+        }
+        throw new Error ("An unexpected error occurred")
+    }
+}
+
+export const rejectCampaign = async (id: string) => {
+    try {
+        const response = await axiosInstance.post(`/campaigns/${id}/reject`)
+        return response.data
+    } catch (error) {
+        if(error instanceof AxiosError) {
+            throw new Error(error.response?.data.message || "Failed to reject campaign")
+        }
+        throw new Error ("An unexpected error occurred")
+    }
+}
+
+export const deleteCampaign = async (id: string) => {
+    try {
+        const response = await axiosInstance.delete(`/campaigns/${id}`)
+        return response.data
+    } catch (error) {
+        if(error instanceof AxiosError) {
+            throw new Error(error.response?.data.message || "Failed to delete campaign")
+        }
+        throw new Error ("An unexpected error occurred")
+    }
+}
+
 export const deleteCamapign = async (id: string) => {
     try {
         const response = await axiosInstance.delete(`/campaigns/${id}`) 

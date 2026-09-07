@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner";
-import { changeCampaignStatus } from "../../../../http/apis/content/campaignApi";
+import { approveCampaign } from "../../../../http/apis/content/campaignApi";
 
 export const useCampaignApproveCommand = () => {
     const qc = useQueryClient();
@@ -8,7 +8,7 @@ export const useCampaignApproveCommand = () => {
     const campaignApproveMutation = useMutation({
         mutationKey: ['approve-campaign'],
         mutationFn: async (id: string) => {
-            const response = await changeCampaignStatus(id, 'active');
+            const response = await approveCampaign(id);
             return response?.data;
         },
         onSuccess: () => {
