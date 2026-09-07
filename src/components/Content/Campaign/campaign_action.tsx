@@ -6,7 +6,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowRight, BriefcaseBusiness, Calendar1, CheckCircle, Info, LetterText, Megaphone, MoreHorizontal, Trash2, UserStarIcon, Wallet } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, Calendar1, CheckCircle, Info, LetterText, Megaphone, MoreHorizontal, Trash2, UserStarIcon, Wallet, XCircle } from "lucide-react";
 import React from "react";
 import { Button } from "../../ui/button";
 import {
@@ -17,8 +17,9 @@ import {
     DialogHeader,
     DialogTitle,
 } from "../../ui/dialog";
-import { usePostDeleteCommand } from "../../../Composable/Command/content/posts/usePostDeleteCommand";
 import { useCampaignApproveCommand } from "../../../Composable/Command/content/campaign/useCampaignApproveCommand";
+import { useCampaignRejectCommand } from "../../../Composable/Command/content/campaign/useCampaignRejectCommand";
+import { useCampaignDeleteCommand } from "../../../Composable/Command/content/campaign/useCampaignDeleteCommand";
 import { cn } from "../../../lib/utils";
 import type { CampaignResponse } from "../../../dto/response/content/campaignResponse";
 
@@ -38,18 +39,25 @@ export default function CampaignActions({
     const [deleteOpen, setDeleteOpen] = React.useState(false);
     const [detailOpen, setDetailOpen] = React.useState(false);
     const [approveOpen, setApproveOpen] = React.useState(false);
+    const [rejectOpen, setRejectOpen] = React.useState(false);
 
-    const { deletePostCommand } = usePostDeleteCommand();
+    const { deleteCampaignCommand } = useCampaignDeleteCommand();
     const { approveCampaignCommand, isPending: isApproving } = useCampaignApproveCommand();
+    const { rejectCampaignCommand, isPending: isRejecting } = useCampaignRejectCommand();
 
     const handleDelete = async () => {
-        await deletePostCommand(id!);
+        await deleteCampaignCommand(id!);
         setDeleteOpen(false);
     };
 
     const handleApprove = async () => {
         await approveCampaignCommand(id!);
         setApproveOpen(false);
+    };
+
+    const handleReject = async () => {
+        await rejectCampaignCommand(id!);
+        setRejectOpen(false);
     };
 
     /*  STATUS STYLES  */
@@ -73,7 +81,7 @@ export default function CampaignActions({
     const remainingDay = Math.ceil(
         (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
     );
-    
+
     return (
         <>
             {/* ACTION MENU */}
@@ -104,10 +112,16 @@ export default function CampaignActions({
                     </DropdownMenuItem>
 
                     {status?.toLowerCase() === 'pending' && (
-                        <DropdownMenuItem onClick={() => setApproveOpen(true)} className="text-green-600 focus:text-green-600">
-                            <CheckCircle className="mr-2 h-4 w-4" />
-                            Approve
-                        </DropdownMenuItem>
+                        <>
+                            <DropdownMenuItem onClick={() => setApproveOpen(true)} className="text-green-600 focus:text-green-600">
+                                <CheckCircle className="mr-2 h-4 w-4" />
+                                Approve
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setRejectOpen(true)} className="text-destructive focus:text-destructive">
+                                <XCircle className="mr-2 h-4 w-4" />
+                                Reject
+                            </DropdownMenuItem>
+                        </>
                     )}
 
                     <DropdownMenuSeparator />
@@ -127,7 +141,7 @@ export default function CampaignActions({
             <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
                 <DialogContent className="sm:max-w-md rounded-2xl">
                     <DialogHeader>
-                        <DialogTitle>Delete post?</DialogTitle>
+                        <DialogTitle>Delete campaign?</DialogTitle>
                         <DialogDescription>
                             This action cannot be undone.
                             <br />
@@ -175,6 +189,31 @@ export default function CampaignActions({
                             disabled={isApproving}
                         >
                             {isApproving ? 'Approving...' : 'Approve'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* REJECT DIALOG */}
+            <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
+                <DialogContent className="sm:max-w-md rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Reject campaign?</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to reject{" "}
+                            <span className="font-medium text-foreground">
+                                {name}
+                            </span>
+                            ? This will set the campaign status to rejected.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <DialogFooter className="gap-2">
+                        <Button variant="outline" onClick={() => setRejectOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button variant="destructive" onClick={handleReject} disabled={isRejecting}>
+                            {isRejecting ? 'Rejecting...' : 'Reject'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -286,7 +325,7 @@ export default function CampaignActions({
                                     </div>
                                 </div>
                             </section>
-                            
+
                         </div>
                         <section className="w-full">
                                 <div className="flex flex-1 items-center gap-2 mb-4">
@@ -302,13 +341,13 @@ export default function CampaignActions({
                                         </div>
                                         <div>
                                             <p className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase">Post Title</p>
-                                            <p className="text-slate-900 dark:text-white text-sm font-medium">{post?.title}</p>
+                                            <p className="text-slate-900 dark:text-white text-sm font-medium">{post ? post.title : "— (no post attached, e.g. a Display Ads campaign)"}</p>
                                         </div>
                                     </div>
                                 </div>
                             </section>
                     </div>
-                    
+
                 </DialogContent>
             </Dialog>
         </>
