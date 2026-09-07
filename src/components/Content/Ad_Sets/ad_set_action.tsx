@@ -6,10 +6,9 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ClipboardPenLine, Info, MapPin, MoreHorizontal, Tags, Trash2, UserSearch, VenusAndMars } from "lucide-react";
+import { Info, MapPin, MoreHorizontal, Tags, Trash2, UserSearch, VenusAndMars } from "lucide-react";
 import React from "react";
 import { Button } from "../../ui/button";
-import DrawerFormLayout from "../../Common/Layout/drawer_form_layout";
 import {
     Dialog,
     DialogContent,
@@ -18,14 +17,12 @@ import {
     DialogHeader,
     DialogTitle,
 } from "../../ui/dialog";
-import { usePostDeleteCommand } from "../../../Composable/Command/content/posts/usePostDeleteCommand";
+import { useAdSetDeleteCommand } from "../../../Composable/Command/content/adSet/useAdSetDeleteCommand";
 import type { AdSetResponse } from "../../../dto/response/content/adSetResponse";
-import AdSetForm from "./ad_set_form";
 import { cn } from "../../../lib/utils";
 
 export default function AdSetAction({
     id,
-    campaignId,
     ageMin,
     ageMax,
     gender,
@@ -33,14 +30,13 @@ export default function AdSetAction({
     category,
     campaign: { name }
 }: AdSetResponse) {
-    const [editOpen, setEditOpen] = React.useState(false);
     const [deleteOpen, setDeleteOpen] = React.useState(false);
     const [detailOpen, setDetailOpen] = React.useState(false);
 
-    const { deletePostCommand } = usePostDeleteCommand();
+    const { deleteAdSetCommand } = useAdSetDeleteCommand();
 
     const handleDelete = async () => {
-        await deletePostCommand(id);
+        await deleteAdSetCommand(id);
         setDeleteOpen(false);
     };
 
@@ -73,11 +69,6 @@ export default function AdSetAction({
                         View
                     </DropdownMenuItem>
 
-                    <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                        <ClipboardPenLine className="mr-2 h-4 w-4" />
-                        Edit
-                    </DropdownMenuItem>
-
                     <DropdownMenuSeparator />
 
                     <DropdownMenuItem
@@ -90,39 +81,11 @@ export default function AdSetAction({
                 </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* EDIT DRAWER */}
-            <DrawerFormLayout
-                open={editOpen}
-                setOpen={setEditOpen}
-                title="Edit Ad Set"
-                description="Update ad set information"
-                formContent={
-                    <AdSetForm
-                        mode="edit"
-                        defaultValues={{
-                            id,
-                            campaignId: campaignId,
-                            ageMin: ageMin,
-                            ageMax: ageMax,
-                            gender,
-                            location,
-                            category,
-                        }}
-                        onSuccess={() => setEditOpen(false)}
-                    />
-                }
-                cancelButton={
-                    <Button variant="outline" className="w-full rounded-lg">
-                        Cancel
-                    </Button>
-                }
-            />
-
             {/* DELETE DIALOG */}
             <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
                 <DialogContent className="sm:max-w-md rounded-2xl">
                     <DialogHeader>
-                        <DialogTitle>Delete post?</DialogTitle>
+                        <DialogTitle>Delete ad set?</DialogTitle>
                         <DialogDescription>
                             This action cannot be undone.
                             <br />

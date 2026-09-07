@@ -10,7 +10,7 @@ import {
 import type { SortingState } from "@tanstack/react-table";
 import type { VisibilityState } from "@tanstack/react-table";
 import type { ColumnFiltersState } from "@tanstack/react-table";
-import { ChevronDown, CirclePlus } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -27,12 +27,9 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import columns from "./column";
-import DrawerFormLayout from "../../Common/Layout/drawer_form_layout";
-import DrawerButton from "../../Common/drawer-button";
 import { PageSizeComponent } from "../../Common/Pagination/page-number";
 import Paginator from "../../Common/Pagination/paginator";
 import type { AdSetResponse } from "../../../dto/response/content/adSetResponse";
-import AdSetForm from "./ad_set_form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
 type AdSetProps = {
     data: AdSetResponse[];
@@ -50,7 +47,6 @@ export function AdSetComponent({ data }: AdSetProps) {
         pageIndex: 0,
         pageSize: 10,
     });
-    const [open, setOpen] = React.useState(false);
 
     const table = useReactTable({
         data,
@@ -152,29 +148,6 @@ export function AdSetComponent({ data }: AdSetProps) {
                     </div>
                 </div>
                 <div className="flex flex-row gap-3 justify-end">
-                    {/* drawer */}
-                    <DrawerFormLayout
-                        open={open}
-                        setOpen={setOpen}
-                        title="Ad Set Form"
-                        description="Add new ad set here."
-                        formContent={
-                            <AdSetForm
-                                mode="add"
-                                onSuccess={() => {
-                                    setOpen(false); //
-                                }}
-                            />
-                        }
-                        cancelButton={
-                            <Button variant="outline" className="w-full my-3">
-                                Cancel
-                            </Button>
-                        }
-                        drawerButton={
-                            <DrawerButton btn_icon={CirclePlus} title="Add Ad Set" />
-                        }
-                    />
                     {/* column filter */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
