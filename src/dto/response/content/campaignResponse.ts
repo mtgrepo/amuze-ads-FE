@@ -4,6 +4,7 @@ export interface CampaignResponse {
     id: string,
     name: string,
     objective: string,
+    modelType: string,
     dailyBudget: number,
     totalBudget: number,
     spentAmount: number,
@@ -15,10 +16,10 @@ export interface CampaignResponse {
     advertiser: AdvertisersResponse,
     createdAt: Date,
     advertiserId: string,
-    postId: string,
+    postId: string | null,
     post: {
         title: string,
         status: string,
         photo: string
-    }
+    } | null
 }
