@@ -10,7 +10,7 @@ import {
 import type { SortingState } from "@tanstack/react-table";
 import type { VisibilityState } from "@tanstack/react-table";
 import type { ColumnFiltersState } from "@tanstack/react-table";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, CirclePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -31,6 +31,9 @@ import type { AdResponse } from "../../../dto/response/content/adResponse";
 import { PageSizeComponent } from "../../Common/Pagination/page-number";
 import Paginator from "../../Common/Pagination/paginator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
+import CreateAdForm from "./create_ad_form";
+import DrawerFormLayout from "../../Common/Layout/drawer_form_layout";
+import DrawerButton from "../../Common/drawer-button";
 
 type AdProps = {
   data: AdResponse[];
@@ -49,7 +52,7 @@ export function AdComponent
     pageIndex: 0,
     pageSize: 10,
   });
-  // const [open, setOpen] = React.useState(false);
+  const [createOpen, setCreateOpen] = React.useState(false);
 
   const table = useReactTable({
     data,
@@ -184,28 +187,23 @@ export function AdComponent
         </div>
         <div className="flex flex-row gap-3 justify-end">
           {/* drawer */}
-          {/* <DrawerFormLayout
-                        open={open}
-                        setOpen={setOpen}
-                        title="Post Form"
-                        description="Add new post here."
-                        formContent={
-                            <PostForm
-                                mode="add"
-                                onSuccess={() => {
-                                    setOpen(false); //
-                                }}
-                            />
-                        }
-                        cancelButton={
-                            <Button variant="outline" className="w-full my-3">
-                                Cancel
-                            </Button>
-                        }
-                        drawerButton={
-                            <DrawerButton btn_icon={CirclePlus} title="Add post" />
-                        }
-                    /> */}
+          <DrawerFormLayout
+            open={createOpen}
+            setOpen={setCreateOpen}
+            title="Create Ad"
+            description="Create a campaign, creative, targeting, and ad in one step."
+            formContent={
+              <CreateAdForm onSuccess={() => setCreateOpen(false)} />
+            }
+            cancelButton={
+              <Button variant="outline" className="w-full my-3">
+                Cancel
+              </Button>
+            }
+            drawerButton={
+              <DrawerButton btn_icon={CirclePlus} title="Create Ad" />
+            }
+          />
           {/* column filter */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
