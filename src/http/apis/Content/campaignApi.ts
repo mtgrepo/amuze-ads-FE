@@ -98,6 +98,22 @@ export const deleteCampaign = async (id: string) => {
     }
 }
 
+export const createFullCampaign = async (data: FormData) => {
+    try {
+        const response = await axiosInstance.post("/campaigns/full", data, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        })
+        return response.data
+    } catch (error) {
+        if(error instanceof AxiosError) {
+            throw new Error(error.response?.data.message || "Failed to create campaign")
+        }
+        throw new Error ("An unexpected error occurred")
+    }
+}
+
 export const deleteCamapign = async (id: string) => {
     try {
         const response = await axiosInstance.delete(`/campaigns/${id}`) 
