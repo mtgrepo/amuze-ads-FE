@@ -74,17 +74,9 @@ const data = {
       icon: Newspaper,
       items: [
         {
-          title: "Posts",
-          url: "/content/posts",
-        },
-        {
-          title: "Campaigns",
-          url: "/campaigns",
-        },
-        {
           title: "Ads",
           url: "/ads",
-        },        
+        },
       ],
     },
     {

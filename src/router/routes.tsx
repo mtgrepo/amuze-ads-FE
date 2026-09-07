@@ -5,6 +5,7 @@ import Dashboard from "../features/Dashboard/dashboard"
 import Advertisers from "../features/Advertisers/advertisers"
 import LoginPage from "../features/Auth/login"
 import Ads from "../features/Content/Ads/ads"
+import AdDetailsPage from "../features/Content/Ads/ad_details"
 import NotFound from "../components/Common/notfound_component"
 import AdvertiserDetailsPage from "../features/Advertisers/advertiser_details"
 import { ProtectedRoute, PublicRoute } from "./guard"
@@ -65,6 +66,16 @@ const router = createBrowserRouter([
                 path: "ads",
                 element: <Ads />,
                 handle: { crumb: ["Content", "Ads"] },
+            },
+            {
+                path: "ads/:id",
+                element: <AdDetailsPage />,
+                handle: {
+                    crumb: [
+                        { label: "Ads", href: "/ads" },
+                        { label: "Details" }
+                    ]
+                },
             },
             // ad-sets
             {

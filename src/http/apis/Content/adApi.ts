@@ -13,6 +13,18 @@ export const getAllAds = async () => {
     }
 }
 
+export const getAdById = async (id: string) => {
+    try {
+        const response = await axiosInstance.get(`/ads/${id}`)
+        return response.data
+    } catch (error) {
+        if(error instanceof AxiosError) {
+            throw new Error(error.response?.data.message || "Failed to fetch ad")
+        }
+        throw new Error("An unexpected error occurred")
+    }
+}
+
 export const approveAd = async (adId: string) => {
     try {
         const response = await axiosInstance.post(`/ads/${adId}/approve`)

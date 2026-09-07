@@ -6,8 +6,9 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CheckCircle, CircleCheck, Info, MapPin, MoreHorizontal, Pause, XCircle } from "lucide-react";
+import { CheckCircle, CircleCheck, Info, MoreHorizontal, Pause, XCircle } from "lucide-react";
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../../ui/button";
 import {
     Dialog,
@@ -22,11 +23,11 @@ import { useAdApproveCommand } from "../../../Composable/Command/content/ads/use
 import { useAdRejectCommand } from "../../../Composable/Command/content/ads/useAdRejectCommand";
 import type { AdResponse } from "../../../dto/response/content/adResponse";
 
-export default function AdsActions({ id, status, adType, placementKey, adSet, adCreative }: AdResponse) {
+export default function AdsActions({ id, status }: AdResponse) {
+    const navigate = useNavigate();
     const [statusDialogOpen, setStatusDialogOpen] = React.useState(false);
     const [approveOpen, setApproveOpen] = React.useState(false);
     const [rejectOpen, setRejectOpen] = React.useState(false);
-    const [detailOpen, setDetailOpen] = React.useState(false);
 
     const { updateAdStatusCommand, isPending } = useUpdateAdStatusCommand();
     const { approveAdCommand, isPending: isApproving } = useAdApproveCommand();
@@ -74,7 +75,7 @@ export default function AdsActions({ id, status, adType, placementKey, adSet, ad
 
                     <DropdownMenuSeparator />
 
-                    <DropdownMenuItem onClick={() => setDetailOpen(true)}>
+                    <DropdownMenuItem onClick={() => navigate(`/ads/${id}`)}>
                         <Info className="mr-2 h-4 w-4" />
                         View
                     </DropdownMenuItem>
@@ -196,30 +197,6 @@ export default function AdsActions({ id, status, adType, placementKey, adSet, ad
                 </DialogContent>
             </Dialog>
 
-            {/* DETAIL VIEW */}
-            <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-                <DialogContent className="max-w-lg p-0 rounded-2xl overflow-hidden shadow-xl">
-                    <div className="px-6 py-5 border-b bg-muted/30">
-                        <h2 className="text-lg font-semibold capitalize">{adType} · {placementKey}</h2>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Campaign: {adSet?.campaign?.name} — Status: {status}
-                        </p>
-                    </div>
-
-                    {adCreative?.assetType === 'video' ? (
-                        <video src={adCreative.asset} controls className="w-full max-h-72 object-cover bg-black" />
-                    ) : (
-                        <img src={adCreative?.asset} alt={adCreative?.name} className="w-full max-h-72 object-cover" />
-                    )}
-
-                    <div className="px-6 py-4 flex items-center gap-2 text-sm">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <a href={adCreative?.destinationLink} target="_blank" rel="noreferrer" className="text-primary underline break-all">
-                            {adCreative?.destinationLink}
-                        </a>
-                    </div>
-                </DialogContent>
-            </Dialog>
         </>
     );
 }
