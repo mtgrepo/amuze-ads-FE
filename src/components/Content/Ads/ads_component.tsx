@@ -11,6 +11,7 @@ import type { SortingState } from "@tanstack/react-table";
 import type { VisibilityState } from "@tanstack/react-table";
 import type { ColumnFiltersState } from "@tanstack/react-table";
 import { ChevronDown, CirclePlus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -31,9 +32,6 @@ import type { AdResponse } from "../../../dto/response/content/adResponse";
 import { PageSizeComponent } from "../../Common/Pagination/page-number";
 import Paginator from "../../Common/Pagination/paginator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
-import CreateAdForm from "./create_ad_form";
-import DrawerFormLayout from "../../Common/Layout/drawer_form_layout";
-import DrawerButton from "../../Common/drawer-button";
 
 type AdProps = {
   data: AdResponse[];
@@ -41,6 +39,7 @@ type AdProps = {
 
 export function AdComponent
   ({ data }: AdProps) {
+  const navigate = useNavigate();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -52,7 +51,6 @@ export function AdComponent
     pageIndex: 0,
     pageSize: 10,
   });
-  const [createOpen, setCreateOpen] = React.useState(false);
 
   const table = useReactTable({
     data,
@@ -186,24 +184,10 @@ export function AdComponent
           </div>
         </div>
         <div className="flex flex-row gap-3 justify-end">
-          {/* drawer */}
-          <DrawerFormLayout
-            open={createOpen}
-            setOpen={setCreateOpen}
-            title="Create Ad"
-            description="Create a campaign, creative, targeting, and ad in one step."
-            formContent={
-              <CreateAdForm onSuccess={() => setCreateOpen(false)} />
-            }
-            cancelButton={
-              <Button variant="outline" className="w-full my-3">
-                Cancel
-              </Button>
-            }
-            drawerButton={
-              <DrawerButton btn_icon={CirclePlus} title="Create Ad" />
-            }
-          />
+          <Button onClick={() => navigate("/ads/create")}>
+            <CirclePlus className="h-4 w-4" />
+            Create Ad
+          </Button>
           {/* column filter */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
