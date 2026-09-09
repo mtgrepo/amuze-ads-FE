@@ -38,11 +38,11 @@ const columns: ColumnDef<AdResponse>[] = [
         ),
     },
     {
-        id: "objective",
-        accessorFn: (row) => row.adSet.campaign.objective,
-        header: "Objective",
+        id: "budgetPlan",
+        accessorFn: (row) => row.adSet.campaign.budgetPlan,
+        header: "Budget Plan",
         cell: ({ row }) => (
-            <div className="capitalize">{row.getValue("objective")}</div>
+            <div className="capitalize">{row.getValue("budgetPlan")}</div>
         ),
     },
     {

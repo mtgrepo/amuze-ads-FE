@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
+import { useEffect } from "react"
 import { format } from "date-fns"
 import { CalendarIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -27,10 +28,11 @@ import { cn } from "../../../lib/utils"
 const formSchema = z.object({
     advertiserId: z.string().min(1, { message: "Advertiser is required." }),
     name: z.string().min(1, { message: "Campaign name is required." }),
-    objective: z.string().min(1, { message: "Objective is required." }),
-    dailyBudget: z.number().min(1, { message: "Daily budget is required." }),
+    budgetPlan: z.enum(["daily", "total"]),
+    dailyBudget: z.number().min(0),
     totalBudget: z.number().min(1, { message: "Total budget is required." }),
     startDate: z.date({ message: "Start date is required." }),
+    endDate: z.date({ message: "End date is required." }),
     paymentMethod: z.string().min(1, { message: "Payment method is required." }),
     creativeName: z.string().min(1, { message: "Creative name is required." }),
     assetType: z.string().min(1, { message: "Asset type is required." }),
@@ -43,6 +45,9 @@ const formSchema = z.object({
     category: z.string().min(1, { message: "Category is required." }),
     adType: z.string().min(1, { message: "Ad type is required." }),
     placementKey: z.string().min(1, { message: "Placement is required." }),
+}).refine((data) => data.budgetPlan !== "daily" || data.dailyBudget >= 1, {
+    message: "Daily budget is required.",
+    path: ["dailyBudget"],
 })
 
 type Values = z.infer<typeof formSchema>;
@@ -53,10 +58,11 @@ export default function CreateAdForm({ onSuccess }: { onSuccess?: () => void }) 
         defaultValues: {
             advertiserId: "",
             name: "",
-            objective: "",
+            budgetPlan: "daily",
             dailyBudget: 1,
             totalBudget: 1,
             startDate: undefined,
+            endDate: undefined,
             paymentMethod: "",
             creativeName: "",
             assetType: "",
@@ -74,6 +80,24 @@ export default function CreateAdForm({ onSuccess }: { onSuccess?: () => void }) 
 
     const { advertisersList } = useAdvertisersQuery();
     const { createFullCampaignCommand, isPending } = useCreateFullCampaignCommand();
+
+    const budgetPlan = form.watch("budgetPlan");
+    const dailyBudget = form.watch("dailyBudget");
+    const startDate = form.watch("startDate");
+    const endDate = form.watch("endDate");
+
+    useEffect(() => {
+        if (budgetPlan === "daily") {
+            if (startDate && endDate && dailyBudget >= 1) {
+                const msPerDay = 1000 * 60 * 60 * 24;
+                const days = Math.floor((endDate.getTime() - startDate.getTime()) / msPerDay) + 1;
+                form.setValue("totalBudget", dailyBudget * Math.max(days, 1));
+            }
+        } else {
+            form.setValue("dailyBudget", 0);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [budgetPlan, dailyBudget, startDate, endDate]);
 
     const onSubmit = async (values: Values) => {
         const formData = new FormData();
@@ -144,16 +168,15 @@ export default function CreateAdForm({ onSuccess }: { onSuccess?: () => void }) 
                         <FormField control={form.control} name="name" render={({ field }) => (
                             <FormItem><FormLabel>Campaign Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
-                        <FormField control={form.control} name="objective" render={({ field }) => (
+                        <FormField control={form.control} name="budgetPlan" render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Objective</FormLabel>
+                                <FormLabel>Budget Plan</FormLabel>
                                 <FormControl>
                                     <Select value={field.value} onValueChange={field.onChange}>
-                                        <SelectTrigger className="w-full"><SelectValue placeholder="Select objective" /></SelectTrigger>
+                                        <SelectTrigger className="w-full"><SelectValue placeholder="Select budget plan" /></SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="reach">Reach</SelectItem>
-                                            <SelectItem value="traffic">Traffic</SelectItem>
-                                            <SelectItem value="engagement">Engagement</SelectItem>
+                                            <SelectItem value="daily">Daily Budget</SelectItem>
+                                            <SelectItem value="total">Total Budget</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </FormControl>
@@ -162,17 +185,57 @@ export default function CreateAdForm({ onSuccess }: { onSuccess?: () => void }) 
                         )} />
                         <FormField control={form.control} name="dailyBudget" render={({ field }) => (
                             <FormItem><FormLabel>Daily Budget</FormLabel><FormControl>
-                                <Input type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                                <Input
+                                    type="number"
+                                    {...field}
+                                    disabled={budgetPlan === "total"}
+                                    onChange={(e) => field.onChange(Number(e.target.value))}
+                                />
                             </FormControl><FormMessage /></FormItem>
                         )} />
                         <FormField control={form.control} name="totalBudget" render={({ field }) => (
                             <FormItem><FormLabel>Total Budget</FormLabel><FormControl>
-                                <Input type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                                <Input
+                                    type="number"
+                                    {...field}
+                                    disabled={budgetPlan === "daily"}
+                                    onChange={(e) => field.onChange(Number(e.target.value))}
+                                />
                             </FormControl><FormMessage /></FormItem>
                         )} />
                         <FormField control={form.control} name="startDate" render={({ field }) => (
                             <FormItem className="flex flex-col">
                                 <FormLabel>Start Date</FormLabel>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <FormControl>
+                                            <Button
+                                                variant="outline"
+                                                className={cn(
+                                                    "w-full pl-3 text-left font-normal",
+                                                    !field.value && "text-muted-foreground"
+                                                )}
+                                            >
+                                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                            </Button>
+                                        </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                            mode="single"
+                                            selected={field.value}
+                                            onSelect={field.onChange}
+                                            captionLayout="dropdown"
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                        <FormField control={form.control} name="endDate" render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                                <FormLabel>End Date</FormLabel>
                                 <Popover>
                                     <PopoverTrigger asChild>
                                         <FormControl>

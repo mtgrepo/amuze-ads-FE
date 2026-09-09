@@ -101,8 +101,8 @@ export default function AdDetails({ data }: Props) {
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
-                        <p className="text-sm font-semibold">Objective</p>
-                        <p className="text-sm text-muted-foreground capitalize">{campaign?.objective}</p>
+                        <p className="text-sm font-semibold">Budget Plan</p>
+                        <p className="text-sm text-muted-foreground capitalize">{campaign?.budgetPlan}</p>
                     </div>
                     <div>
                         <p className="text-sm font-semibold">Status</p>

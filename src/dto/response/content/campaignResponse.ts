@@ -3,8 +3,8 @@ import type { AdvertisersResponse } from "../advertisers/advertisersResponse"
 export interface CampaignResponse {
     id: string,
     name: string,
-    objective: string,
     modelType: string,
+    budgetPlan: string,
     dailyBudget: number,
     totalBudget: number,
     spentAmount: number,
