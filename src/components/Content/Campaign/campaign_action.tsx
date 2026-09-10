@@ -6,7 +6,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowRight, BriefcaseBusiness, Calendar1, CheckCircle, Info, LetterText, Megaphone, MoreHorizontal, Trash2, UserStarIcon, Wallet, XCircle } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, Calendar1, CheckCircle, Info, Megaphone, MoreHorizontal, Trash2, UserStarIcon, Wallet, XCircle } from "lucide-react";
 import React from "react";
 import { Button } from "../../ui/button";
 import {
@@ -33,8 +33,7 @@ export default function CampaignActions({
     endDate,
     status,
     createdAt,
-    advertiser,
-    post
+    advertiser
 }: CampaignResponse) {
     const [deleteOpen, setDeleteOpen] = React.useState(false);
     const [detailOpen, setDetailOpen] = React.useState(false);
@@ -327,25 +326,6 @@ export default function CampaignActions({
                             </section>
 
                         </div>
-                        <section className="w-full">
-                                <div className="flex flex-1 items-center gap-2 mb-4">
-                                    <span className="material-symbols-outlined text-primary text-xl"><Info /></span>
-                                    <h3 className="text-slate-900 dark:text-white text-sm font-bold uppercase tracking-widest">Post Info</h3>
-                                </div>
-                                <div className="grid grid-cols-1 gap-3">
-
-                                    <div className="flex items-center gap-3 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
-                                        <div className="w-10 h-10 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                                            {/* <img src={post?.photo!} className="w-full h-full object-cover rounded" /> */}
-                                            <span className="material-symbols-outlined text-slate-500 dark:text-slate-400"><LetterText /></span>
-                                        </div>
-                                        <div>
-                                            <p className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase">Post Title</p>
-                                            <p className="text-slate-900 dark:text-white text-sm font-medium">{post ? post.title : "— (no post attached, e.g. a Display Ads campaign)"}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </section>
                     </div>
 
                 </DialogContent>

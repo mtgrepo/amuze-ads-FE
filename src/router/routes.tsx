@@ -12,7 +12,6 @@ import AdvertiserDetailsPage from "../features/Advertisers/advertiser_details"
 import { ProtectedRoute, PublicRoute } from "./guard"
 import AdminUsers from "../features/System/AdminUsers/admin_users"
 import SystemConfigs from "../features/System/SystemConfigs/system_configs"
-import PostPage from "../features/Content/Posts/post"
 import ProfilePage from "../features/AdvertiserProfile/profile"
 import AdSetPage from "../features/Content/AdSet/ad_set"
 import CampaignPage from "../features/Content/Campaign/campaign"
@@ -55,12 +54,6 @@ const router = createBrowserRouter([
                 path: "advertiser-profiles",
                 element: <ProfilePage />,
                 handle: { crumb: ['Advertiser', 'Profiles'] },
-            },
-            // content -> post
-            {
-                path: "content/posts",
-                element: <PostPage />,
-                handle: { crumb: ["Content", "Posts"] },
             },
             // ads
             {

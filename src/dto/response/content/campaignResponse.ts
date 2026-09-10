@@ -16,10 +16,4 @@ export interface CampaignResponse {
     advertiser: AdvertisersResponse,
     createdAt: Date,
     advertiserId: string,
-    postId: string | null,
-    post: {
-        title: string,
-        status: string,
-        photo: string
-    } | null
 }
