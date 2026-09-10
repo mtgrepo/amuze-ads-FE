@@ -6,8 +6,6 @@ export interface AdSetResponse {
     ageMin: number;
     ageMax: number;
     gender: string;
-    location: string;
-    category: string;
     created_at: string;
     updated_at: string;
     campaign: CampaignResponse

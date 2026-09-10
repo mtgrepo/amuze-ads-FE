@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Badge } from "../../ui/badge";
-import { MapPin, Tags, UserSearch, VenusAndMars } from "lucide-react";
+import { MapPin, UserSearch, VenusAndMars } from "lucide-react";
 import type { AdResponse } from "../../../dto/response/content/adResponse";
 import { cn } from "../../../lib/utils";
 
@@ -76,20 +76,6 @@ export default function AdDetails({ data }: Props) {
                             Gender
                         </label>
                         <p className="text-sm text-muted-foreground capitalize">{adSet?.gender}</p>
-                    </div>
-                    <div className="space-y-2">
-                        <label className="flex items-center gap-2 text-sm font-semibold">
-                            <Tags className="h-4 w-4 text-primary" />
-                            Category
-                        </label>
-                        <p className="text-sm text-muted-foreground">{adSet?.category}</p>
-                    </div>
-                    <div className="space-y-2">
-                        <label className="flex items-center gap-2 text-sm font-semibold">
-                            <MapPin className="h-4 w-4 text-primary" />
-                            Location
-                        </label>
-                        <p className="text-sm text-muted-foreground">{adSet?.location}</p>
                     </div>
                 </CardContent>
             </Card>

@@ -41,8 +41,6 @@ const formSchema = z.object({
     ageMin: z.number().min(1, { message: "Age min is required." }),
     ageMax: z.number().min(1, { message: "Age max is required." }),
     gender: z.string().min(1, { message: "Gender is required." }),
-    location: z.string().min(1, { message: "Location is required." }),
-    category: z.string().min(1, { message: "Category is required." }),
     adType: z.string().min(1, { message: "Ad type is required." }),
     placementKey: z.string().min(1, { message: "Placement is required." }),
 }).refine((data) => data.budgetPlan !== "daily" || data.dailyBudget >= 1, {
@@ -71,8 +69,6 @@ export default function CreateAdForm({ onSuccess }: { onSuccess?: () => void }) 
             ageMin: 1,
             ageMax: 1,
             gender: "",
-            location: "",
-            category: "",
             adType: "",
             placementKey: "",
         },
@@ -333,12 +329,6 @@ export default function CreateAdForm({ onSuccess }: { onSuccess?: () => void }) 
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
-                        )} />
-                        <FormField control={form.control} name="category" render={({ field }) => (
-                            <FormItem><FormLabel>Category</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField control={form.control} name="location" render={({ field }) => (
-                            <FormItem className="md:col-span-2"><FormLabel>Location</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                     </CardContent>
                 </Card>

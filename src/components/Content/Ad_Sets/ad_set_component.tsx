@@ -83,40 +83,11 @@ export function AdSetComponent({ data }: AdSetProps) {
                         <div className="flex items-center gap-3">
                             <h3 className="text-base font-semibold">Search Filters</h3>
                             <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
-                                2 filters
+                                1 filter
                             </span>
                         </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="relative">
-                            <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground z-10">
-                                Category
-                            </label>
-                            <Select
-                                value={
-                                    (table.getColumn("category")?.getFilterValue() as string) ?? "all"
-                                }
-                                onValueChange={(value) =>
-                                    table.getColumn("category")?.setFilterValue(
-                                        value === "all" ? undefined : value
-                                    )
-                                }
-                            >
-                                <SelectTrigger className="w-full border-2 rounded-lg">
-                                    <SelectValue placeholder="Select service..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All</SelectItem>
-                                    {[...new Set(data.map((item) => item.category))].map(
-                                        (service) => (
-                                            <SelectItem key={service} value={service}>
-                                                {service}
-                                            </SelectItem>
-                                        )
-                                    )}
-                                </SelectContent>
-                            </Select>
-                        </div>
                         <div className="relative">
                             <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground z-10">
                                 Gender

@@ -91,14 +91,6 @@ const columns: ColumnDef<AdResponse>[] = [
         },
     },
     {
-        id: "category",
-        accessorFn: (row) => row.adSet.category,
-        header: "Category",
-        cell: ({ row }) => (
-            <div className="capitalize">{row.getValue("category")}</div>
-        ),
-    },
-    {
         accessorKey: "status",
         header: "Status",
         cell: ({ row }) => {

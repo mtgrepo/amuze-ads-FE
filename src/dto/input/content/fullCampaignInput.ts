@@ -1,10 +1,11 @@
 export interface FullCampaignInput {
     advertiserId?: string;
     name: string;
-    objective: string;
+    budgetPlan: string;
     dailyBudget: number;
     totalBudget: number;
     startDate: string;
+    endDate: string;
     paymentMethod: string;
     creativeName: string;
     assetType: string;
@@ -13,8 +14,6 @@ export interface FullCampaignInput {
     ageMin: number;
     ageMax: number;
     gender: string;
-    location: string;
-    category: string;
     adType: string;
     placementKey: string;
 }

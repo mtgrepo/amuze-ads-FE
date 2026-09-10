@@ -6,7 +6,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Info, MapPin, MoreHorizontal, Tags, Trash2, UserSearch, VenusAndMars } from "lucide-react";
+import { Info, MoreHorizontal, Trash2, UserSearch, VenusAndMars } from "lucide-react";
 import React from "react";
 import { Button } from "../../ui/button";
 import {
@@ -26,8 +26,6 @@ export default function AdSetAction({
     ageMin,
     ageMax,
     gender,
-    location,
-    category,
     campaign: { name }
 }: AdSetResponse) {
     const [deleteOpen, setDeleteOpen] = React.useState(false);
@@ -202,40 +200,6 @@ export default function AdSetAction({
                                     );
                                 })}
                             </div>
-                        </section>
-
-                        {/* CATEGORY */}
-                        <section className="space-y-4 pb-8 border-b border-border">
-                            <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                                <Tags className="h-4 w-4 text-primary" />
-                                Category
-                            </label>
-
-                            <span className="inline-flex px-3 py-1.5 rounded-full text-xs font-medium bg-primary/40 text-primary dark:text-primary-foreground border-primary text-center">
-                                {category}
-                            </span>
-                        </section>
-
-                        {/* LOCATION */}
-                        <section className="space-y-4">
-                            <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                                <MapPin className="h-4 w-4 text-primary" />
-                                Location
-                            </label>
-
-                            <input
-                                value={location}
-                                readOnly
-                                disabled
-                                aria-readonly
-                                className="
-            w-full rounded-md px-3 py-2 text-sm
-            bg-background text-foreground
-            border border-input
-            cursor-not-allowed
-            focus:outline-none
-          "
-                            />
                         </section>
 
                     </div>
