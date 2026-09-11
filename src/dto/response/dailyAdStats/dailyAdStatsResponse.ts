@@ -12,11 +12,6 @@ export interface AdminTrendItem {
     engagements: number;
 }
 
-export interface PricingDistributionItem {
-    pricingMode: string;
-    count: number;
-}
-
 export interface TopAdItem {
     campaignName: string;
     totalImpressions: number;

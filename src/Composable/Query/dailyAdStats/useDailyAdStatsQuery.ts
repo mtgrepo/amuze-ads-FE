@@ -2,14 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import {
     getAdminOverview,
     getAdminTrend,
-    getPricingDistribution,
     getTopAds,
 } from "../../../http/apis/dailyAdStats/dailyAdStatsApi";
 import { getAdvertisers } from "../../../http/apis/advertisers/advertisersApi";
 import type {
     AdminOverviewResponse,
     AdminTrendItem,
-    PricingDistributionItem,
     TopAdItem,
 } from "../../../dto/response/dailyAdStats/dailyAdStatsResponse";
 
@@ -32,14 +30,6 @@ export const useAdminTrendQuery = (days: number, advertiserId?: string) => {
         queryFn: () => getAdminTrend(days, advertiserId),
     });
     return { trendData: data?.data ?? [], isLoading, isError };
-};
-
-export const usePricingDistributionQuery = (advertiserId?: string) => {
-    const { data, isLoading, isError } = useQuery<{ data: PricingDistributionItem[] }>({
-        queryKey: ["pricing-distribution", advertiserId],
-        queryFn: () => getPricingDistribution(advertiserId),
-    });
-    return { pricingData: data?.data ?? [], isLoading, isError };
 };
 
 export const useTopAdsQuery = (limit: number, metric: string, advertiserId?: string) => {

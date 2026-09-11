@@ -28,19 +28,6 @@ export const getAdminTrend = async (days: number, advertiserId?: string) => {
     }
 };
 
-export const getPricingDistribution = async (advertiserId?: string) => {
-    try {
-        const params = advertiserId ? `?advertiserId=${advertiserId}` : "";
-        const response = await axiosInstance.get(`/daily-ad-stats/admin/pricing-distribution${params}`);
-        return response.data;
-    } catch (error) {
-        if (error instanceof AxiosError) {
-            throw new Error(error.response?.data.message || "Failed to fetch pricing distribution");
-        }
-        throw new Error("An unexpected error occurred");
-    }
-};
-
 export const getTopAds = async (limit: number, metric: string, advertiserId?: string) => {
     try {
         const params = new URLSearchParams({ limit: String(limit), metric });

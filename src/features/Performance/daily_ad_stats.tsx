@@ -24,25 +24,15 @@ import {
     MousePointer2,
     Monitor,
     TrendingUp,
-    PieChart as PieChartIcon,
     Trophy,
     Zap,
 } from "lucide-react";
-import { PieChart, Pie, Cell } from "recharts";
 import {
     useAdminOverviewQuery,
     useAdminTrendQuery,
-    usePricingDistributionQuery,
     useTopAdsQuery,
     useAdvertisersQuery,
 } from "../../Composable/Query/dailyAdStats/useDailyAdStatsQuery";
-
-const PRICING_COLORS: Record<string, string> = {
-    CPM: "#3b82f6",
-    CPC: "#22c55e",
-    CPE: "#f97316",
-    Unknown: "#94a3b8",
-};
 
 const DAY_OPTIONS = [7, 14, 30] as const;
 type TopMetric = "clicks" | "impressions" | "engagements";
@@ -96,7 +86,6 @@ export default function DailyAdStats() {
     const { advertisers } = useAdvertisersQuery();
     const { overviewData, isLoading: overviewLoading } = useAdminOverviewQuery(advertiserId);
     const { trendData, isLoading: trendLoading } = useAdminTrendQuery(days, advertiserId);
-    const { pricingData } = usePricingDistributionQuery(advertiserId);
     const { topAdsData } = useTopAdsQuery(5, topMetric, advertiserId);
 
     const ctr =
@@ -111,9 +100,6 @@ export default function DailyAdStats() {
             day: "numeric",
         }),
     }));
-
-    const pieFallback = [{ pricingMode: "No Data", count: 1 }];
-    const pieData = pricingData.length > 0 ? pricingData : pieFallback;
 
     const selectedAdvertiserName =
         advertiserId ? advertisers.find((a) => a.id === advertiserId)?.name : undefined;
@@ -205,10 +191,9 @@ export default function DailyAdStats() {
                 </div>
             )}
 
-            {/* Split Panel: Trend Chart (left) + Sidebar (right) */}
-            <div className="grid grid-cols-1 lg:grid-cols-7 gap-5">
-                {/* Performance Trend - Area Chart (4/7) */}
-                <Card className="lg:col-span-4">
+            {/* Performance Trend - Area Chart */}
+            <div className="grid grid-cols-1 gap-5">
+                <Card>
                     <CardHeader className="px-6">
                         <CardTitle className="flex items-center gap-2 text-base">
                             <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -275,51 +260,6 @@ export default function DailyAdStats() {
                         )}
                     </CardContent>
                 </Card>
-
-                {/* Right Sidebar (3/7): Pricing Donut + Budget Utilization */}
-                <div className="lg:col-span-3 flex flex-col gap-5">
-                    {/* Pricing Mode Donut */}
-                    <Card className="flex-1">
-                        <CardHeader className="px-6">
-                            <CardTitle className="flex items-center gap-2 text-base">
-                                <PieChartIcon className="h-4 w-4 text-muted-foreground" />
-                                Pricing Mode — Today
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="px-6 pb-4">
-                            <ResponsiveContainer width="100%" height={180}>
-                                <PieChart>
-                                    <Pie
-                                        data={pieData}
-                                        dataKey="count"
-                                        nameKey="pricingMode"
-                                        cx="50%"
-                                        cy="50%"
-                                        innerRadius={50}
-                                        outerRadius={75}
-                                        paddingAngle={3}
-                                    >
-                                        {pieData.map((entry) => (
-                                            <Cell
-                                                key={entry.pricingMode}
-                                                fill={PRICING_COLORS[entry.pricingMode] ?? "#94a3b8"}
-                                            />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip
-                                        contentStyle={{ borderRadius: "8px", fontSize: "13px" }}
-                                        formatter={(value: number | undefined, name: string | undefined) => [
-                                            `${value ?? 0} ad${(value ?? 0) !== 1 ? "s" : ""}`,
-                                            name ?? "",
-                                        ]}
-                                    />
-                                    <Legend wrapperStyle={{ fontSize: "12px" }} />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </CardContent>
-                    </Card>
-
-                </div>
             </div>
 
             {/* Top 5 Ads — Table */}
