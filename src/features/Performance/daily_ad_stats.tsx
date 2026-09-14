@@ -12,6 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import {
     Select,
     SelectContent,
@@ -26,6 +27,7 @@ import {
     TrendingUp,
     Trophy,
     Zap,
+    PlayCircle,
 } from "lucide-react";
 import {
     useAdminOverviewQuery,
@@ -34,13 +36,19 @@ import {
     useAdvertisersQuery,
 } from "../../Composable/Query/dailyAdStats/useDailyAdStatsQuery";
 
-const DAY_OPTIONS = [7, 14, 30] as const;
-type TopMetric = "clicks" | "impressions" | "engagements";
+type TopMetric = "clicks" | "impressions" | "engagements" | "watches";
 
 function formatNumber(n: number): string {
     if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
     if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
     return n.toLocaleString();
+}
+
+function toDateInputValue(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
 }
 
 function StatCard({
@@ -78,15 +86,22 @@ function ChartSkeleton({ height = 280 }: { height?: number }) {
     return <Skeleton className="w-full rounded-lg" style={{ height }} />;
 }
 
+const DEFAULT_FROM = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 6);
+    return d;
+})();
+
 export default function DailyAdStats() {
-    const [days, setDays] = useState<7 | 14 | 30>(7);
+    const [dateFrom, setDateFrom] = useState(toDateInputValue(DEFAULT_FROM));
+    const [dateTo, setDateTo] = useState(toDateInputValue(new Date()));
     const [topMetric, setTopMetric] = useState<TopMetric>("clicks");
     const [advertiserId, setAdvertiserId] = useState<string | undefined>(undefined);
 
     const { advertisers } = useAdvertisersQuery();
-    const { overviewData, isLoading: overviewLoading } = useAdminOverviewQuery(advertiserId);
-    const { trendData, isLoading: trendLoading } = useAdminTrendQuery(days, advertiserId);
-    const { topAdsData } = useTopAdsQuery(5, topMetric, advertiserId);
+    const { overviewData, isLoading: overviewLoading } = useAdminOverviewQuery(dateFrom, dateTo, advertiserId);
+    const { trendData, isLoading: trendLoading } = useAdminTrendQuery(dateFrom, dateTo, advertiserId);
+    const { topAdsData } = useTopAdsQuery(5, topMetric, dateFrom, dateTo, advertiserId);
 
     const ctr =
         overviewData && overviewData.totalImpressions > 0
@@ -135,35 +150,41 @@ export default function DailyAdStats() {
                         </SelectContent>
                     </Select>
 
-                    {/* Day Range */}
-                    <div className="flex items-center gap-1">
-                        {DAY_OPTIONS.map((d) => (
-                            <Button
-                                key={d}
-                                variant={days === d ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => setDays(d)}
-                            >
-                                {d}D
-                            </Button>
-                        ))}
+                    {/* Date Range */}
+                    <div className="flex items-center gap-2">
+                        <Input
+                            type="date"
+                            className="w-40"
+                            value={dateFrom}
+                            max={dateTo}
+                            onChange={(e) => setDateFrom(e.target.value)}
+                        />
+                        <span className="text-sm text-muted-foreground">to</span>
+                        <Input
+                            type="date"
+                            className="w-40"
+                            value={dateTo}
+                            min={dateFrom}
+                            max={toDateInputValue(new Date())}
+                            onChange={(e) => setDateTo(e.target.value)}
+                        />
                     </div>
                 </div>
             </div>
 
             {/* KPI Cards */}
             {overviewLoading ? (
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                     {Array.from({ length: 5 }).map((_, i) => (
                         <Skeleton key={i} className="h-28 rounded-xl" />
                     ))}
                 </div>
             ) : (
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                     <StatCard
                         title="Impressions"
                         value={formatNumber(overviewData?.totalImpressions ?? 0)}
-                        sub="Today"
+                        sub="Selected range"
                         icon={Eye}
                         accent="bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400"
                     />
@@ -177,14 +198,21 @@ export default function DailyAdStats() {
                     <StatCard
                         title="Engagements"
                         value={formatNumber(overviewData?.totalEngagements ?? 0)}
-                        sub="Today"
+                        sub="Selected range"
                         icon={Zap}
                         accent="bg-yellow-100 text-yellow-600 dark:bg-yellow-950 dark:text-yellow-400"
                     />
                     <StatCard
+                        title="Watches"
+                        value={formatNumber(overviewData?.totalWatches ?? 0)}
+                        sub="Selected range"
+                        icon={PlayCircle}
+                        accent="bg-violet-100 text-violet-600 dark:bg-violet-950 dark:text-violet-400"
+                    />
+                    <StatCard
                         title="Active Ads"
                         value={overviewData?.activeAds ?? 0}
-                        sub="Running today"
+                        sub="Running now"
                         icon={Monitor}
                         accent="bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-400"
                     />
@@ -197,7 +225,7 @@ export default function DailyAdStats() {
                     <CardHeader className="px-6">
                         <CardTitle className="flex items-center gap-2 text-base">
                             <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                            Performance Trend — Last {days} Days
+                            Performance Trend
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="px-6 pb-4">
@@ -221,6 +249,10 @@ export default function DailyAdStats() {
                                         <linearGradient id="gradEngagements" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.2} />
                                             <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                                        </linearGradient>
+                                        <linearGradient id="gradWatches" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.2} />
+                                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -255,6 +287,14 @@ export default function DailyAdStats() {
                                         strokeWidth={2}
                                         dot={false}
                                     />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="watches"
+                                        stroke="#8b5cf6"
+                                        fill="url(#gradWatches)"
+                                        strokeWidth={2}
+                                        dot={false}
+                                    />
                                 </AreaChart>
                             </ResponsiveContainer>
                         )}
@@ -271,7 +311,7 @@ export default function DailyAdStats() {
                             Top 5 Ads
                         </CardTitle>
                         <div className="flex gap-2">
-                            {(["clicks", "impressions", "engagements"] as TopMetric[]).map((m) => (
+                            {(["clicks", "impressions", "engagements", "watches"] as TopMetric[]).map((m) => (
                                 <Button
                                     key={m}
                                     variant={topMetric === m ? "default" : "outline"}
@@ -299,7 +339,8 @@ export default function DailyAdStats() {
                                         <th className="text-left py-2 pr-4 font-medium">Campaign</th>
                                         <th className="text-right py-2 pr-4 font-medium">Clicks</th>
                                         <th className="text-right py-2 pr-4 font-medium">Impressions</th>
-                                        <th className="text-right py-2 font-medium">Engagements</th>
+                                        <th className="text-right py-2 pr-4 font-medium">Engagements</th>
+                                        <th className="text-right py-2 font-medium">Watches</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -320,8 +361,11 @@ export default function DailyAdStats() {
                                             <td className="py-3 pr-4 text-right tabular-nums">
                                                 {formatNumber(ad.totalImpressions)}
                                             </td>
-                                            <td className="py-3 text-right tabular-nums">
+                                            <td className="py-3 pr-4 text-right tabular-nums">
                                                 {formatNumber(ad.totalEngagements)}
+                                            </td>
+                                            <td className="py-3 text-right tabular-nums">
+                                                {formatNumber(ad.totalWatches)}
                                             </td>
                                         </tr>
                                     ))}

@@ -2,6 +2,7 @@ export interface AdminOverviewResponse {
     totalImpressions: number;
     totalClicks: number;
     totalEngagements: number;
+    totalWatches: number;
     activeAds: number;
 }
 
@@ -10,6 +11,7 @@ export interface AdminTrendItem {
     impressions: number;
     clicks: number;
     engagements: number;
+    watches: number;
 }
 
 export interface TopAdItem {
@@ -17,4 +19,5 @@ export interface TopAdItem {
     totalImpressions: number;
     totalClicks: number;
     totalEngagements: number;
+    totalWatches: number;
 }

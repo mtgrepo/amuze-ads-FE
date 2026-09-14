@@ -16,26 +16,26 @@ export interface AdvertiserOption {
     name: string;
 }
 
-export const useAdminOverviewQuery = (advertiserId?: string) => {
+export const useAdminOverviewQuery = (fromDate?: string, toDate?: string, advertiserId?: string) => {
     const { data, isLoading, isError } = useQuery<{ data: AdminOverviewResponse }>({
-        queryKey: ["admin-overview", advertiserId],
-        queryFn: () => getAdminOverview(advertiserId),
+        queryKey: ["admin-overview", fromDate, toDate, advertiserId],
+        queryFn: () => getAdminOverview(fromDate, toDate, advertiserId),
     });
     return { overviewData: data?.data, isLoading, isError };
 };
 
-export const useAdminTrendQuery = (days: number, advertiserId?: string) => {
+export const useAdminTrendQuery = (fromDate?: string, toDate?: string, advertiserId?: string) => {
     const { data, isLoading, isError } = useQuery<{ data: AdminTrendItem[] }>({
-        queryKey: ["admin-trend", days, advertiserId],
-        queryFn: () => getAdminTrend(days, advertiserId),
+        queryKey: ["admin-trend", fromDate, toDate, advertiserId],
+        queryFn: () => getAdminTrend(fromDate, toDate, advertiserId),
     });
     return { trendData: data?.data ?? [], isLoading, isError };
 };
 
-export const useTopAdsQuery = (limit: number, metric: string, advertiserId?: string) => {
+export const useTopAdsQuery = (limit: number, metric: string, fromDate?: string, toDate?: string, advertiserId?: string) => {
     const { data, isLoading, isError } = useQuery<{ data: TopAdItem[] }>({
-        queryKey: ["top-ads", limit, metric, advertiserId],
-        queryFn: () => getTopAds(limit, metric, advertiserId),
+        queryKey: ["top-ads", limit, metric, fromDate, toDate, advertiserId],
+        queryFn: () => getTopAds(limit, metric, fromDate, toDate, advertiserId),
     });
     return { topAdsData: data?.data ?? [], isLoading, isError };
 };
