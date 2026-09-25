@@ -23,8 +23,8 @@ import { Spinner } from "../ui/spinner";
 
 const schema = z.object({
     name: z.string().min(2, "Name required"),
-    email: z.string().email(),
-    phone: z.string().min(5),
+    email: z.union([z.string().email(), z.literal("")]),
+    phone: z.string(),
     status: z.enum(["active", "inactive"]),
     verified: z.boolean(),
 });
@@ -42,8 +42,8 @@ export default function ContactForm({ data }: { data: AdvertisersResponse }) {
 
         form.reset({
             name: data.name,
-            email: data.email,
-            phone: data.phone,
+            email: data.email ?? "",
+            phone: data.phone ?? "",
             status: data.status as any,
             verified: data.verified,
         });
@@ -54,7 +54,7 @@ export default function ContactForm({ data }: { data: AdvertisersResponse }) {
             toast.error("Advertiser ID is missing.")
             return
         }
-        await updateAdvertiserCommand({ id: data.id, data: values })
+        await updateAdvertiserCommand({ id: data.id, data: { ...values, email: values.email || undefined } })
         form.reset();
         setEditing(false);
     };

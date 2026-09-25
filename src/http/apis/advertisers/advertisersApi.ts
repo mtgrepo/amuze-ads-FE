@@ -1,6 +1,6 @@
 import { AxiosError } from "axios"
 import axiosInstance from "../../httpClient";
-import type { AdvertiserInput } from "../../../dto/input/advertiser/advertiserInput";
+import type { AccountInput, AdvertiserInput } from "../../../dto/input/advertiser/advertiserInput";
 
 export const getAdvertisers = async () => {
     try {
@@ -26,9 +26,9 @@ export const getAdvertiserById = async (id: string) => {
     }
 }
 
-export const createAdvertiser = async (data: AdvertiserInput) => {
+export const createAdvertiser = async (data: AccountInput) => {
     try {
-        const response = await axiosInstance.post("/advertisers", data);
+        const response = await axiosInstance.post("/advertisers/accounts", data);
         return response.data;
     } catch (error) {
         if ( error instanceof AxiosError ) {

@@ -1,13 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { createAdvertiser } from "../../../http/apis/advertisers/advertisersApi"
-import type { AdvertiserInput } from "../../../dto/input/advertiser/advertiserInput"
+import type { AccountInput } from "../../../dto/input/advertiser/advertiserInput"
 import { toast } from "sonner";
 
 export const useAdvertiserCreateCommand = () => {
     const qc = useQueryClient();
     const createAdvertiserCommand = useMutation({
         mutationKey: ["create-advertiser-command"],
-        mutationFn: async (data: AdvertiserInput) => {
+        mutationFn: async (data: AccountInput) => {
             const response = await createAdvertiser(data)
             return response?.data
         },

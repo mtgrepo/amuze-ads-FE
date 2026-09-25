@@ -37,10 +37,20 @@ const columns: ColumnDef<AdvertisersResponse>[] = [
         ),
     },
     {
+        accessorKey: "type",
+        header: "Type",
+        cell: ({ row }) => {
+            const a = row.original;
+            if (a.type === "agency") return <span className="font-medium">Agency</span>;
+            if (a.agency) return <span>Client of {a.agency.name}</span>;
+            return <span>Advertiser</span>;
+        },
+    },
+    {
         accessorKey: "email",
         header: "Email",
         cell: ({ row }) => (
-            <div>{row.getValue("email")}</div>
+            <div>{row.getValue("email") ?? "—"}</div>
         ),
     },
     {

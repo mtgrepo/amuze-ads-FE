@@ -15,23 +15,33 @@ import { Input } from "@/components/ui/input"
 import { useAdvertiserCreateCommand } from "../../Composable/Command/advertiser/useAdvertiserCreateCommand"
 import { Spinner } from "../ui/spinner"
 import { useAdvertiserUpdateCommand } from "../../Composable/Command/advertiser/useAdvertiserUpdateCommand"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
+import { useAdvertisersQuery } from "../../Composable/Query/advertiser/useAdvertisersQuery"
+import type { AdvertisersResponse } from "../../dto/response/advertisers/advertisersResponse"
+
+const NO_AGENCY = "none"
 
 // Validation schema
 const formSchema = z.object({
-    name: z.string().min(1, {
-        message: "Name is required.",
-    }),
-    email: z.email().min(1, {
-        message: "Email is required.",
-    }),
-    phone: z.string().min(1, {
-        message: "Phone is required.",
-    }),
-    status: z.string().min(1, {
-        message: "Status is required.",
-    }),
-    password: z.string().min(6).optional(),
+    name: z.string().min(1, { message: "Name is required." }),
+    type: z.enum(["advertiser", "agency"]),
+    agencyId: z.string(),
+    email: z.union([z.email(), z.literal("")]),
+    phone: z.string(),
+    status: z.string().min(1, { message: "Status is required." }),
+    password: z.string().optional(),
     verified: z.boolean(),
+}).superRefine((v, ctx) => {
+    const isClient = v.type === "advertiser" && v.agencyId !== NO_AGENCY
+    if (!isClient && !v.email) {
+        ctx.addIssue({ code: "custom", path: ["email"], message: "Email is required." })
+    }
+    if (!isClient && !v.phone) {
+        ctx.addIssue({ code: "custom", path: ["phone"], message: "Phone is required." })
+    }
+    if (v.password && v.password.length < 6) {
+        ctx.addIssue({ code: "custom", path: ["password"], message: "Password must be at least 6 characters." })
+    }
 })
 
 interface AdvertiserProps {
@@ -39,11 +49,12 @@ interface AdvertiserProps {
     defaultValues?: {
         id?: string
         name: string
-        email: string
+        email: string | null
         phone: string
         status: string
         password?: string
         verified: boolean
+        agencyId?: string | null
     }
     onSuccess?: () => void
 }
@@ -56,52 +67,65 @@ export default function AdvertiserForm({
 
     const { createAdvertiserCommand, isPending: createPending } = useAdvertiserCreateCommand();
     const { updateAdvertiserCommand, isPending: updatePending } = useAdvertiserUpdateCommand();
+    const { advertisersList } = useAdvertisersQuery();
+    const agencies: AdvertisersResponse[] = (advertisersList ?? []).filter((a: AdvertisersResponse) => a.type === "agency");
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
-        defaultValues: defaultValues || {
-            name: "",
-            email: "",
-            phone: "",
-            status: "active",
+        defaultValues: {
+            name: defaultValues?.name ?? "",
+            type: "advertiser",
+            agencyId: defaultValues?.agencyId ?? NO_AGENCY,
+            email: defaultValues?.email ?? "",
+            phone: defaultValues?.phone ?? "",
+            status: defaultValues?.status ?? "active",
             password: "",
-            verified: true,
+            verified: defaultValues?.verified ?? true,
         },
     })
+
+    const accountType = form.watch("type");
+    const agencyId = form.watch("agencyId");
+    const isClient = accountType === "advertiser" && agencyId !== NO_AGENCY;
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         try {
             if (mode === "add") {
-                if (!values.password) {
-                    form.setError("password", {
-                        message: "Password is required",
-                    })
+                if (!isClient && !values.password) {
+                    form.setError("password", { message: "Password is required" })
                     return
                 }
-
                 await createAdvertiserCommand({
                     name: values.name,
-                    email: values.email,
-                    phone: values.phone,
+                    type: values.type,
+                    ...(isClient && { agencyId: values.agencyId }),
+                    ...(values.email && { email: values.email }),
+                    ...(values.phone && { phone: values.phone }),
                     status: values.status,
                     verified: values.verified,
-                    password: values.password, 
+                    ...(!isClient && { password: values.password }),
                 })
             } else {
                 if (!defaultValues?.id) {
                     toast.error("Advertiser ID is missing.")
                     return
                 }
-                await updateAdvertiserCommand({id: defaultValues.id, data: values})
-                form.reset();
-                onSuccess?.()
+                await updateAdvertiserCommand({
+                    id: defaultValues.id,
+                    data: {
+                        name: values.name,
+                        email: values.email || undefined,
+                        phone: values.phone,
+                        status: values.status,
+                        verified: values.verified,
+                    },
+                })
             }
+            form.reset();
             onSuccess?.()
         } catch (err) {
             console.error(err)
             toast.error("Something went wrong!")
-        } finally {
-            form.reset()
         }
     }
 
@@ -109,6 +133,54 @@ export default function AdvertiserForm({
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                {mode === "add" && (
+                    <FormField
+                        control={form.control}
+                        name="type"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Account Type</FormLabel>
+                                <FormControl>
+                                    <Select value={field.value} onValueChange={(v) => {
+                                        field.onChange(v)
+                                        if (v === "agency") form.setValue("agencyId", NO_AGENCY)
+                                    }}>
+                                        <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="advertiser">Advertiser</SelectItem>
+                                            <SelectItem value="agency">Agency</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                )}
+                {mode === "add" && accountType === "advertiser" && (
+                    <FormField
+                        control={form.control}
+                        name="agencyId"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Agency</FormLabel>
+                                <FormControl>
+                                    <Select value={field.value} onValueChange={field.onChange}>
+                                        <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value={NO_AGENCY}>None (standalone advertiser)</SelectItem>
+                                            {agencies.map((a) => (
+                                                <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                )}
+
                 <FormField
                     control={form.control}
                     name="name"
@@ -133,7 +205,7 @@ export default function AdvertiserForm({
                     name="email"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Email</FormLabel>
+                            <FormLabel>{isClient ? "Email (optional)" : "Email"}</FormLabel>
                             <FormControl>
                                 <Input type="email" placeholder="Enter Email" {...field}
                                     value={field.value}
@@ -151,7 +223,7 @@ export default function AdvertiserForm({
                     name="phone"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Phone</FormLabel>
+                            <FormLabel>{isClient ? "Phone (optional)" : "Phone"}</FormLabel>
                             <FormControl>
                                 <Input placeholder="Enter Phone" {...field}
                                     value={field.value}
@@ -222,7 +294,7 @@ export default function AdvertiserForm({
                     )}
                 /> */}
 
-                {mode === "add" && (
+                {mode === "add" && !isClient && (
                     <FormField
                         control={form.control}
                         name="password"
@@ -240,7 +312,7 @@ export default function AdvertiserForm({
 
                 <Button type="submit" className="w-full" disabled={createPending || updatePending}>
                     {(createPending || updatePending) && <Spinner />}
-                    {mode === "add" ? "Add Advertiser" : "Update Advertiser"}
+                    {mode === "add" ? (accountType === "agency" ? "Add Agency" : isClient ? "Add Client" : "Add Advertiser") : "Update Account"}
                 </Button>
             </form>
         </Form>

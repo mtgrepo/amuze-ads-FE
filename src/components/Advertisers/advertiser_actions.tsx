@@ -19,7 +19,7 @@ import { useAdvertiserDeleteCommand } from "../../Composable/Command/advertiser/
 import { useAdvertiserVerifyCommand } from "../../Composable/Command/advertiser/useAdvertiserVerifyCommand";
 import { useUpdateAdvertiserStatusCommand } from "../../Composable/Command/advertiser/useUpdateAdvertiserStatusCommand";
 
-export default function AdvertiserActions({ id, name, email, phone, status, verified, password }: AdvertisersResponse) {
+export default function AdvertiserActions({ id, name, email, phone, status, verified, password, agencyId }: AdvertisersResponse) {
     const [editOpen, setEditOpen] = React.useState(false);
     const [deleteOpen, setDeleteOpen] = React.useState(false);
     const [verifyOpen, setVerifyOpen] = React.useState(false);
@@ -129,6 +129,7 @@ export default function AdvertiserActions({ id, name, email, phone, status, veri
                             phone,
                             status,
                             verified,
+                            agencyId,
                         }}
 
                         onSuccess={() => setEditOpen(false)}
