@@ -1,8 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Badge } from "../../ui/badge";
-import { MapPin, UserSearch, VenusAndMars } from "lucide-react";
+import { useState } from "react";
+import { CreditCard, MapPin, UserSearch, VenusAndMars } from "lucide-react";
 import type { AdResponse } from "../../../dto/response/content/adResponse";
 import { cn } from "../../../lib/utils";
+import { Button } from "../../ui/button";
+import BudgetForm from "./budget_form";
+import PaymentDialog from "../Payment/payment_dialog";
 
 interface Props {
     data: AdResponse;
@@ -16,6 +20,7 @@ const statusVariant = (status: string) => {
 };
 
 export default function AdDetails({ data }: Props) {
+    const [payOpen, setPayOpen] = useState(false);
     if (!data) return <p>No data available</p>;
 
     const { adType, placementKey, status, adSet, adCreative } = data;
@@ -36,6 +41,17 @@ export default function AdDetails({ data }: Props) {
                     </Badge>
                 </CardContent>
             </Card>
+
+            {status === "draft" && campaign && (
+                <Card className="rounded-2xl shadow-sm border-primary/30 bg-primary/5">
+                    <CardContent className="p-6 flex items-center justify-between gap-4 text-sm">
+                        <span>This ad is a draft. Pay to publish it.</span>
+                        <Button size="sm" onClick={() => setPayOpen(true)}>
+                            <CreditCard className="h-4 w-4" /> Pay
+                        </Button>
+                    </CardContent>
+                </Card>
+            )}
 
             {/* CREATIVE */}
             <Card className="rounded-2xl shadow-sm overflow-hidden">
@@ -87,10 +103,6 @@ export default function AdDetails({ data }: Props) {
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
-                        <p className="text-sm font-semibold">Budget Plan</p>
-                        <p className="text-sm text-muted-foreground capitalize">{campaign?.budgetPlan}</p>
-                    </div>
-                    <div>
                         <p className="text-sm font-semibold">Status</p>
                         <p className="text-sm text-muted-foreground capitalize">{campaign?.status}</p>
                     </div>
@@ -99,27 +111,24 @@ export default function AdDetails({ data }: Props) {
                         <p className="text-sm text-muted-foreground capitalize">{campaign?.modelType}</p>
                     </div>
                     <div>
-                        <p className="text-sm font-semibold">Daily Budget</p>
-                        <p className="text-sm text-muted-foreground">{campaign?.dailyBudget}</p>
-                    </div>
-                    <div>
-                        <p className="text-sm font-semibold">Total Budget</p>
-                        <p className="text-sm text-muted-foreground">{campaign?.totalBudget}</p>
-                    </div>
-                    <div>
                         <p className="text-sm font-semibold">Spent Amount</p>
                         <p className="text-sm text-muted-foreground">{campaign?.spentAmount}</p>
                     </div>
-                    <div>
-                        <p className="text-sm font-semibold">Start Date</p>
-                        <p className="text-sm text-muted-foreground">{campaign?.startDate ? new Date(campaign.startDate).toLocaleDateString() : "-"}</p>
-                    </div>
-                    <div>
-                        <p className="text-sm font-semibold">End Date</p>
-                        <p className="text-sm text-muted-foreground">{campaign?.endDate ? new Date(campaign.endDate).toLocaleDateString() : "-"}</p>
-                    </div>
                 </CardContent>
             </Card>
+
+            {/* BUDGET — editable only while draft */}
+            {campaign && <BudgetForm campaign={campaign} />}
+
+            {status === "draft" && campaign && (
+                <PaymentDialog
+                    open={payOpen}
+                    onOpenChange={setPayOpen}
+                    campaignId={campaign.id}
+                    campaignName={campaign.name}
+                    amount={campaign.totalBudget}
+                />
+            )}
 
             {/* ADVERTISER */}
             <Card className="rounded-2xl shadow-sm">
