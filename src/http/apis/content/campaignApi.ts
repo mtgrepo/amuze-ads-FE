@@ -1,5 +1,6 @@
 import { AxiosError } from "axios"
 import axiosInstance from "../../httpClient"
+import type { CampaignBudgetInput } from "../../../dto/input/content/campaignBudgetInput"
 import type { CampaignInput } from "../../../dto/input/content/campaignInput"
 
 export const getAllCampaign = async () => {
@@ -122,6 +123,29 @@ export const deleteCamapign = async (id: string) => {
         if(error instanceof AxiosError) {
             throw new Error(error.response?.data.message || "Failed to delete campaign")
         }   
+        throw new Error ("An unexpected error occurred")
+    }
+}
+export const payCampaign = async (id: string) => {
+    try {
+        const response = await axiosInstance.post(`/campaigns/${id}/pay`)
+        return response.data
+    } catch (error) {
+        if(error instanceof AxiosError) {
+            throw new Error(error.response?.data.message || "Payment failed")
+        }
+        throw new Error ("An unexpected error occurred")
+    }
+}
+
+export const updateCampaignBudget = async (id: string, data: CampaignBudgetInput) => {
+    try {
+        const response = await axiosInstance.patch(`/campaigns/${id}/update`, data)
+        return response.data
+    } catch (error) {
+        if(error instanceof AxiosError) {
+            throw new Error(error.response?.data.message || "Failed to update budget")
+        }
         throw new Error ("An unexpected error occurred")
     }
 }

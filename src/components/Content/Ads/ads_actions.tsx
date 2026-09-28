@@ -6,7 +6,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CheckCircle, CircleCheck, Info, MoreHorizontal, Pause, XCircle } from "lucide-react";
+import { CheckCircle, CircleCheck, CreditCard, Info, MoreHorizontal, Pause, XCircle } from "lucide-react";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../ui/button";
@@ -22,10 +22,12 @@ import { useUpdateAdStatusCommand } from "../../../Composable/Command/content/ad
 import { useAdApproveCommand } from "../../../Composable/Command/content/ads/useAdApproveCommand";
 import { useAdRejectCommand } from "../../../Composable/Command/content/ads/useAdRejectCommand";
 import type { AdResponse } from "../../../dto/response/content/adResponse";
+import PaymentDialog from "../Payment/payment_dialog";
 
-export default function AdsActions({ id, status }: AdResponse) {
+export default function AdsActions({ id, status, adSet }: AdResponse) {
     const navigate = useNavigate();
     const [statusDialogOpen, setStatusDialogOpen] = React.useState(false);
+    const [payOpen, setPayOpen] = React.useState(false);
     const [approveOpen, setApproveOpen] = React.useState(false);
     const [rejectOpen, setRejectOpen] = React.useState(false);
 
@@ -79,6 +81,13 @@ export default function AdsActions({ id, status }: AdResponse) {
                         <Info className="mr-2 h-4 w-4" />
                         View
                     </DropdownMenuItem>
+
+                    {status === "draft" && (
+                        <DropdownMenuItem onClick={() => setPayOpen(true)} className="text-green-600 focus:text-green-600">
+                            <CreditCard className="mr-2 h-4 w-4" />
+                            Pay
+                        </DropdownMenuItem>
+                    )}
 
                     {status === "pending" && (
                         <>
@@ -196,6 +205,17 @@ export default function AdsActions({ id, status }: AdResponse) {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* PAYMENT DIALOG */}
+            {status === "draft" && adSet?.campaign && (
+                <PaymentDialog
+                    open={payOpen}
+                    onOpenChange={setPayOpen}
+                    campaignId={adSet.campaign.id}
+                    campaignName={adSet.campaign.name}
+                    amount={adSet.campaign.totalBudget}
+                />
+            )}
 
         </>
     );

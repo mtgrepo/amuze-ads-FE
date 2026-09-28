@@ -14,7 +14,7 @@ export const useCreateFullCampaignCommand = () => {
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ['campaign-list'] });
             qc.invalidateQueries({ queryKey: ['ad-list'] });
-            toast.success('Campaign and ad created successfully.');
+            toast.success('Ad saved as draft.');
         },
         onError: (error: Error) => {
             toast.error(error.message || 'Failed to create campaign.');

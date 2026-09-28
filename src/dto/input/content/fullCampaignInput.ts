@@ -6,7 +6,6 @@ export interface FullCampaignInput {
     totalBudget: number;
     startDate: string;
     endDate: string;
-    paymentMethod: string;
     creativeName: string;
     assetType: string;
     destinationLink: string;

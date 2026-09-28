@@ -6,7 +6,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowRight, BriefcaseBusiness, Calendar1, CheckCircle, Info, Megaphone, MoreHorizontal, Trash2, UserStarIcon, Wallet, XCircle } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, Calendar1, CheckCircle, CreditCard, Info, Megaphone, MoreHorizontal, Trash2, UserStarIcon, Wallet, XCircle } from "lucide-react";
+import PaymentDialog from "../Payment/payment_dialog";
 import React from "react";
 import { Button } from "../../ui/button";
 import {
@@ -39,6 +40,7 @@ export default function CampaignActions({
     const [detailOpen, setDetailOpen] = React.useState(false);
     const [approveOpen, setApproveOpen] = React.useState(false);
     const [rejectOpen, setRejectOpen] = React.useState(false);
+    const [payOpen, setPayOpen] = React.useState(false);
 
     const { deleteCampaignCommand } = useCampaignDeleteCommand();
     const { approveCampaignCommand, isPending: isApproving } = useCampaignApproveCommand();
@@ -110,6 +112,13 @@ export default function CampaignActions({
                         View
                     </DropdownMenuItem>
 
+                    {status?.toLowerCase() === 'draft' && (
+                        <DropdownMenuItem onClick={() => setPayOpen(true)} className="text-green-600 focus:text-green-600">
+                            <CreditCard className="mr-2 h-4 w-4" />
+                            Pay
+                        </DropdownMenuItem>
+                    )}
+
                     {status?.toLowerCase() === 'pending' && (
                         <>
                             <DropdownMenuItem onClick={() => setApproveOpen(true)} className="text-green-600 focus:text-green-600">
@@ -135,6 +144,17 @@ export default function CampaignActions({
                 </DropdownMenuContent>
             </DropdownMenu>
 
+
+            {/* PAYMENT DIALOG */}
+            {status?.toLowerCase() === 'draft' && (
+                <PaymentDialog
+                    open={payOpen}
+                    onOpenChange={setPayOpen}
+                    campaignId={id!}
+                    campaignName={name}
+                    amount={totalBudget}
+                />
+            )}
 
             {/* DELETE DIALOG */}
             <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>

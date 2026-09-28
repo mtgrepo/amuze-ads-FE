@@ -1,7 +1,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox"
-import { CircleCheck, ClockFading, Mars, PauseCircle, Venus, VenusAndMars } from "lucide-react";
+import { CircleCheck, ClockFading, FilePen, Mars, PauseCircle, Venus, VenusAndMars } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../ui/tooltip";
 import type { AdResponse } from "../../../dto/response/content/adResponse";
 import AdsActions from "./ads_actions";
@@ -105,6 +105,9 @@ const columns: ColumnDef<AdResponse>[] = [
                     break;
                 case "pending":
                     icon = <ClockFading color="yellow" />;
+                    break;
+                case "draft":
+                    icon = <FilePen color="gray" />;
                     break;
                 default:
                     icon = null;

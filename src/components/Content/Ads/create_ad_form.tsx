@@ -33,7 +33,6 @@ const formSchema = z.object({
     totalBudget: z.number().min(1, { message: "Total budget is required." }),
     startDate: z.date({ message: "Start date is required." }),
     endDate: z.date({ message: "End date is required." }),
-    paymentMethod: z.string().min(1, { message: "Payment method is required." }),
     creativeName: z.string().min(1, { message: "Creative name is required." }),
     assetType: z.string().min(1, { message: "Asset type is required." }),
     destinationLink: z.string().min(1, { message: "Destination link is required." }),
@@ -50,7 +49,12 @@ const formSchema = z.object({
 
 type Values = z.infer<typeof formSchema>;
 
-export default function CreateAdForm({ onSuccess }: { onSuccess?: () => void }) {
+// What the create endpoint returns that the payment step needs.
+export interface CreatedAd {
+    campaign: { id: string; name: string; totalBudget: number };
+}
+
+export default function CreateAdForm({ onCreated }: { onCreated?: (created: CreatedAd) => void }) {
     const form = useForm<Values>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -61,7 +65,6 @@ export default function CreateAdForm({ onSuccess }: { onSuccess?: () => void }) 
             totalBudget: 1,
             startDate: undefined,
             endDate: undefined,
-            paymentMethod: "",
             creativeName: "",
             assetType: "",
             destinationLink: "",
@@ -112,9 +115,9 @@ export default function CreateAdForm({ onSuccess }: { onSuccess?: () => void }) 
             }
         });
 
-        await createFullCampaignCommand(formData);
+        const created = await createFullCampaignCommand(formData);
         form.reset();
-        onSuccess?.();
+        onCreated?.(created);
     };
 
     return (
@@ -123,7 +126,7 @@ export default function CreateAdForm({ onSuccess }: { onSuccess?: () => void }) 
                 <div>
                     <h1 className="text-2xl font-bold">Create Ad</h1>
                     <p className="text-muted-foreground mt-1">
-                        Set up the campaign, creative, and targeting in one step. It goes live as soon as you submit.
+                        Set up the campaign, creative, and targeting in one step. It's saved as a draft; pay to publish it.
                     </p>
                 </div>
 
@@ -261,9 +264,6 @@ export default function CreateAdForm({ onSuccess }: { onSuccess?: () => void }) 
                                 </Popover>
                                 <FormMessage />
                             </FormItem>
-                        )} />
-                        <FormField control={form.control} name="paymentMethod" render={({ field }) => (
-                            <FormItem><FormLabel>Payment Method</FormLabel><FormControl><Input {...field} placeholder="manual, kbzpay, wave..." /></FormControl><FormMessage /></FormItem>
                         )} />
                     </CardContent>
                 </Card>
