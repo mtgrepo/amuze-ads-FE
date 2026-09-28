@@ -15,6 +15,7 @@ export interface AdvertiserOption {
     id: string;
     name: string;
     type: "agency" | "advertiser";
+    agencyId: string | null;
 }
 
 export const useAdminOverviewQuery = (fromDate?: string, toDate?: string, advertiserId?: string) => {
@@ -47,6 +48,5 @@ export const useAdvertisersQuery = () => {
         queryFn: getAdvertisers,
         staleTime: 5 * 60 * 1000,
     });
-    // Agencies own no campaigns, so filtering stats by one would always show zeros.
-    return { advertisers: (data?.data ?? []).filter((a) => a.type === "advertiser"), isLoading };
+    return { advertisers: data?.data ?? [], isLoading };
 };

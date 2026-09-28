@@ -96,12 +96,21 @@ export default function DailyAdStats() {
     const [dateFrom, setDateFrom] = useState(toDateInputValue(DEFAULT_FROM));
     const [dateTo, setDateTo] = useState(toDateInputValue(new Date()));
     const [topMetric, setTopMetric] = useState<TopMetric>("clicks");
+    // First box: a standalone advertiser or an agency. Second box (agency only): one of its clients.
+    // With an agency and no client chosen, the backend returns all of that agency's clients combined.
     const [advertiserId, setAdvertiserId] = useState<string | undefined>(undefined);
+    const [clientId, setClientId] = useState<string | undefined>(undefined);
 
     const { advertisers } = useAdvertisersQuery();
-    const { overviewData, isLoading: overviewLoading } = useAdminOverviewQuery(dateFrom, dateTo, advertiserId);
-    const { trendData, isLoading: trendLoading } = useAdminTrendQuery(dateFrom, dateTo, advertiserId);
-    const { topAdsData } = useTopAdsQuery(5, topMetric, dateFrom, dateTo, advertiserId);
+    const accountOptions = advertisers.filter((a) => a.type === "agency" || !a.agencyId);
+    const selectedAccount = advertisers.find((a) => a.id === advertiserId);
+    const isAgencySelected = selectedAccount?.type === "agency";
+    const agencyClients = isAgencySelected ? advertisers.filter((a) => a.agencyId === advertiserId) : [];
+    const scopeId = clientId ?? advertiserId;
+
+    const { overviewData, isLoading: overviewLoading } = useAdminOverviewQuery(dateFrom, dateTo, scopeId);
+    const { trendData, isLoading: trendLoading } = useAdminTrendQuery(dateFrom, dateTo, scopeId);
+    const { topAdsData } = useTopAdsQuery(5, topMetric, dateFrom, dateTo, scopeId);
 
     const ctr =
         overviewData && overviewData.totalImpressions > 0
@@ -116,8 +125,14 @@ export default function DailyAdStats() {
         }),
     }));
 
-    const selectedAdvertiserName =
-        advertiserId ? advertisers.find((a) => a.id === advertiserId)?.name : undefined;
+    const selectedClientName = clientId ? agencyClients.find((a) => a.id === clientId)?.name : undefined;
+    const statsSubtitle = selectedClientName
+        ? `Showing stats for ${selectedClientName} (${selectedAccount?.name})`
+        : isAgencySelected
+            ? `Showing combined stats for all clients of ${selectedAccount?.name}`
+            : selectedAccount
+                ? `Showing stats for ${selectedAccount.name}`
+                : "Aggregate stats across all advertisers";
 
     return (
         <div className="w-full mx-auto px-5 py-4 space-y-5">
@@ -126,29 +141,51 @@ export default function DailyAdStats() {
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">Daily Ad Performance</h1>
                     <p className="text-sm text-muted-foreground">
-                        {selectedAdvertiserName
-                            ? `Showing stats for ${selectedAdvertiserName}`
-                            : "Aggregate stats across all advertisers"}
+                        {statsSubtitle}
                     </p>
                 </div>
                 <div className="flex items-center gap-3 flex-wrap">
                     {/* Advertiser Filter */}
                     <Select
                         value={advertiserId ?? "all"}
-                        onValueChange={(v) => setAdvertiserId(v === "all" ? undefined : v)}
+                        onValueChange={(v) => {
+                            setAdvertiserId(v === "all" ? undefined : v);
+                            setClientId(undefined);
+                        }}
                     >
                         <SelectTrigger className="w-48">
                             <SelectValue placeholder="All Advertisers" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Advertisers</SelectItem>
-                            {advertisers.map((adv) => (
+                            {accountOptions.map((adv) => (
                                 <SelectItem key={adv.id} value={adv.id}>
-                                    {adv.name}
+                                    {adv.type === "agency" ? `${adv.name} (Agency)` : adv.name}
                                 </SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
+
+                    {/* Agency client filter: empty = all clients combined */}
+                    {isAgencySelected && (
+                        <Select
+                            key={advertiserId}
+                            value={clientId ?? ""}
+                            onValueChange={(v) => setClientId(v === "all" ? undefined : v)}
+                        >
+                            <SelectTrigger className="w-48">
+                                <SelectValue placeholder="All clients" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All clients</SelectItem>
+                                {agencyClients.map((client) => (
+                                    <SelectItem key={client.id} value={client.id}>
+                                        {client.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    )}
 
                     {/* Date Range */}
                     <div className="flex items-center gap-2">
