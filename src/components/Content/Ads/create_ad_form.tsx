@@ -75,6 +75,7 @@ export default function CreateAdForm({ onSuccess }: { onSuccess?: () => void }) 
     })
 
     const { advertisersList } = useAdvertisersQuery();
+    const selectableAdvertisers = (advertisersList ?? []).filter((a: AdvertisersResponse) => a.type === "advertiser");
     const { createFullCampaignCommand, isPending } = useCreateFullCampaignCommand();
 
     const budgetPlan = form.watch("budgetPlan");
@@ -143,8 +144,10 @@ export default function CreateAdForm({ onSuccess }: { onSuccess?: () => void }) 
                                                 <SelectValue placeholder="Select Advertiser" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {advertisersList?.map((a: AdvertisersResponse) => (
-                                                    <SelectItem key={a.id} value={String(a.id)}>{a.name}</SelectItem>
+                                                {selectableAdvertisers.map((a: AdvertisersResponse) => (
+                                                    <SelectItem key={a.id} value={String(a.id)}>
+                                                        {a.agency ? `${a.name} (${a.agency.name})` : a.name}
+                                                    </SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
