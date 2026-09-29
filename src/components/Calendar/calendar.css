@@ -5,7 +5,7 @@
     --fc-neutral-bg-color: var(--muted);
     --fc-neutral-text-color: var(--muted-foreground);
     --fc-list-event-hover-bg-color: var(--accent);
-    --fc-today-bg-color: color-mix(in oklab, var(--primary) 12%, transparent);
+    --fc-today-bg-color: color-mix(in oklab, var(--primary) 8%, transparent);
     --fc-button-bg-color: var(--secondary);
     --fc-button-border-color: var(--border);
     --fc-button-text-color: var(--secondary-foreground);
@@ -30,17 +30,147 @@
     text-transform: capitalize;
 }
 
-.campaign-calendar .fc-daygrid-event,
-.campaign-calendar .fc-list-event {
+.campaign-calendar .fc .fc-col-header-cell-cushion {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    text-transform: uppercase;
+    padding: 6px 4px;
+}
+
+.campaign-calendar .fc .fc-daygrid-day-number {
+    font-size: 0.8rem;
+    color: var(--muted-foreground);
+    padding: 6px 8px;
+}
+
+/* Today: a filled circle on the day number instead of a tinted cell. */
+.campaign-calendar .fc .fc-day-today .fc-daygrid-day-number {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border-radius: 9999px;
+    min-width: 1.6rem;
+    text-align: center;
+    margin: 4px;
+    padding: 2px 6px;
+}
+
+.campaign-calendar .fc .fc-daygrid-more-link {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+}
+
+/* ---------- Status colours (soft tint + border + dot), light then dark ---------- */
+.cal-status-draft    { --pill-bg: #F1EFE8; --pill-border: #888780; --pill-dot: #5F5E5A; --pill-text: #444441; --pill-sub: #5F5E5A; }
+.cal-status-pending  { --pill-bg: #FAEEDA; --pill-border: #EF9F27; --pill-dot: #854F0B; --pill-text: #633806; --pill-sub: #854F0B; }
+.cal-status-active   { --pill-bg: #EAF3DE; --pill-border: #97C459; --pill-dot: #3B6D11; --pill-text: #27500A; --pill-sub: #3B6D11; }
+.cal-status-paused   { --pill-bg: #FAECE7; --pill-border: #F0997B; --pill-dot: #993C1D; --pill-text: #712B13; --pill-sub: #993C1D; }
+.cal-status-rejected { --pill-bg: #FCEBEB; --pill-border: #F09595; --pill-dot: #A32D2D; --pill-text: #791F1F; --pill-sub: #A32D2D; }
+.cal-status-expired  { --pill-bg: #F1EFE8; --pill-border: #D3D1C7; --pill-dot: #888780; --pill-text: #5F5E5A; --pill-sub: #888780; }
+
+.dark .cal-status-draft    { --pill-bg: #2C2C2A; --pill-border: #888780; --pill-dot: #B4B2A9; --pill-text: #D3D1C7; --pill-sub: #B4B2A9; }
+.dark .cal-status-pending  { --pill-bg: #412402; --pill-border: #BA7517; --pill-dot: #EF9F27; --pill-text: #FAC775; --pill-sub: #EF9F27; }
+.dark .cal-status-active   { --pill-bg: #173404; --pill-border: #639922; --pill-dot: #97C459; --pill-text: #C0DD97; --pill-sub: #97C459; }
+.dark .cal-status-paused   { --pill-bg: #4A1B0C; --pill-border: #D85A30; --pill-dot: #F0997B; --pill-text: #F5C4B3; --pill-sub: #F0997B; }
+.dark .cal-status-rejected { --pill-bg: #501313; --pill-border: #E24B4A; --pill-dot: #F09595; --pill-text: #F7C1C1; --pill-sub: #F09595; }
+.dark .cal-status-expired  { --pill-bg: #2C2C2A; --pill-border: #5F5E5A; --pill-dot: #888780; --pill-text: #B4B2A9; --pill-sub: #888780; }
+
+/* ---------- Month view pills ---------- */
+.campaign-calendar .fc-daygrid-event.cal-pill {
+    background: var(--pill-bg);
+    border: 1px solid var(--pill-border);
+    border-radius: 6px;
+    margin: 1px 3px 2px;
+    padding: 0;
+    cursor: pointer;
+    box-shadow: none;
+}
+
+.campaign-calendar .fc-daygrid-event.cal-pill:hover {
+    filter: brightness(0.97);
+}
+
+.dark .campaign-calendar .fc-daygrid-event.cal-pill:hover {
+    filter: brightness(1.15);
+}
+
+/* Drafts look unfinished even without colour. */
+.campaign-calendar .fc-daygrid-event.cal-status-draft {
+    border-style: dashed;
+}
+
+/* A bar that continues into the next/previous week gets a flat, open edge. */
+.campaign-calendar .fc-daygrid-event.cal-pill:not(.fc-event-end) {
+    border-right: none;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    margin-right: 0;
+}
+
+.campaign-calendar .fc-daygrid-event.cal-pill:not(.fc-event-start) {
+    border-left: none;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    margin-left: 0;
+}
+
+.cal-pill-content {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    padding: 2px 8px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.cal-pill-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 9999px;
+    background: var(--pill-dot);
+    flex: none;
+}
+
+.cal-pill-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--pill-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cal-pill-meta {
+    font-size: 0.7rem;
+    color: var(--pill-sub);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ---------- List view ---------- */
+.campaign-calendar .fc-list-event.cal-pill {
     cursor: pointer;
 }
 
-.campaign-calendar .fc-daygrid-event .fc-event-title {
-    color: #fff;
-    font-weight: 500;
+.campaign-calendar .fc-list-event.cal-pill .fc-list-event-dot {
+    border-color: var(--pill-dot);
 }
 
 .campaign-calendar .fc-list-day-cushion,
 .campaign-calendar .fc-list-table td {
     background-color: var(--card);
+}
+
+.campaign-calendar .fc-list-event .cal-pill-content {
+    padding: 0;
+}
+
+/* Legend swatch next to each status filter. */
+.cal-legend-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 9999px;
+    background: var(--pill-bg);
+    border: 1.5px solid var(--pill-dot);
 }

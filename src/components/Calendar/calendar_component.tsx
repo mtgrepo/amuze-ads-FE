@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { useAdListQuery } from "../../Composable/Query/content/useAdListQuery";
 import { useAdvertisersQuery } from "../../Composable/Query/dailyAdStats/useDailyAdStatsQuery";
 import type { AdResponse } from "../../dto/response/content/adResponse";
-import { CALENDAR_STATUSES, DEFAULT_CALENDAR_STATUSES, STATUS_COLORS, toCalendarEvents } from "./calendar_events";
+import { CALENDAR_STATUSES, DEFAULT_CALENDAR_STATUSES, STATUS_LABELS, statusClass, toCalendarEvents } from "./calendar_events";
+import { renderCalendarPill } from "./calendar_pill";
 import "./calendar.css";
 
 export function CalendarComponent() {
@@ -96,13 +97,13 @@ export function CalendarComponent() {
                         )}
                         <div className="lg:col-span-2 flex flex-wrap items-center gap-x-4 gap-y-2">
                             {CALENDAR_STATUSES.map((status) => (
-                                <label key={status} className="flex items-center gap-2 text-sm capitalize cursor-pointer">
+                                <label key={status} className="flex items-center gap-2 text-sm cursor-pointer">
                                     <Checkbox
                                         checked={statuses.includes(status)}
                                         onCheckedChange={(value) => toggleStatus(status, !!value)}
                                     />
-                                    <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: STATUS_COLORS[status] }} />
-                                    {status}
+                                    <span className={`cal-legend-dot ${statusClass(status)}`} />
+                                    {STATUS_LABELS[status]}
                                 </label>
                             ))}
                         </div>
@@ -121,6 +122,8 @@ export function CalendarComponent() {
                             headerToolbar={{ left: "prev,next today", center: "title", right: "dayGridMonth,listMonth" }}
                             buttonText={{ today: "Today", dayGridMonth: "Month", listMonth: "List" }}
                             events={events}
+                            eventContent={renderCalendarPill}
+                            eventDisplay="block"
                             dayMaxEvents={3}
                             height="auto"
                             noEventsContent="No ads in this month."
