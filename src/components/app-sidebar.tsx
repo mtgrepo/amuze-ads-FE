@@ -77,6 +77,10 @@ const data = {
           title: "Ads",
           url: "/ads",
         },
+        {
+          title: "Calendar",
+          url: "/calendar",
+        },
       ],
     },
     {

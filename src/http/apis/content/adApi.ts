@@ -1,9 +1,9 @@
 import { AxiosError } from "axios"
 import axiosInstance from "../../httpClient"
 
-export const getAllAds = async () => {
+export const getAllAds = async (advertiserId?: string) => {
     try {
-        const response = await axiosInstance.get("/ads")
+        const response = await axiosInstance.get("/ads", { params: advertiserId ? { advertiserId } : undefined })
         return response.data
     } catch (error) {
         if(error instanceof AxiosError) {

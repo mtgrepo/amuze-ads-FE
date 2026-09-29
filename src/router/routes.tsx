@@ -18,6 +18,7 @@ import CampaignPage from "../features/Content/Campaign/campaign"
 import NotificationsPage from "../features/Notifications/notifications"
 import DailyAdStats from "@/features/Performance/daily_ad_stats"
 import TransactionsPage from "../features/Financial/Transactions/transactions"
+import CalendarPage from "../features/Calendar/calendar"
 
 const router = createBrowserRouter([
     {
@@ -61,6 +62,11 @@ const router = createBrowserRouter([
                 path: "ads",
                 element: <Ads />,
                 handle: { crumb: ["Content", "Ads"] },
+            },
+            {
+                path: "calendar",
+                element: <CalendarPage />,
+                handle: { crumb: ["Content", "Calendar"] },
             },
             {
                 path: "ads/create",
