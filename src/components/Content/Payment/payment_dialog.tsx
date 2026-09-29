@@ -1,4 +1,4 @@
-import { CreditCard } from "lucide-react";
+import { Coins } from "lucide-react";
 import { Button } from "../../ui/button";
 import {
     Dialog,
@@ -9,57 +9,80 @@ import {
     DialogTitle,
 } from "../../ui/dialog";
 import { Spinner } from "../../ui/spinner";
+import { cn } from "../../../lib/utils";
 import { usePayCampaignCommand } from "../../../Composable/Command/content/campaign/usePayCampaignCommand";
-
-// Until the KBZPay gateway is integrated, paying just records a KBZPay transaction.
-const PAYMENT_METHOD = "KBZPay";
+import { usePaymentInfoQuery } from "../../../Composable/Query/content/usePaymentInfoQuery";
 
 interface PaymentDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     campaignId: string;
     campaignName: string;
+    // Shown until the server's payment info loads; the server always charges the stored total.
     amount: number;
     onPaid?: () => void;
 }
 
+// Admin pays with the customer's points (the agency's for agency clients); the ad goes live immediately.
 export default function PaymentDialog({ open, onOpenChange, campaignId, campaignName, amount, onPaid }: PaymentDialogProps) {
     const { payCampaignCommand, isPending } = usePayCampaignCommand();
+    const { paymentInfo, isLoading } = usePaymentInfoQuery(campaignId, open);
+
+    const total = paymentInfo?.amount ?? Number(amount);
+    const balance = paymentInfo?.balance ?? 0;
+    const shortfall = Math.max(total - balance, 0);
+    const canPay = !!paymentInfo && shortfall === 0;
 
     const handlePay = async () => {
-        await payCampaignCommand(campaignId);
-        onPaid?.();
-        onOpenChange(false);
+        try {
+            await payCampaignCommand(campaignId);
+            onPaid?.();
+            onOpenChange(false);
+        } catch {
+            // The command's onError already shows the reason.
+        }
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={(next) => { if (!isPending) onOpenChange(next); }}>
             <DialogContent className="sm:max-w-md rounded-2xl">
                 <DialogHeader>
                     <DialogTitle>Payment</DialogTitle>
                     <DialogDescription>
-                        Your ad "{campaignName}" is saved as a draft. Once paid, the ad goes live immediately.
+                        "{campaignName}" is saved as a draft. Once paid with points, the ad goes live immediately.
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="rounded-xl border p-4 space-y-3">
-                    <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Amount</span>
-                        <span className="text-lg font-bold">{Number(amount).toLocaleString()}</span>
+                <div className="rounded-xl border p-4 space-y-3 text-sm">
+                    <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Paid by</span>
+                        <span className="font-medium">{isLoading ? "…" : paymentInfo?.payerName}</span>
                     </div>
-                    <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Method</span>
-                        <span className="font-medium">{PAYMENT_METHOD}</span>
+                    <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Amount</span>
+                        <span className="text-lg font-bold">{total.toLocaleString()} points</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Balance</span>
+                        <span className={cn("font-medium", shortfall > 0 && "text-destructive")}>
+                            {isLoading ? "…" : `${balance.toLocaleString()} points`}
+                        </span>
                     </div>
                 </div>
+
+                {paymentInfo && shortfall > 0 && (
+                    <p className="text-sm text-destructive">
+                        Not enough points — {shortfall.toLocaleString()} more needed. Add points to {paymentInfo.payerName} from the Advertisers list first.
+                    </p>
+                )}
 
                 <DialogFooter className="gap-2">
                     <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
                         Pay later
                     </Button>
-                    <Button onClick={handlePay} disabled={isPending}>
-                        {isPending ? <Spinner /> : <CreditCard className="h-4 w-4" />}
-                        Pay with {PAYMENT_METHOD}
+                    <Button onClick={handlePay} disabled={isPending || !canPay}>
+                        {isPending ? <Spinner /> : <Coins className="h-4 w-4" />}
+                        Pay with points
                     </Button>
                 </DialogFooter>
             </DialogContent>

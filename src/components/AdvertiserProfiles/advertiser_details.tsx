@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/tooltip"
 import ContactForm from "../Advertisers/contact_form";
 import BusinessForm from "./business_form";
+import PointsCard from "../Points/points_card";
 
 interface Props {
   data: AdvertisersResponse;
@@ -82,6 +83,8 @@ export default function AdvertiserDetails({ data }: Props) {
 
       <ContactForm data={data} />
       <BusinessForm profile={profile} advertiser_id={data.id}/>
+      {/* Agency clients have no wallet; they spend their agency's points. */}
+      {!data.agencyId && <PointsCard accountId={data.id} />}
 
     </div>
 

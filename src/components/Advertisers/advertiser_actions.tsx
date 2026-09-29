@@ -6,7 +6,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Ban, CheckCircle, ClipboardPenLine, InfoIcon, MoreHorizontal, Power, Trash2 } from "lucide-react";
+import { Ban, CheckCircle, ClipboardPenLine, Coins, InfoIcon, MoreHorizontal, Power, Trash2 } from "lucide-react";
+import TopUpForm from "../Points/top_up_form";
 import type { AdvertisersResponse } from "../../dto/response/advertisers/advertisersResponse";
 import { Button } from "../ui/button";
 import { useNavigate } from "react-router-dom";
@@ -24,6 +25,9 @@ export default function AdvertiserActions({ id, name, email, phone, status, veri
     const [deleteOpen, setDeleteOpen] = React.useState(false);
     const [verifyOpen, setVerifyOpen] = React.useState(false);
     const [statusOpen, setStatusOpen] = React.useState(false);
+    const [topUpOpen, setTopUpOpen] = React.useState(false);
+    // Only standalone advertisers and agencies own a points wallet.
+    const hasWallet = !agencyId;
 
     const [_formData, setFormData] = useState({ id, name, email, phone, status, verified, password });
 
@@ -86,6 +90,15 @@ export default function AdvertiserActions({ id, name, email, phone, status, veri
                         <ClipboardPenLine /> Edit
                     </DropdownMenuItem>
 
+                    {hasWallet && (
+                        <DropdownMenuItem
+                            onClick={() => setTopUpOpen(true)}
+                            className="cursor-pointer"
+                        >
+                            <Coins /> Add points
+                        </DropdownMenuItem>
+                    )}
+
                     {!verified && (
                         <DropdownMenuItem
                             onClick={() => setVerifyOpen(true)}
@@ -141,6 +154,24 @@ export default function AdvertiserActions({ id, name, email, phone, status, veri
                     </Button>
                 }
             />
+
+            {/* Add points drawer */}
+            {hasWallet && (
+                <DrawerFormLayout
+                    open={topUpOpen}
+                    setOpen={setTopUpOpen}
+                    title="Add Points"
+                    description={`Add points to ${name}'s wallet.`}
+                    formContent={
+                        <TopUpForm accountId={id} onSuccess={() => setTopUpOpen(false)} />
+                    }
+                    cancelButton={
+                        <Button variant="outline" className="w-full my-3">
+                            Cancel
+                        </Button>
+                    }
+                />
+            )}
 
             {/* Verify Dialog */}
             <Dialog open={verifyOpen} onOpenChange={setVerifyOpen}>

@@ -149,3 +149,15 @@ export const updateCampaignBudget = async (id: string, data: CampaignBudgetInput
         throw new Error ("An unexpected error occurred")
     }
 }
+
+export const getPaymentInfo = async (id: string) => {
+    try {
+        const response = await axiosInstance.get(`/campaigns/${id}/payment-info`)
+        return response.data
+    } catch (error) {
+        if(error instanceof AxiosError) {
+            throw new Error(error.response?.data.message || "Failed to load payment info")
+        }
+        throw new Error ("An unexpected error occurred")
+    }
+}

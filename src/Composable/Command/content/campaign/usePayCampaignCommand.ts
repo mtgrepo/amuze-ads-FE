@@ -16,6 +16,8 @@ export const usePayCampaignCommand = () => {
             qc.invalidateQueries({ queryKey: ['ad-list'] });
             qc.invalidateQueries({ queryKey: ['ad-details'] });
             qc.invalidateQueries({ queryKey: ['transaction-list'] });
+            qc.invalidateQueries({ queryKey: ['wallet'] });
+            qc.invalidateQueries({ queryKey: ['payment-info'] });
             toast.success('Payment recorded.');
         },
         onError: (error: Error) => {
