@@ -6,7 +6,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CheckCircle, CircleCheck, CreditCard, Info, MoreHorizontal, Pause, XCircle } from "lucide-react";
+import { CheckCircle, CircleCheck, CreditCard, Info, MoreHorizontal, Pause, Wallet, XCircle } from "lucide-react";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../ui/button";
@@ -23,11 +23,13 @@ import { useAdApproveCommand } from "../../../Composable/Command/content/ads/use
 import { useAdRejectCommand } from "../../../Composable/Command/content/ads/useAdRejectCommand";
 import type { AdResponse } from "../../../dto/response/content/adResponse";
 import PaymentDialog from "../Payment/payment_dialog";
+import BudgetForm from "./budget_form";
 
 export default function AdsActions({ id, status, adSet }: AdResponse) {
     const navigate = useNavigate();
     const [statusDialogOpen, setStatusDialogOpen] = React.useState(false);
     const [payOpen, setPayOpen] = React.useState(false);
+    const [budgetOpen, setBudgetOpen] = React.useState(false);
     const [approveOpen, setApproveOpen] = React.useState(false);
     const [rejectOpen, setRejectOpen] = React.useState(false);
 
@@ -83,10 +85,16 @@ export default function AdsActions({ id, status, adSet }: AdResponse) {
                     </DropdownMenuItem>
 
                     {status === "draft" && (
-                        <DropdownMenuItem onClick={() => setPayOpen(true)} className="text-green-600 focus:text-green-600">
-                            <CreditCard className="mr-2 h-4 w-4" />
-                            Pay
-                        </DropdownMenuItem>
+                        <>
+                            <DropdownMenuItem onClick={() => setBudgetOpen(true)}>
+                                <Wallet className="mr-2 h-4 w-4" />
+                                Edit budget
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setPayOpen(true)} className="text-green-600 focus:text-green-600">
+                                <CreditCard className="mr-2 h-4 w-4" />
+                                Pay
+                            </DropdownMenuItem>
+                        </>
                     )}
 
                     {status === "pending" && (
@@ -205,6 +213,21 @@ export default function AdsActions({ id, status, adSet }: AdResponse) {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* EDIT BUDGET DIALOG — drafts only; the budget is locked after payment */}
+            {status === "draft" && adSet?.campaign && (
+                <Dialog open={budgetOpen} onOpenChange={setBudgetOpen}>
+                    <DialogContent className="sm:max-w-2xl rounded-2xl">
+                        <DialogHeader>
+                            <DialogTitle>Edit budget</DialogTitle>
+                            <DialogDescription>
+                                {adSet.campaign.name} — the budget can be changed until the ad is paid.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <BudgetForm campaign={adSet.campaign} embedded onDone={() => setBudgetOpen(false)} />
+                    </DialogContent>
+                </Dialog>
+            )}
 
             {/* PAYMENT DIALOG */}
             {status === "draft" && adSet?.campaign && (

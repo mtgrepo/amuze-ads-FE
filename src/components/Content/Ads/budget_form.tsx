@@ -41,6 +41,10 @@ interface BudgetFormProps {
         startDate: string | Date
         endDate: string | Date
     }
+    /** Render just the form, already editing (e.g. inside a dialog). */
+    embedded?: boolean
+    /** Called after Save succeeds or Cancel is pressed. */
+    onDone?: () => void
 }
 
 const toDateOnly = (value: Date) => {
@@ -59,8 +63,8 @@ const parseLocalDate = (value: string | Date) => {
 }
 
 // Budget and schedule set the amount paid, so they can change only while the ad is a draft.
-export default function BudgetForm({ campaign }: BudgetFormProps) {
-    const [editing, setEditing] = useState(false);
+export default function BudgetForm({ campaign, embedded = false, onDone }: BudgetFormProps) {
+    const [editing, setEditing] = useState(embedded);
     const isDraft = campaign.status === "draft";
     const { updateCampaignBudgetCommand, isPending } = useUpdateCampaignBudgetCommand();
 
@@ -114,12 +118,14 @@ export default function BudgetForm({ campaign }: BudgetFormProps) {
                 endDate: toDateOnly(values.endDate),
             },
         });
-        setEditing(false);
+        setEditing(embedded);
+        onDone?.();
     };
 
     const handleCancel = () => {
         form.reset(toValues());
-        setEditing(false);
+        setEditing(embedded);
+        onDone?.();
     };
 
     const renderDateField = (name: "startDate" | "endDate", label: string) => (
@@ -156,24 +162,7 @@ export default function BudgetForm({ campaign }: BudgetFormProps) {
         )} />
     );
 
-    return (
-        <Card className="rounded-2xl shadow-sm">
-            <CardHeader className="flex justify-between items-center">
-                <CardTitle className="flex flex-row gap-3 items-center">
-                    <Wallet size={20} className="text-primary" /> Budget
-                </CardTitle>
-                {isDraft && !editing && (
-                    <Button type="button" size="sm" variant="outline" onClick={() => setEditing(true)}>
-                        <EditIcon size={16} /> Edit
-                    </Button>
-                )}
-                {!isDraft && (
-                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Lock size={14} /> Budget is locked after payment.
-                    </span>
-                )}
-            </CardHeader>
-            <CardContent>
+    const formContent = (
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
@@ -229,6 +218,29 @@ export default function BudgetForm({ campaign }: BudgetFormProps) {
                         )}
                     </form>
                 </Form>
+    );
+
+    if (embedded) return formContent;
+
+    return (
+        <Card className="rounded-2xl shadow-sm">
+            <CardHeader className="flex justify-between items-center">
+                <CardTitle className="flex flex-row gap-3 items-center">
+                    <Wallet size={20} className="text-primary" /> Budget
+                </CardTitle>
+                {isDraft && !editing && (
+                    <Button type="button" size="sm" variant="outline" onClick={() => setEditing(true)}>
+                        <EditIcon size={16} /> Edit
+                    </Button>
+                )}
+                {!isDraft && (
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Lock size={14} /> Budget is locked after payment.
+                    </span>
+                )}
+            </CardHeader>
+            <CardContent>
+                {formContent}
             </CardContent>
         </Card>
     )
