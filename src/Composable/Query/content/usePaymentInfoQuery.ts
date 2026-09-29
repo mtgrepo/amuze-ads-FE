@@ -14,5 +14,6 @@ export const usePaymentInfoQuery = (campaignId: string, enabled: boolean = true)
     return {
         paymentInfo: paymentInfo.data,
         isLoading: paymentInfo.isLoading,
+        isError: paymentInfo.isError,
     }
 }

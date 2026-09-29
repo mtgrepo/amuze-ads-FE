@@ -39,9 +39,13 @@ export default function TopUpForm({ accountId, onSuccess }: TopUpFormProps) {
     })
 
     async function onSubmit(values: Values) {
-        await topUpPointsCommand({ accountId, data: values });
-        form.reset();
-        onSuccess?.();
+        try {
+            await topUpPointsCommand({ accountId, data: values });
+            form.reset();
+            onSuccess?.();
+        } catch {
+            // The command's onError already shows the reason.
+        }
     }
 
     return (

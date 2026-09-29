@@ -26,7 +26,7 @@ interface PaymentDialogProps {
 // Admin pays with the customer's points (the agency's for agency clients); the ad goes live immediately.
 export default function PaymentDialog({ open, onOpenChange, campaignId, campaignName, amount, onPaid }: PaymentDialogProps) {
     const { payCampaignCommand, isPending } = usePayCampaignCommand();
-    const { paymentInfo, isLoading } = usePaymentInfoQuery(campaignId, open);
+    const { paymentInfo, isLoading, isError } = usePaymentInfoQuery(campaignId, open);
 
     const total = paymentInfo?.amount ?? Number(amount);
     const balance = paymentInfo?.balance ?? 0;
@@ -69,6 +69,10 @@ export default function PaymentDialog({ open, onOpenChange, campaignId, campaign
                         </span>
                     </div>
                 </div>
+
+                {isError && (
+                    <p className="text-sm text-destructive">Couldn't load the payer's balance. Close this and try again.</p>
+                )}
 
                 {paymentInfo && shortfall > 0 && (
                     <p className="text-sm text-destructive">
