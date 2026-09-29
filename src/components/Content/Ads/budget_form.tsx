@@ -50,6 +50,14 @@ const toDateOnly = (value: Date) => {
     return `${year}-${month}-${day}`;
 }
 
+// Stored dates arrive as "YYYY-MM-DD"; read them as local calendar days (new Date("YYYY-MM-DD") is UTC midnight),
+// matching the local-midnight dates the calendar picker produces.
+const parseLocalDate = (value: string | Date) => {
+    if (value instanceof Date) return value;
+    const [year, month, day] = value.slice(0, 10).split("-").map(Number);
+    return new Date(year, month - 1, day);
+}
+
 // Budget and schedule set the amount paid, so they can change only while the ad is a draft.
 export default function BudgetForm({ campaign }: BudgetFormProps) {
     const [editing, setEditing] = useState(false);
@@ -60,8 +68,8 @@ export default function BudgetForm({ campaign }: BudgetFormProps) {
         budgetPlan: campaign.budgetPlan === "total" ? "total" : "daily",
         dailyBudget: Number(campaign.dailyBudget),
         totalBudget: Number(campaign.totalBudget),
-        startDate: new Date(campaign.startDate),
-        endDate: new Date(campaign.endDate),
+        startDate: parseLocalDate(campaign.startDate),
+        endDate: parseLocalDate(campaign.endDate),
     });
 
     const form = useForm<Values>({
@@ -84,7 +92,7 @@ export default function BudgetForm({ campaign }: BudgetFormProps) {
         if (budgetPlan === "daily") {
             if (startDate && endDate && dailyBudget >= 1) {
                 const msPerDay = 1000 * 60 * 60 * 24;
-                const days = Math.floor((endDate.getTime() - startDate.getTime()) / msPerDay) + 1;
+                const days = Math.round((endDate.getTime() - startDate.getTime()) / msPerDay) + 1;
                 form.setValue("totalBudget", dailyBudget * Math.max(days, 1));
             }
         } else {
