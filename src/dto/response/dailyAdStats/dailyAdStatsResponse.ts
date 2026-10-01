@@ -29,6 +29,8 @@ export interface TopAdItem {
 
 export interface PlacementBreakdownItem {
     placementKey: string;
+    impressions: number;
     clicks: number;
     watches: number;
+    engagements: number;
 }

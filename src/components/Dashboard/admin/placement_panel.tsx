@@ -1,6 +1,6 @@
 import { usePlacementBreakdownQuery } from "../../../Composable/Query/dailyAdStats/useDailyAdStatsQuery";
 import { Panel, PanelHeader, PanelLoading } from "./panel";
-import { compactNumber, placementLabel, type DateRange } from "./dashboard_utils";
+import { compactNumber, placementLabel, rate, type DateRange } from "./dashboard_utils";
 
 export function PlacementPanel({ range }: { range: DateRange }) {
     const { placementData, isLoading } = usePlacementBreakdownQuery(range.from, range.to);
@@ -8,7 +8,7 @@ export function PlacementPanel({ range }: { range: DateRange }) {
 
     return (
         <Panel>
-            <PanelHeader title="By placement" meta="Clicks · watches" />
+            <PanelHeader title="By placement" meta="Clicks · CTR · view rate" />
             {isLoading ? (
                 <PanelLoading rows={3} />
             ) : placementData.length === 0 ? (
@@ -22,7 +22,7 @@ export function PlacementPanel({ range }: { range: DateRange }) {
                             <div className="mb-1.5 flex justify-between text-sm">
                                 <span>{placementLabel(p.placementKey)}</span>
                                 <span className="tabular-nums text-muted-foreground">
-                                    <span className="text-foreground">{compactNumber(p.clicks)}</span> · {compactNumber(p.watches)}
+                                    <span className="text-foreground">{compactNumber(p.clicks)}</span> · {rate(p.clicks, p.impressions)} · {rate(p.watches, p.impressions)}
                                 </span>
                             </div>
                             <div className="h-1 rounded-full bg-muted">

@@ -88,7 +88,7 @@ export default function DashboardComponent() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1.15fr_1fr]">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_1.4fr]">
         <AttentionPanel />
         <HeadlinePanel range={range} rangeLabel={RANGE_LABELS[preset]} />
       </div>

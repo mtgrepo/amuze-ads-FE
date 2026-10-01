@@ -59,6 +59,13 @@ export function compactNumber(n: number): string {
     return n.toLocaleString();
 }
 
+/** part ÷ base as a percentage, e.g. clicks ÷ impressions = CTR. "—" when there's nothing to divide by. */
+export function rate(part: number, base: number): string {
+    if (!base) return "—";
+    const pct = (part / base) * 100;
+    return `${pct.toFixed(pct >= 10 ? 1 : 2)}%`;
+}
+
 export function percentChange(current: number, previous: number): number | null {
     if (!previous) return null;
     return Math.round(((current - previous) / previous) * 100);

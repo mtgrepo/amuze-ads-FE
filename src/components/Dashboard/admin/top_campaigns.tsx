@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useTopAdsQuery } from "../../../Composable/Query/dailyAdStats/useDailyAdStatsQuery";
 import { Panel, PanelHeader, PanelLoading } from "./panel";
-import { daysUntil, endsInLabel, type DateRange } from "./dashboard_utils";
+import { daysUntil, endsInLabel, rate, type DateRange } from "./dashboard_utils";
 
 export function TopCampaigns({ range }: { range: DateRange }) {
     const { topAdsData, isLoading } = useTopAdsQuery(5, "clicks", range.from, range.to);
@@ -23,7 +23,9 @@ export function TopCampaigns({ range }: { range: DateRange }) {
                                 <th className="pb-2 font-normal">Campaign</th>
                                 <th className="pb-2 font-normal">Advertiser</th>
                                 <th className="pb-2 text-right font-normal">Clicks</th>
+                                <th className="pb-2 text-right font-normal">CTR</th>
                                 <th className="pb-2 text-right font-normal">Watches</th>
+                                <th className="pb-2 text-right font-normal">Eng.</th>
                                 <th className="pb-2 text-right font-normal">Ends</th>
                             </tr>
                         </thead>
@@ -40,7 +42,9 @@ export function TopCampaigns({ range }: { range: DateRange }) {
                                             {ad.agencyName && <span className="text-xs"> · via {ad.agencyName}</span>}
                                         </td>
                                         <td className="py-2.5 text-right tabular-nums">{ad.totalClicks.toLocaleString()}</td>
+                                        <td className="py-2.5 text-right tabular-nums">{rate(ad.totalClicks, ad.totalImpressions)}</td>
                                         <td className="py-2.5 text-right tabular-nums">{ad.totalWatches.toLocaleString()}</td>
+                                        <td className="py-2.5 text-right tabular-nums">{ad.totalEngagements.toLocaleString()}</td>
                                         <td className={`py-2.5 text-right ${daysLeft >= 0 && daysLeft <= 1 ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}`}>
                                             {endsInLabel(ad.endDate)}
                                         </td>
