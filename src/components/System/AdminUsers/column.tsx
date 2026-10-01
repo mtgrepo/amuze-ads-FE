@@ -4,7 +4,6 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { CircleCheck, XCircle } from "lucide-react";
 import type { AdminUserResponse } from "../../../dto/response/system/adminUserResponse";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../ui/tooltip";
-import AdminActions from "./admin_actions";
 
 const columns: ColumnDef<AdminUserResponse>[] = [
     {
@@ -37,10 +36,17 @@ const columns: ColumnDef<AdminUserResponse>[] = [
         ),
     },
     {
+        accessorKey: "phone",
+        header: "Phone",
+        cell: ({ row }) => (
+            <div>{row.original.phone ?? "—"}</div>
+        ),
+    },
+    {
         accessorKey: "email",
         header: "Email",
         cell: ({ row }) => (
-            <div>{row.getValue("email")}</div>
+            <div>{row.original.email ?? "—"}</div>
         ),
     },
     {
@@ -66,8 +72,18 @@ const columns: ColumnDef<AdminUserResponse>[] = [
         ),
     },
     {
+        accessorKey: "lastLogin",
+        header: "Last Sign-in",
+        cell: ({ row }) => {
+            const lastLogin = row.original.lastLogin;
+            return (
+                <div>{lastLogin ? new Date(lastLogin).toLocaleString() : "—"}</div>
+            )
+        },
+    },
+    {
         accessorKey: "createdAt",
-        header: "Created At",
+        header: "First Sign-in",
         cell: ({ row }) => {
             const date = new Date(row.getValue("createdAt"));
 
@@ -75,17 +91,6 @@ const columns: ColumnDef<AdminUserResponse>[] = [
                 <div className="capitalize">
                     {date.toLocaleString()}
                 </div>
-            )
-        },
-    },
-    {
-        id: "actions",
-        enableHiding: false,
-        cell: ({ row }) => {
-            const admins = row.original
-
-            return (
-                <AdminActions {...admins} />
             )
         },
     },

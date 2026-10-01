@@ -1,7 +1,7 @@
 import { AxiosError } from "axios"
 import axiosInstance from "../../httpClient"
-import type { AdminUserInput } from "../../../dto/input/system/adminUserInput"
 
+// Admin users are created and updated from the AMUZE admin portal (on sign-in); this is read-only.
 export const getAdminUsers = async () => {
     try {
         const response = await axiosInstance.get("/admin-users")
@@ -9,42 +9,6 @@ export const getAdminUsers = async () => {
     } catch (error) {
         if (error instanceof AxiosError) {
             throw new Error(error.response?.data.message || "Failed to fetch admin users")
-        }
-        throw new Error("An unexpected error occurred")
-    }
-}
-
-export const createAdminUser = async (data: AdminUserInput) => {
-    try {
-        const response = await axiosInstance.post("/admin-users", data)
-        return response.data
-    } catch (error) {
-        if (error instanceof AxiosError) {
-            throw new Error(error.response?.data.message || "Failed to create admin user")
-        }
-        throw new Error("An unexpected error occurred")
-    }
-}   
-
-export const deleteAdminUser = async (id: string) => {
-    try {
-        const response = await axiosInstance.delete(`/admin-users/${id}`)
-        return response.data
-    } catch (error) {
-        if (error instanceof AxiosError) {
-            throw new Error(error.response?.data.message || "Failed to delete admin user")
-        }
-        throw new Error("An unexpected error occurred")
-    }
-}
-
-export const updateAdminUser = async (id: string, data: AdminUserInput) => {
-    try {
-        const response = await axiosInstance.patch(`/admin-users/${id}/update`, data)
-        return response.data
-    } catch (error) {
-        if (error instanceof AxiosError) {
-            throw new Error(error.response?.data.message || "Failed to update admin user")
         }
         throw new Error("An unexpected error occurred")
     }

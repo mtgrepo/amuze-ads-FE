@@ -3,13 +3,13 @@ import { createBrowserRouter } from "react-router-dom"
 import App from "../App"
 import Dashboard from "../features/Dashboard/dashboard"
 import Advertisers from "../features/Advertisers/advertisers"
-import LoginPage from "../features/Auth/login"
+import SsoPage from "../features/Auth/sso"
 import Ads from "../features/Content/Ads/ads"
 import AdDetailsPage from "../features/Content/Ads/ad_details"
 import CreateAdPage from "../features/Content/Ads/create_ad"
 import NotFound from "../components/Common/notfound_component"
 import AdvertiserDetailsPage from "../features/Advertisers/advertiser_details"
-import { ProtectedRoute, PublicRoute } from "./guard"
+import { ProtectedRoute } from "./guard"
 import AdminUsers from "../features/System/AdminUsers/admin_users"
 import SystemConfigs from "../features/System/SystemConfigs/system_configs"
 import ProfilePage from "../features/AdvertiserProfile/profile"
@@ -137,13 +137,11 @@ const router = createBrowserRouter([
     },
 
     // outside layout (no sidebar/header)
+    // Admins arrive here from the AMUZE admin portal: /sso#token=<AMUZE admin JWT>.
+    // Not restricted to signed-out users, so a different admin arriving in the same browser still signs in.
     {
-        path: "/login",
-        element: (
-            <PublicRoute>
-                <LoginPage />
-            </PublicRoute>
-        ),
+        path: "/sso",
+        element: <SsoPage />,
     },
 ])
 

@@ -27,23 +27,25 @@ import {
 } from "@/components/ui/sidebar"
 import { useDispatch } from "react-redux"
 import { logoutAction } from "../redux/auth/authSlice"
-import { toast } from "sonner"
+import { goToAmuzeAdmin } from "../lib/amuze"
 
 export function NavUser({
   user,
 }: {
   user: {
     name: string
-    email: string
+    email?: string | null
+    phone?: string | null
     avatar?: string
   }
 }) {
   const { isMobile } = useSidebar()
   
   const dispatch = useDispatch();
+  // Admins sign in through AMUZE, so logging out returns them there.
   const handleLogout = () => {
     dispatch(logoutAction());
-    toast.success("Logged out successfully");
+    goToAmuzeAdmin();
   }
   return (
     <SidebarMenu>
@@ -56,11 +58,11 @@ export function NavUser({
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg bg-primary-foreground text-primary">{user?.email?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                <AvatarFallback className="rounded-lg bg-primary-foreground text-primary">{(user?.name || user?.email || "").slice(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
-                <span className="truncate text-xs">{user.email}</span>
+                <span className="truncate text-xs">{user.email || user.phone}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -75,11 +77,11 @@ export function NavUser({
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg bg-primary-foreground text-primary">{user?.email?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback className="rounded-lg bg-primary-foreground text-primary">{(user?.name || user?.email || "").slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>
-                  <span className="truncate text-xs">{user.email}</span>
+                  <span className="truncate text-xs">{user.email || user.phone}</span>
                 </div>
               </div>
             </DropdownMenuLabel>

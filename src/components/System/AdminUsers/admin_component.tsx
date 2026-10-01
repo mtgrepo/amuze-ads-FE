@@ -10,7 +10,7 @@ import {
 import type { SortingState } from "@tanstack/react-table";
 import type { VisibilityState } from "@tanstack/react-table";
 import type { ColumnFiltersState } from "@tanstack/react-table";
-import { ChevronDown, CirclePlus } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -29,11 +29,8 @@ import {
 } from "@/components/ui/table";
 import columns  from "./column";
 import type { AdminUserResponse } from "../../../dto/response/system/adminUserResponse";
-import DrawerFormLayout from "../../Common/Layout/drawer_form_layout";
-import DrawerButton from "../../Common/drawer-button";
 import { PageSizeComponent } from "../../Common/Pagination/page-number";
 import Paginator from "../../Common/Pagination/paginator";
-import AdminUserForm from "./admin_user_form";
 type AdminProps = {
   data: AdminUserResponse[];
 };
@@ -50,7 +47,6 @@ export function AdminComponent({ data }: AdminProps) {
     pageIndex: 0,
     pageSize: 10,
   });
-  const [open , setOpen] = React.useState(false);
 
   const table = useReactTable({
     data,
@@ -104,30 +100,11 @@ export function AdminComponent({ data }: AdminProps) {
             </div>
           </div>
         </div>
-        <div className="flex flex-row gap-3 justify-end">
-          {/* drawer */}
-          <DrawerFormLayout
-            open={open}
-            setOpen={setOpen}
-            title="Admin user Form"
-            description="Add admin user here."
-            formContent={
-              <AdminUserForm
-                mode="add"
-                onSuccess={() => {
-                  setOpen(false); //
-                }}
-              />
-            }
-            cancelButton={
-              <Button variant="outline" className="w-full my-3">
-                Cancel
-              </Button>
-            }
-            drawerButton={
-              <DrawerButton btn_icon={CirclePlus} title="Add admin user" />
-            }
-          />
+        <div className="flex flex-row gap-3 justify-end items-center">
+          {/* Admins are added automatically the first time they open the Ad portal from AMUZE. */}
+          <p className="text-sm text-muted-foreground mr-auto">
+            Admins are managed in the AMUZE admin portal and appear here after their first sign-in.
+          </p>
           {/* column filter */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

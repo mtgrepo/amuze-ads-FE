@@ -1,6 +1,7 @@
 // src/api/axios.js
 import axios from 'axios';
 import { decryptAuthData } from '../lib/helper';
+import { goToAmuzeAdmin } from '../lib/amuze';
 
 // const baseURL = import.meta.env.VITE_APP_BASE_URL;
 const baseURL= import.meta.env.VITE_APP_BASE_URL ? import.meta.env.VITE_APP_BASE_URL : 'http://localhost:3000';
@@ -30,10 +31,11 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    //unauthorized
-    if(error?.response?.status === 401) {
+    //unauthorized: the AMUZE token expired or was rejected, so sign in again through AMUZE.
+    // The /sso call itself is excluded so its page can show why sign-in failed.
+    if(error?.response?.status === 401 && !error?.config?.url?.includes('/auth/admin/sso')) {
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        goToAmuzeAdmin();
     }
 
     // Global error handling
