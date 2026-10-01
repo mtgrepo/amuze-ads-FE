@@ -1,417 +1,114 @@
 import { useState } from "react";
-import {
-    AreaChart,
-    Area,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    Legend,
-    ResponsiveContainer,
-} from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import {
-    Eye,
-    MousePointer2,
-    Monitor,
-    TrendingUp,
-    Trophy,
-    Zap,
-    PlayCircle,
-} from "lucide-react";
+import { format } from "date-fns";
+import { ChevronRight } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
     useAdminOverviewQuery,
     useAdminTrendQuery,
-    useTopAdsQuery,
     useAdvertisersQuery,
 } from "../../Composable/Query/dailyAdStats/useDailyAdStatsQuery";
+import { eachDay, parseLocalDate, priorRange, type DateRange } from "../../components/Dashboard/admin/dashboard_utils";
+import { MetricStrip } from "../../components/Performance/metric_strip";
+import { ComparisonChart } from "../../components/Performance/comparison_chart";
+import { AdsTable } from "../../components/Performance/ads_table";
+import { DailyBreakdown } from "../../components/Performance/daily_breakdown";
+import { RangeControl } from "../../components/Performance/range_control";
+import { rangeForDays, toDayTotals, type Metric } from "../../components/Performance/performance_types";
 
-type TopMetric = "clicks" | "impressions" | "engagements" | "watches";
+const ALL = "all";
 
-function formatNumber(n: number): string {
-    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-    if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-    return n.toLocaleString();
+function periodLabel(range: DateRange): string {
+    return `${format(parseLocalDate(range.from), "d MMM")} – ${format(parseLocalDate(range.to), "d MMM")}`;
 }
-
-function toDateInputValue(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-}
-
-function StatCard({
-    title,
-    value,
-    sub,
-    icon: Icon,
-    accent,
-}: {
-    title: string;
-    value: string | number;
-    sub?: string;
-    icon: React.ElementType;
-    accent: string;
-}) {
-    return (
-        <Card className="gap-3 py-5">
-            <CardHeader className="px-5 pb-0">
-                <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-muted-foreground">{title}</span>
-                    <span className={`p-2 rounded-lg ${accent}`}>
-                        <Icon className="h-4 w-4" />
-                    </span>
-                </div>
-            </CardHeader>
-            <CardContent className="px-5">
-                <p className="text-2xl font-bold tracking-tight">{value}</p>
-                {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
-            </CardContent>
-        </Card>
-    );
-}
-
-function ChartSkeleton({ height = 280 }: { height?: number }) {
-    return <Skeleton className="w-full rounded-lg" style={{ height }} />;
-}
-
-const DEFAULT_FROM = (() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 6);
-    return d;
-})();
 
 export default function DailyAdStats() {
-    const [dateFrom, setDateFrom] = useState(toDateInputValue(DEFAULT_FROM));
-    const [dateTo, setDateTo] = useState(toDateInputValue(new Date()));
-    const [topMetric, setTopMetric] = useState<TopMetric>("clicks");
-    // First box: a standalone advertiser or an agency. Second box (agency only): one of its clients.
-    // With an agency and no client chosen, the backend returns all of that agency's clients combined.
-    const [advertiserId, setAdvertiserId] = useState<string | undefined>(undefined);
-    const [clientId, setClientId] = useState<string | undefined>(undefined);
+    const [range, setRange] = useState<DateRange>(() => rangeForDays(7));
+    const [metric, setMetric] = useState<Metric>("clicks");
+    // First step: a standalone advertiser or an agency. Second step (agency only): one of its clients.
+    // An agency with no client chosen means all of that agency's clients combined.
+    const [accountId, setAccountId] = useState<string>();
+    const [clientId, setClientId] = useState<string>();
 
     const { advertisers } = useAdvertisersQuery();
-    const accountOptions = advertisers.filter((a) => a.type === "agency" || !a.agencyId);
-    const selectedAccount = advertisers.find((a) => a.id === advertiserId);
-    const isAgencySelected = selectedAccount?.type === "agency";
-    const agencyClients = isAgencySelected ? advertisers.filter((a) => a.agencyId === advertiserId) : [];
-    const scopeId = clientId ?? advertiserId;
+    const accounts = advertisers.filter((a) => a.type === "agency" || !a.agencyId);
+    const account = advertisers.find((a) => a.id === accountId);
+    const agencyClients = account?.type === "agency" ? advertisers.filter((a) => a.agencyId === account.id) : [];
+    const scopeId = clientId ?? accountId;
 
-    const { overviewData, isLoading: overviewLoading } = useAdminOverviewQuery(dateFrom, dateTo, scopeId);
-    const { trendData, isLoading: trendLoading } = useAdminTrendQuery(dateFrom, dateTo, scopeId);
-    const { topAdsData } = useTopAdsQuery(5, topMetric, dateFrom, dateTo, scopeId);
+    const prior = priorRange(range);
+    const { overviewData, isLoading } = useAdminOverviewQuery(range.from, range.to, scopeId);
+    const { overviewData: priorOverview } = useAdminOverviewQuery(prior.from, prior.to, scopeId);
+    const { trendData } = useAdminTrendQuery(range.from, range.to, scopeId);
+    const { trendData: priorTrend } = useAdminTrendQuery(prior.from, prior.to, scopeId);
 
-    const ctr =
-        overviewData && overviewData.totalImpressions > 0
-            ? ((overviewData.totalClicks / overviewData.totalImpressions) * 100).toFixed(2)
-            : "0.00";
-
-    const formattedTrend = trendData.map((item) => ({
-        ...item,
-        date: new Date(item.date).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-        }),
-    }));
-
-    const selectedClientName = clientId ? agencyClients.find((a) => a.id === clientId)?.name : undefined;
-    const statsSubtitle = selectedClientName
-        ? `Showing stats for ${selectedClientName} (${selectedAccount?.name})`
-        : isAgencySelected
-            ? `Showing combined stats for all clients of ${selectedAccount?.name}`
-            : selectedAccount
-                ? `Showing stats for ${selectedAccount.name}`
-                : "Aggregate stats across all advertisers";
+    const current = toDayTotals(eachDay(range), trendData);
+    const previous = toDayTotals(eachDay(prior), priorTrend);
+    const days = current.length;
 
     return (
-        <div className="w-full mx-auto px-5 py-4 space-y-5">
-            {/* Page Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-6 lg:px-6">
+            <div className="mb-2 flex flex-wrap items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Daily Ad Performance</h1>
-                    <p className="text-sm text-muted-foreground">
-                        {statsSubtitle}
-                    </p>
-                </div>
-                <div className="flex items-center gap-3 flex-wrap">
-                    {/* Advertiser Filter */}
-                    <Select
-                        value={advertiserId ?? "all"}
-                        onValueChange={(v) => {
-                            setAdvertiserId(v === "all" ? undefined : v);
-                            setClientId(undefined);
-                        }}
-                    >
-                        <SelectTrigger className="w-48">
-                            <SelectValue placeholder="All Advertisers" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Advertisers</SelectItem>
-                            {accountOptions.map((adv) => (
-                                <SelectItem key={adv.id} value={adv.id}>
-                                    {adv.type === "agency" ? `${adv.name} (Agency)` : adv.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-
-                    {/* Agency client filter: empty = all clients combined */}
-                    {isAgencySelected && (
+                    <h1 className="text-xl font-medium">Performance</h1>
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
                         <Select
-                            key={advertiserId}
-                            value={clientId ?? ""}
-                            onValueChange={(v) => setClientId(v === "all" ? undefined : v)}
+                            value={accountId ?? ALL}
+                            onValueChange={(v) => {
+                                setAccountId(v === ALL ? undefined : v);
+                                setClientId(undefined);
+                            }}
                         >
-                            <SelectTrigger className="w-48">
-                                <SelectValue placeholder="All clients" />
-                            </SelectTrigger>
+                            <SelectTrigger size="sm" className="h-8 min-w-40 text-xs"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All clients</SelectItem>
-                                {agencyClients.map((client) => (
-                                    <SelectItem key={client.id} value={client.id}>
-                                        {client.name}
+                                <SelectItem value={ALL}>All advertisers</SelectItem>
+                                {accounts.map((a) => (
+                                    <SelectItem key={a.id} value={a.id}>
+                                        {a.name}{a.type === "agency" && <span className="text-muted-foreground"> · agency</span>}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
-                    )}
-
-                    {/* Date Range */}
-                    <div className="flex items-center gap-2">
-                        <Input
-                            type="date"
-                            className="w-40"
-                            value={dateFrom}
-                            max={dateTo}
-                            onChange={(e) => setDateFrom(e.target.value)}
-                        />
-                        <span className="text-sm text-muted-foreground">to</span>
-                        <Input
-                            type="date"
-                            className="w-40"
-                            value={dateTo}
-                            min={dateFrom}
-                            max={toDateInputValue(new Date())}
-                            onChange={(e) => setDateTo(e.target.value)}
-                        />
+                        {account?.type === "agency" ? (
+                            <>
+                                <ChevronRight className="size-3.5 text-muted-foreground" />
+                                <Select key={account.id} value={clientId ?? ALL} onValueChange={(v) => setClientId(v === ALL ? undefined : v)}>
+                                    <SelectTrigger size="sm" className="h-8 min-w-36 text-xs"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value={ALL}>All clients</SelectItem>
+                                        {agencyClients.map((c) => (
+                                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </>
+                        ) : !account ? (
+                            <span className="ml-1 text-xs text-muted-foreground">Pick an agency to narrow to one of its clients</span>
+                        ) : null}
                     </div>
                 </div>
+                <RangeControl range={range} onChange={setRange} />
             </div>
 
-            {/* KPI Cards */}
-            {overviewLoading ? (
-                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                        <Skeleton key={i} className="h-28 rounded-xl" />
-                    ))}
-                </div>
-            ) : (
-                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                    <StatCard
-                        title="Impressions"
-                        value={formatNumber(overviewData?.totalImpressions ?? 0)}
-                        sub="Selected range"
-                        icon={Eye}
-                        accent="bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400"
-                    />
-                    <StatCard
-                        title="Clicks"
-                        value={formatNumber(overviewData?.totalClicks ?? 0)}
-                        sub={`CTR: ${ctr}%`}
-                        icon={MousePointer2}
-                        accent="bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400"
-                    />
-                    <StatCard
-                        title="Engagements"
-                        value={formatNumber(overviewData?.totalEngagements ?? 0)}
-                        sub="Selected range"
-                        icon={Zap}
-                        accent="bg-yellow-100 text-yellow-600 dark:bg-yellow-950 dark:text-yellow-400"
-                    />
-                    <StatCard
-                        title="Watches"
-                        value={formatNumber(overviewData?.totalWatches ?? 0)}
-                        sub="Selected range"
-                        icon={PlayCircle}
-                        accent="bg-violet-100 text-violet-600 dark:bg-violet-950 dark:text-violet-400"
-                    />
-                    <StatCard
-                        title="Active Ads"
-                        value={overviewData?.activeAds ?? 0}
-                        sub="Running now"
-                        icon={Monitor}
-                        accent="bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-400"
-                    />
-                </div>
-            )}
+            <section className="overflow-hidden rounded-xl border bg-card">
+                <MetricStrip
+                    current={overviewData}
+                    previous={priorOverview}
+                    selected={metric}
+                    onSelect={setMetric}
+                    activeAdsNote="running now"
+                    isLoading={isLoading}
+                />
+                <ComparisonChart
+                    metric={metric}
+                    current={current}
+                    previous={previous}
+                    rangeLabel={periodLabel(range)}
+                    previousLabel={`Previous ${days} ${days === 1 ? "day" : "days"}`}
+                />
+            </section>
 
-            {/* Performance Trend - Area Chart */}
-            <div className="grid grid-cols-1 gap-5">
-                <Card>
-                    <CardHeader className="px-6">
-                        <CardTitle className="flex items-center gap-2 text-base">
-                            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                            Performance Trend
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="px-6 pb-4">
-                        {trendLoading ? (
-                            <ChartSkeleton height={300} />
-                        ) : (
-                            <ResponsiveContainer width="100%" height={300}>
-                                <AreaChart
-                                    data={formattedTrend}
-                                    margin={{ top: 4, right: 16, left: 0, bottom: 0 }}
-                                >
-                                    <defs>
-                                        <linearGradient id="gradImpressions" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
-                                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                                        </linearGradient>
-                                        <linearGradient id="gradClicks" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#22c55e" stopOpacity={0.2} />
-                                            <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-                                        </linearGradient>
-                                        <linearGradient id="gradEngagements" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.2} />
-                                            <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
-                                        </linearGradient>
-                                        <linearGradient id="gradWatches" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.2} />
-                                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                    <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                                    <YAxis tick={{ fontSize: 11 }} width={50} tickFormatter={(v) => formatNumber(v)} />
-                                    <Tooltip
-                                        contentStyle={{ borderRadius: "8px", fontSize: "13px" }}
-                                        formatter={(value: number | undefined) => formatNumber(value ?? 0)}
-                                    />
-                                    <Legend wrapperStyle={{ fontSize: "13px" }} />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="impressions"
-                                        stroke="#3b82f6"
-                                        fill="url(#gradImpressions)"
-                                        strokeWidth={2}
-                                        dot={false}
-                                    />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="clicks"
-                                        stroke="#22c55e"
-                                        fill="url(#gradClicks)"
-                                        strokeWidth={2}
-                                        dot={false}
-                                    />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="engagements"
-                                        stroke="#f59e0b"
-                                        fill="url(#gradEngagements)"
-                                        strokeWidth={2}
-                                        dot={false}
-                                    />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="watches"
-                                        stroke="#8b5cf6"
-                                        fill="url(#gradWatches)"
-                                        strokeWidth={2}
-                                        dot={false}
-                                    />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        )}
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Top 5 Ads — Table */}
-            <Card>
-                <CardHeader className="px-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <CardTitle className="flex items-center gap-2 text-base">
-                            <Trophy className="h-4 w-4 text-muted-foreground" />
-                            Top 5 Ads
-                        </CardTitle>
-                        <div className="flex gap-2">
-                            {(["clicks", "impressions", "engagements", "watches"] as TopMetric[]).map((m) => (
-                                <Button
-                                    key={m}
-                                    variant={topMetric === m ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => setTopMetric(m)}
-                                    className="capitalize text-xs"
-                                >
-                                    {m}
-                                </Button>
-                            ))}
-                        </div>
-                    </div>
-                </CardHeader>
-                <CardContent className="px-6 pb-4">
-                    {topAdsData.length === 0 ? (
-                        <div className="h-32 flex items-center justify-center text-muted-foreground text-sm">
-                            No ad data available.
-                        </div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="border-b text-muted-foreground">
-                                        <th className="text-left py-2 pr-4 font-medium w-8">#</th>
-                                        <th className="text-left py-2 pr-4 font-medium">Campaign</th>
-                                        <th className="text-right py-2 pr-4 font-medium">Clicks</th>
-                                        <th className="text-right py-2 pr-4 font-medium">Impressions</th>
-                                        <th className="text-right py-2 pr-4 font-medium">Engagements</th>
-                                        <th className="text-right py-2 font-medium">Watches</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {topAdsData.map((ad, index) => (
-                                        <tr
-                                            key={index}
-                                            className="border-b last:border-0 hover:bg-muted/40 transition-colors"
-                                        >
-                                            <td className="py-3 pr-4 text-muted-foreground font-medium">
-                                                {index + 1}
-                                            </td>
-                                            <td className="py-3 pr-4 font-medium">
-                                                {ad.campaignName}
-                                            </td>
-                                            <td className="py-3 pr-4 text-right tabular-nums">
-                                                {formatNumber(ad.totalClicks)}
-                                            </td>
-                                            <td className="py-3 pr-4 text-right tabular-nums">
-                                                {formatNumber(ad.totalImpressions)}
-                                            </td>
-                                            <td className="py-3 pr-4 text-right tabular-nums">
-                                                {formatNumber(ad.totalEngagements)}
-                                            </td>
-                                            <td className="py-3 text-right tabular-nums">
-                                                {formatNumber(ad.totalWatches)}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+            <AdsTable range={range} scopeId={scopeId} owner="advertiser" title="Ads" />
+            <DailyBreakdown days={current} />
         </div>
     );
 }

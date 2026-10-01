@@ -21,6 +21,9 @@ export interface TopAdItem {
     endDate: string;
     advertiserName: string;
     agencyName: string | null;
+    placementKey: string;
+    /** Campaign status, e.g. active, paused, expired. */
+    status: string;
     totalImpressions: number;
     totalClicks: number;
     totalEngagements: number;
