@@ -3,12 +3,14 @@ import {
     getAdminOverview,
     getAdminTrend,
     getTopAds,
+    getPlacementBreakdown,
 } from "../../../http/apis/dailyAdStats/dailyAdStatsApi";
 import { getAdvertisers } from "../../../http/apis/advertisers/advertisersApi";
 import type {
     AdminOverviewResponse,
     AdminTrendItem,
     TopAdItem,
+    PlacementBreakdownItem,
 } from "../../../dto/response/dailyAdStats/dailyAdStatsResponse";
 
 export interface AdvertiserOption {
@@ -49,4 +51,12 @@ export const useAdvertisersQuery = () => {
         staleTime: 5 * 60 * 1000,
     });
     return { advertisers: data?.data ?? [], isLoading };
+};
+
+export const usePlacementBreakdownQuery = (fromDate?: string, toDate?: string, advertiserId?: string) => {
+    const { data, isLoading, isError } = useQuery<{ data: PlacementBreakdownItem[] }>({
+        queryKey: ["placement-breakdown", fromDate, toDate, advertiserId],
+        queryFn: () => getPlacementBreakdown(fromDate, toDate, advertiserId),
+    });
+    return { placementData: data?.data ?? [], isLoading, isError };
 };

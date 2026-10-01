@@ -11,7 +11,7 @@ import type { SortingState } from "@tanstack/react-table";
 import type { VisibilityState } from "@tanstack/react-table";
 import type { ColumnFiltersState } from "@tanstack/react-table";
 import { ChevronDown, CirclePlus } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -40,10 +40,13 @@ type AdProps = {
 export function AdComponent
   ({ data }: AdProps) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
+  // ?status=pending (e.g. from the dashboard) opens the list pre-filtered.
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(() => {
+    const status = searchParams.get("status");
+    return status ? [{ id: "status", value: status }] : [];
+  });
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});

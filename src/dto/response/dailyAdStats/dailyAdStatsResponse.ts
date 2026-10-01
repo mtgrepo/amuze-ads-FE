@@ -15,9 +15,20 @@ export interface AdminTrendItem {
 }
 
 export interface TopAdItem {
+    adId: string;
+    campaignId: string;
     campaignName: string;
+    endDate: string;
+    advertiserName: string;
+    agencyName: string | null;
     totalImpressions: number;
     totalClicks: number;
     totalEngagements: number;
     totalWatches: number;
+}
+
+export interface PlacementBreakdownItem {
+    placementKey: string;
+    clicks: number;
+    watches: number;
 }
