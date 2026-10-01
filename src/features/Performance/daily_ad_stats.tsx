@@ -46,7 +46,7 @@ export default function DailyAdStats() {
     const days = current.length;
 
     return (
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-6 lg:px-6">
+        <div className="flex w-full flex-col gap-3 px-4 py-6 lg:px-6">
             <div className="mb-2 flex flex-wrap items-end justify-between gap-4">
                 <div>
                     <h1 className="text-xl font-medium">Performance</h1>

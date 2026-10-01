@@ -42,7 +42,7 @@ export default function DashboardComponent() {
   const today = toLocalDateString(new Date())
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-6 lg:px-6">
+    <div className="flex w-full flex-col gap-3 px-4 py-6 lg:px-6">
       <div className="mb-3 flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="text-xs text-muted-foreground">{format(new Date(), "EEEE, d MMMM")}</div>
