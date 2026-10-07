@@ -51,10 +51,10 @@ const data = {
           title: "Advertisers",
           url: "/advertisers",
         },
-        {
-          title: "Advertiser Profiles",
-          url: "/advertiser-profiles",
-        }
+        // {
+        //   title: "Advertiser Profiles",
+        //   url: "/advertiser-profiles",
+        // }
       ],
     },
     {
