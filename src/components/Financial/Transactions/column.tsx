@@ -1,5 +1,5 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import type { TransactionResponse } from "../../../dto/response/transactions/transactionResponse";
+import { TRANSACTION_TYPE_LABELS, type TransactionResponse } from "../../../dto/response/transactions/transactionResponse";
 
 const columns: ColumnDef<TransactionResponse>[] = [
     {
@@ -8,14 +8,6 @@ const columns: ColumnDef<TransactionResponse>[] = [
         header: "Advertiser",
         cell: ({ row }) => (
             <div className="capitalize">{row.getValue("advertiser")}</div>
-        ),
-    },
-    {
-        id: "campaign",
-        accessorFn: (row) => row.campaign?.name ?? "-",
-        header: "Campaign",
-        cell: ({ row }) => (
-            <div>{row.getValue("campaign")}</div>
         ),
     },
     {
@@ -34,10 +26,11 @@ const columns: ColumnDef<TransactionResponse>[] = [
         ),
     },
     {
-        accessorKey: "referenceType",
-        header: "Reference Type",
+        id: "type",
+        accessorFn: (row) => TRANSACTION_TYPE_LABELS[row.referenceType] ?? row.referenceType,
+        header: "Type",
         cell: ({ row }) => (
-            <div className="capitalize">{row.getValue("referenceType")}</div>
+            <div>{row.getValue("type")}</div>
         ),
     },
     {

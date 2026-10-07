@@ -10,8 +10,10 @@ export interface TransactionResponse {
         name: string,
         email: string,
     },
-    campaign: {
-        id: string,
-        name: string,
-    } | null,
 }
+
+/** What the money paid for. Every transaction is money received. */
+export const TRANSACTION_TYPE_LABELS: Record<string, string> = {
+    point_purchase: "Points purchase",
+    admin_top_up: "Top-up paid to admin",
+};
