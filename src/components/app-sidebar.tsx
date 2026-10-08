@@ -35,9 +35,9 @@ const data = {
   },
   teams: [
     {
-      name: "Acme Inc",
+      name: "Amuze Ad Portal",
       logo: Layers,
-      plan: "Enterprise",
+      plan: ""
     },
   ],
   navMain: [
@@ -74,7 +74,7 @@ const data = {
       icon: Newspaper,
       items: [
         {
-          title: "Ads",
+          title: "Ad Management",
           url: "/ads",
         },
         {
