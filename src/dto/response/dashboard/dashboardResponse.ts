@@ -24,3 +24,20 @@ export interface PointsSummaryResponse {
     spent: number;
     refunded: number;
 }
+
+/** All-time figure plus the selected range's share. 1 point = 1 MMK. */
+export interface RevenueFigure {
+    allTime: number;
+    inRange: number;
+}
+
+export interface DashboardSummaryResponse {
+    /** Current counts, not limited to the date range. */
+    campaigns: { total: number; drafts: number; pending: number; active: number };
+    revenue: {
+        /** Points spent on ads minus refunds. */
+        earned: RevenueFigure;
+        /** Points bought online plus top-ups paid to an admin. */
+        received: RevenueFigure;
+    };
+}

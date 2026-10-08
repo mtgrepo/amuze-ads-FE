@@ -4,6 +4,7 @@ import { format } from "date-fns"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import type { RootState } from "../../redux/store/store"
+import { SummaryStrip } from "./admin/summary_strip"
 import { AttentionPanel } from "./admin/attention_panel"
 import { HeadlinePanel } from "./admin/headline_panel"
 import { DeliveryChart } from "./admin/delivery_chart"
@@ -87,6 +88,8 @@ export default function DashboardComponent() {
           </div>
         </div>
       </div>
+
+      <SummaryStrip range={range} rangeLabel={RANGE_LABELS[preset]} />
 
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_1.4fr]">
         <AttentionPanel />

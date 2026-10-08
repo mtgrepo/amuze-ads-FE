@@ -27,3 +27,18 @@ export const getPointsSummary = async (fromDate?: string, toDate?: string) => {
         throw new Error("An unexpected error occurred");
     }
 };
+
+export const getDashboardSummary = async (fromDate?: string, toDate?: string) => {
+    try {
+        const params = new URLSearchParams();
+        if (fromDate) params.set("fromDate", fromDate);
+        if (toDate) params.set("toDate", toDate);
+        const response = await axiosInstance.get(`/dashboard/admin/summary?${params}`);
+        return response.data;
+    } catch (error) {
+        if (error instanceof AxiosError) {
+            throw new Error(error.response?.data.message || "Failed to fetch dashboard summary");
+        }
+        throw new Error("An unexpected error occurred");
+    }
+};
