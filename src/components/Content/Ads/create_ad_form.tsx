@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -37,8 +38,8 @@ const formSchema = z
     advertiserId: z.string().min(1, { message: "Advertiser is required." }),
     name: z.string().min(1, { message: "Campaign name is required." }),
     budgetPlan: z.enum(["daily", "total"]),
-    dailyBudget: z.number().min(0),
-    totalBudget: z.number().min(1, { message: "Total budget is required." }),
+    dailyBudget: z.number({ message: "Daily budget is required." }).min(0).optional(),
+    totalBudget: z.number({ message: "Total budget is required." }).min(1, { message: "Total budget is required." }).optional(),
     startDate: z.date({ message: "Start date is required." }),
     endDate: z.date({ message: "End date is required." }),
     creativeName: z.string().min(1, { message: "Creative name is required." }),
@@ -49,13 +50,21 @@ const formSchema = z
     asset: z.any().refine((v) => v instanceof File, {
       message: "An image or video is required.",
     }),
-    ageMin: z.number().min(1, { message: "Age min is required." }),
-    ageMax: z.number().min(1, { message: "Age max is required." }),
+    ageMin: z.number({ message: "Age min is required." }).min(1, { message: "Age min must be at least 1." }),
+    ageMax: z.number({ message: "Age max is required." }).min(1, { message: "Age max must be at least 1." }),
     gender: z.string().min(1, { message: "Gender is required." }),
     adType: z.string().min(1, { message: "Ad type is required." }),
     placementKey: z.string().min(1, { message: "Placement is required." }),
   })
-  .refine((data) => data.budgetPlan !== "daily" || data.dailyBudget >= 1, {
+  // The budget field the user fills in depends on the plan. `when` runs these checks even while
+  // other fields are still invalid, so an empty form flags the right budget box at once.
+  .refine((data) => data.budgetPlan !== "total" || (data.totalBudget ?? 0) >= 1, {
+    message: "Total budget is required.",
+    path: ["totalBudget"],
+    when: () => true,
+  })
+  .refine((data) => data.budgetPlan !== "daily" || (data.dailyBudget ?? 0) >= 1, {
+    when: () => true,
     message: "Daily budget is required.",
     path: ["dailyBudget"],
   });
@@ -119,7 +128,7 @@ export default function CreateAdForm({
 
   useEffect(() => {
     if (budgetPlan === "daily") {
-      if (startDate && endDate && dailyBudget >= 1) {
+      if (startDate && endDate && dailyBudget && dailyBudget >= 1) {
         const msPerDay = 1000 * 60 * 60 * 24;
         const days =
           Math.floor((endDate.getTime() - startDate.getTime()) / msPerDay) + 1;
@@ -245,7 +254,8 @@ export default function CreateAdForm({
                       type="number"
                       {...field}
                       disabled={budgetPlan === "total"}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
                     />
                   </FormControl>
                   <FormMessage />
@@ -263,7 +273,8 @@ export default function CreateAdForm({
                       type="number"
                       {...field}
                       disabled={budgetPlan === "daily"}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
                     />
                   </FormControl>
                   <FormMessage />
@@ -481,10 +492,11 @@ export default function CreateAdForm({
                 name="destinationLink"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Destination Link</FormLabel> <span className="text-xs text-blue-300">(Link to Redirect users when they click the ad)</span>
+                    <FormLabel>Destination Link</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="https://..." />
                     </FormControl>
+                    <FormDescription>Where people go when they tap the ad.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -521,7 +533,8 @@ export default function CreateAdForm({
                       type="number"
                       placeholder="e.g. 18"
                       {...field}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
                     />
                   </FormControl>
                   <FormMessage />
@@ -539,7 +552,8 @@ export default function CreateAdForm({
                       type="number"
                       placeholder="e.g. 65"
                       {...field}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
                     />
                   </FormControl>
                   <FormMessage />
