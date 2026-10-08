@@ -1,31 +1,39 @@
-import { z } from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { useEffect } from "react"
-import { format } from "date-fns"
-import { CalendarIcon } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { useEffect } from "react";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
-import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
-import { Calendar } from "../../ui/calendar"
-import ImageUpload from "../../Common/image_upload"
-import { Spinner } from "../../ui/spinner"
-import { useAdvertisersQuery } from "../../../Composable/Query/advertiser/useAdvertisersQuery"
-import { useCreateFullCampaignCommand } from "../../../Composable/Command/content/campaign/useCreateFullCampaignCommand"
-import type { AdvertisersResponse } from "../../../dto/response/advertisers/advertisersResponse"
-import { cn } from "../../../lib/utils"
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover";
+import { Calendar } from "../../ui/calendar";
+import ImageUpload from "../../Common/image_upload";
+import { Spinner } from "../../ui/spinner";
+import { useAdvertisersQuery } from "../../../Composable/Query/advertiser/useAdvertisersQuery";
+import { useCreateFullCampaignCommand } from "../../../Composable/Command/content/campaign/useCreateFullCampaignCommand";
+import type { AdvertisersResponse } from "../../../dto/response/advertisers/advertisersResponse";
+import { cn } from "../../../lib/utils";
+import { AD_TYPE_OPTIONS, ASSET_TYPE_LABELS, DISPLAY_FORMATS } from "./ad_formats";
 
-const formSchema = z.object({
+const formSchema = z
+  .object({
     advertiserId: z.string().min(1, { message: "Advertiser is required." }),
     name: z.string().min(1, { message: "Campaign name is required." }),
     budgetPlan: z.enum(["daily", "total"]),
@@ -35,343 +43,539 @@ const formSchema = z.object({
     endDate: z.date({ message: "End date is required." }),
     creativeName: z.string().min(1, { message: "Creative name is required." }),
     assetType: z.string().min(1, { message: "Asset type is required." }),
-    destinationLink: z.string().min(1, { message: "Destination link is required." }),
-    asset: z.any().refine((v) => v instanceof File, { message: "An image or video is required." }),
+    destinationLink: z
+      .string()
+      .min(1, { message: "Destination link is required." }),
+    asset: z.any().refine((v) => v instanceof File, {
+      message: "An image or video is required.",
+    }),
     ageMin: z.number().min(1, { message: "Age min is required." }),
     ageMax: z.number().min(1, { message: "Age max is required." }),
     gender: z.string().min(1, { message: "Gender is required." }),
     adType: z.string().min(1, { message: "Ad type is required." }),
     placementKey: z.string().min(1, { message: "Placement is required." }),
-}).refine((data) => data.budgetPlan !== "daily" || data.dailyBudget >= 1, {
+  })
+  .refine((data) => data.budgetPlan !== "daily" || data.dailyBudget >= 1, {
     message: "Daily budget is required.",
     path: ["dailyBudget"],
-})
+  });
 
 type Values = z.infer<typeof formSchema>;
 
 // What the create endpoint returns that the payment step needs.
 export interface CreatedAd {
-    campaign: { id: string; name: string; totalBudget: number };
+  campaign: { id: string; name: string; totalBudget: number };
 }
 
-export default function CreateAdForm({ onCreated }: { onCreated?: (created: CreatedAd) => void }) {
-    const form = useForm<Values>({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-            advertiserId: "",
-            name: "",
-            budgetPlan: "daily",
-            dailyBudget: 1,
-            totalBudget: 1,
-            startDate: undefined,
-            endDate: undefined,
-            creativeName: "",
-            assetType: "",
-            destinationLink: "",
-            asset: undefined,
-            ageMin: 1,
-            ageMax: 1,
-            gender: "",
-            adType: "",
-            placementKey: "",
-        },
-    })
+export default function CreateAdForm({
+  onCreated,
+}: {
+  onCreated?: (created: CreatedAd) => void;
+}) {
+  const form = useForm<Values>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      advertiserId: "",
+      name: "",
+      budgetPlan: "daily",
+      dailyBudget: 1,
+      totalBudget: 1,
+      startDate: undefined,
+      endDate: undefined,
+      creativeName: "",
+      assetType: "",
+      destinationLink: "",
+      asset: undefined,
+      ageMin: 1,
+      ageMax: 1,
+      gender: "",
+      adType: "",
+      placementKey: "",
+    },
+  });
 
-    const { advertisersList } = useAdvertisersQuery();
-    const selectableAdvertisers = (advertisersList ?? []).filter((a: AdvertisersResponse) => a.type === "advertiser");
-    const { createFullCampaignCommand, isPending } = useCreateFullCampaignCommand();
+  const adType = form.watch("adType");
+  const placementKey = form.watch("placementKey");
+  const assetType = form.watch("assetType");
 
-    const budgetPlan = form.watch("budgetPlan");
-    const dailyBudget = form.watch("dailyBudget");
-    const startDate = form.watch("startDate");
-    const endDate = form.watch("endDate");
+  const placements = DISPLAY_FORMATS[adType] ?? [];
+  const selectedPlacement = placements.find((placement) => placement.value === placementKey);
 
-    useEffect(() => {
-        if (budgetPlan === "daily") {
-            if (startDate && endDate && dailyBudget >= 1) {
-                const msPerDay = 1000 * 60 * 60 * 24;
-                const days = Math.floor((endDate.getTime() - startDate.getTime()) / msPerDay) + 1;
-                form.setValue("totalBudget", dailyBudget * Math.max(days, 1));
-            }
-        } else {
-            form.setValue("dailyBudget", 0);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [budgetPlan, dailyBudget, startDate, endDate]);
+  const placementTypes = selectedPlacement?.types ?? [];
 
-    const onSubmit = async (values: Values) => {
-        const formData = new FormData();
-        Object.entries(values).forEach(([key, value]) => {
-            if (value === null || value === undefined) return;
-            if (value instanceof File) {
-                formData.append(key, value);
-            } else if (value instanceof Date) {
-                const year = value.getFullYear();
-                const month = String(value.getMonth() + 1).padStart(2, "0");
-                const day = String(value.getDate()).padStart(2, "0");
-                formData.append(key, `${year}-${month}-${day}`);
-            } else {
-                formData.append(key, String(value));
-            }
-        });
+  const accept = assetType === "image" ? "image/*" : assetType === "video" ? "video/*" : "image/*,video/*";
 
-        const created = await createFullCampaignCommand(formData);
-        form.reset();
-        onCreated?.(created);
-    };
+  const { advertisersList } = useAdvertisersQuery();
+  const selectableAdvertisers = (advertisersList ?? []).filter(
+    (a: AdvertisersResponse) => a.type === "advertiser",
+  );
+  const { createFullCampaignCommand, isPending } =
+    useCreateFullCampaignCommand();
 
-    return (
-        <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div>
-                    <h1 className="text-2xl font-bold">Create Ad</h1>
-                    <p className="text-muted-foreground mt-1">
-                        Set up the campaign, creative, and targeting in one step. It's saved as a draft; pay to publish it.
-                    </p>
-                </div>
+  const budgetPlan = form.watch("budgetPlan");
+  const dailyBudget = form.watch("dailyBudget");
+  const startDate = form.watch("startDate");
+  const endDate = form.watch("endDate");
 
-                <Card className="rounded-2xl shadow-sm">
-                    <CardHeader>
-                        <CardTitle>Advertiser</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <FormField
-                            control={form.control}
-                            name="advertiserId"
-                            render={({ field }) => (
-                                <FormItem className="max-w-sm">
-                                    <FormLabel>Advertiser</FormLabel>
-                                    <FormControl>
-                                        <Select value={field.value} onValueChange={field.onChange}>
-                                            <SelectTrigger className="w-full">
-                                                <SelectValue placeholder="Select Advertiser" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {selectableAdvertisers.map((a: AdvertisersResponse) => (
-                                                    <SelectItem key={a.id} value={String(a.id)}>
-                                                        {a.agency ? `${a.name} (${a.agency.name})` : a.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </CardContent>
-                </Card>
+  useEffect(() => {
+    if (budgetPlan === "daily") {
+      if (startDate && endDate && dailyBudget >= 1) {
+        const msPerDay = 1000 * 60 * 60 * 24;
+        const days =
+          Math.floor((endDate.getTime() - startDate.getTime()) / msPerDay) + 1;
+        form.setValue("totalBudget", dailyBudget * Math.max(days, 1));
+      }
+    } else {
+      form.setValue("dailyBudget", 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [budgetPlan, dailyBudget, startDate, endDate]);
 
-                <Card className="rounded-2xl shadow-sm">
-                    <CardHeader>
-                        <CardTitle>Campaign</CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                        <FormField control={form.control} name="name" render={({ field }) => (
-                            <FormItem><FormLabel>Campaign Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField control={form.control} name="budgetPlan" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Budget Plan</FormLabel>
-                                <FormControl>
-                                    <Select value={field.value} onValueChange={field.onChange}>
-                                        <SelectTrigger className="w-full"><SelectValue placeholder="Select budget plan" /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="daily">Daily Budget</SelectItem>
-                                            <SelectItem value="total">Total Budget</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
-                        <FormField control={form.control} name="dailyBudget" render={({ field }) => (
-                            <FormItem><FormLabel>Daily Budget</FormLabel><FormControl>
-                                <Input
-                                    type="number"
-                                    {...field}
-                                    disabled={budgetPlan === "total"}
-                                    onChange={(e) => field.onChange(Number(e.target.value))}
-                                />
-                            </FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField control={form.control} name="totalBudget" render={({ field }) => (
-                            <FormItem><FormLabel>Total Budget</FormLabel><FormControl>
-                                <Input
-                                    type="number"
-                                    {...field}
-                                    disabled={budgetPlan === "daily"}
-                                    onChange={(e) => field.onChange(Number(e.target.value))}
-                                />
-                            </FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField control={form.control} name="startDate" render={({ field }) => (
-                            <FormItem className="flex flex-col">
-                                <FormLabel>Start Date</FormLabel>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <FormControl>
-                                            <Button
-                                                variant="outline"
-                                                className={cn(
-                                                    "w-full pl-3 text-left font-normal",
-                                                    !field.value && "text-muted-foreground"
-                                                )}
-                                            >
-                                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                            </Button>
-                                        </FormControl>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar
-                                            mode="single"
-                                            selected={field.value}
-                                            onSelect={field.onChange}
-                                            captionLayout="dropdown"
-                                        />
-                                    </PopoverContent>
-                                </Popover>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
-                        <FormField control={form.control} name="endDate" render={({ field }) => (
-                            <FormItem className="flex flex-col">
-                                <FormLabel>End Date</FormLabel>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <FormControl>
-                                            <Button
-                                                variant="outline"
-                                                className={cn(
-                                                    "w-full pl-3 text-left font-normal",
-                                                    !field.value && "text-muted-foreground"
-                                                )}
-                                            >
-                                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                            </Button>
-                                        </FormControl>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar
-                                            mode="single"
-                                            selected={field.value}
-                                            onSelect={field.onChange}
-                                            captionLayout="dropdown"
-                                        />
-                                    </PopoverContent>
-                                </Popover>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
-                    </CardContent>
-                </Card>
+  const onSubmit = async (values: Values) => {
+    const formData = new FormData();
+    Object.entries(values).forEach(([key, value]) => {
+      if (value === null || value === undefined) return;
+      if (value instanceof File) {
+        formData.append(key, value);
+      } else if (value instanceof Date) {
+        const year = value.getFullYear();
+        const month = String(value.getMonth() + 1).padStart(2, "0");
+        const day = String(value.getDate()).padStart(2, "0");
+        formData.append(key, `${year}-${month}-${day}`);
+      } else {
+        formData.append(key, String(value));
+      }
+    });
 
-                <Card className="rounded-2xl shadow-sm">
-                    <CardHeader>
-                        <CardTitle>Creative</CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                            <FormField control={form.control} name="creativeName" render={({ field }) => (
-                                <FormItem><FormLabel>Creative Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                            )} />
-                            <FormField control={form.control} name="assetType" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Asset Type</FormLabel>
-                                    <FormControl>
-                                        <Select value={field.value} onValueChange={field.onChange}>
-                                            <SelectTrigger className="w-full"><SelectValue placeholder="Select asset type" /></SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="image">Image</SelectItem>
-                                                <SelectItem value="video">Video</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )} />
-                            <FormField control={form.control} name="destinationLink" render={({ field }) => (
-                                <FormItem><FormLabel>Destination Link</FormLabel><FormControl><Input {...field} placeholder="https://..." /></FormControl><FormMessage /></FormItem>
-                            )} />
-                        </div>
-                        <FormField name="asset" render={({ field }) => (
-                            <ImageUpload value={field.value} onChange={field.onChange} label="Creative Asset" accept="image/*,video/*" size="large" />
-                        )} />
-                    </CardContent>
-                </Card>
+    const created = await createFullCampaignCommand(formData);
+    form.reset();
+    onCreated?.(created);
+  };
 
-                <Card className="rounded-2xl shadow-sm">
-                    <CardHeader>
-                        <CardTitle>Targeting</CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                        <FormField control={form.control} name="ageMin" render={({ field }) => (
-                            <FormItem><FormLabel>Age Min</FormLabel><FormControl>
-                                <Input type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
-                            </FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField control={form.control} name="ageMax" render={({ field }) => (
-                            <FormItem><FormLabel>Age Max</FormLabel><FormControl>
-                                <Input type="number" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
-                            </FormControl><FormMessage /></FormItem>
-                        )} />
-                        <FormField control={form.control} name="gender" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Gender</FormLabel>
-                                <FormControl>
-                                    <Select value={field.value} onValueChange={field.onChange}>
-                                        <SelectTrigger className="w-full"><SelectValue placeholder="Select gender" /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="male">Male</SelectItem>
-                                            <SelectItem value="female">Female</SelectItem>
-                                            <SelectItem value="all">All</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
-                    </CardContent>
-                </Card>
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold">Create Ad</h1>
+          <p className="text-muted-foreground mt-1">
+            Set up the campaign, creative, and targeting in one step. It's saved
+            as a draft; pay to publish it.
+          </p>
+        </div>
 
-                <Card className="rounded-2xl shadow-sm">
-                    <CardHeader>
-                        <CardTitle>Ad Type &amp; Placement</CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                        <FormField control={form.control} name="adType" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Ad Type</FormLabel>
-                                <FormControl>
-                                    <Select value={field.value} onValueChange={field.onChange}>
-                                        <SelectTrigger className="w-full"><SelectValue placeholder="Select ad type" /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="banner">Banner</SelectItem>
-                                            <SelectItem value="interstitial">Interstitial</SelectItem>
-                                            <SelectItem value="reward_video">Reward Video</SelectItem>
-                                            <SelectItem value="native">Native</SelectItem>
-                                            <SelectItem value="splash">Splash</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
-                        <FormField control={form.control} name="placementKey" render={({ field }) => (
-                            <FormItem><FormLabel>Placement</FormLabel><FormControl><Input {...field} placeholder="home_page, comic, novel..." /></FormControl><FormMessage /></FormItem>
-                        )} />
-                    </CardContent>
-                </Card>
+        <Card className="rounded-2xl shadow-sm">
+          <CardHeader>
+            <CardTitle>Advertiser</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FormField
+              control={form.control}
+              name="advertiserId"
+              render={({ field }) => (
+                <FormItem className="max-w-sm">
+                  <FormLabel>Advertiser</FormLabel>
+                  <FormControl>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select Advertiser" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {selectableAdvertisers.map((a: AdvertisersResponse) => (
+                          <SelectItem key={a.id} value={String(a.id)}>
+                            {a.agency ? `${a.name} (${a.agency.name})` : a.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
 
-                <div className="flex justify-end">
-                    <Button type="submit" size="lg" disabled={isPending}>
-                        {isPending && <Spinner />}
-                        Create Ad
-                    </Button>
-                </div>
-            </form>
-        </Form>
-    )
+        <Card className="rounded-2xl shadow-sm">
+          <CardHeader>
+            <CardTitle>Campaign</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Campaign Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="budgetPlan"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Budget Plan</FormLabel>
+                  <FormControl>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select budget plan" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="daily">Daily Budget</SelectItem>
+                        <SelectItem value="total">Total Budget</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="dailyBudget"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Daily Budget</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      {...field}
+                      disabled={budgetPlan === "total"}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="totalBudget"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Total Budget</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      {...field}
+                      disabled={budgetPlan === "daily"}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="startDate"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Start Date</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground",
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        captionLayout="dropdown"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="endDate"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>End Date</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground",
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        captionLayout="dropdown"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl shadow-sm">
+          <CardHeader>
+            <CardTitle>Ad Type &amp; Placement</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+            <FormField
+              control={form.control}
+              name="adType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Ad Type</FormLabel>
+                  <FormControl>
+                    <Select
+                      value={field.value}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        // Placements differ per ad type, so earlier choices may no longer exist.
+                        form.setValue("placementKey", "");
+                        form.setValue("assetType", "");
+                        form.setValue("asset", undefined);
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select ad type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {AD_TYPE_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="placementKey"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Placement</FormLabel>
+                  <FormControl>
+                    <Select
+                      value={field.value}
+                      disabled={!adType}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        const types = placements.find((p) => p.value === value)?.types ?? [];
+                        form.setValue("assetType", types.length === 1 ? types[0] : "");
+                        form.setValue("asset", undefined);
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={adType ? "Select placement" : "Choose an ad type first"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {placements.map((placement) => (
+                          <SelectItem
+                            key={placement.value}
+                            value={placement.value}
+                          >
+                            {placement.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl shadow-sm">
+          <CardHeader>
+            <CardTitle>Creative</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="creativeName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Creative Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="assetType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Asset Type</FormLabel>
+                    <FormControl>
+                      <Select
+                        value={field.value}
+                        disabled={!selectedPlacement}
+                        onValueChange={(value) => {
+                          if (value !== field.value) form.setValue("asset", undefined);
+                          field.onChange(value);
+                        }}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder={selectedPlacement ? "Select asset type" : "Choose a placement first"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {placementTypes.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {ASSET_TYPE_LABELS[type]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="destinationLink"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Destination Link</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="https://..." />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <FormField
+              name="asset"
+              render={({ field }) => (
+                <ImageUpload
+                  value={field.value}
+                  onChange={field.onChange}
+                  label="Creative Asset"
+                  accept={accept}
+                  size="large"
+                />
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl shadow-sm">
+          <CardHeader>
+            <CardTitle>Targeting</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+            <FormField
+              control={form.control}
+              name="ageMin"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Age Min</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      {...field}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="ageMax"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Age Max</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      {...field}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="gender"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Gender</FormLabel>
+                  <FormControl>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="all">All</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-end">
+          <Button type="submit" size="lg" disabled={isPending}>
+            {isPending && <Spinner />}
+            Create Ad
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
 }
