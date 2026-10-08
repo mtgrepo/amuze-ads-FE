@@ -17,29 +17,36 @@ import { Spinner } from "../ui/spinner";
 import type { AdvertiserDetailsResponse } from "../../dto/response/advertisers/advertiserDetailsResponse";
 import { useAdvertiserProfileCreateCommand } from "../../Composable/Command/advertiser-profile/useAdvertiserProfileCreateCommand";
 
-const schema = z.object({
+// DICA is required for agencies (registered companies) only; small advertisers may not have one.
+const makeSchema = (isAgency: boolean) => z.object({
     business_name: z.string().min(2),
     business_no: z.string().min(2),
     business_type: z.string().min(2),
-    dica_number: z.string().min(2),
+    dica_number: z.string().optional(),
     website: z.string().optional(),
     address: z.string().min(3),
     photo: z.any().optional(),
     country: z.string().optional(),
     timezone: z.string().optional(),
+}).superRefine((values, ctx) => {
+    if (isAgency && !values.dica_number?.trim()) {
+        ctx.addIssue({ code: "custom", path: ["dica_number"], message: "DICA number is required for agencies." });
+    }
 });
 
-type Values = z.infer<typeof schema>;
+type Values = z.infer<ReturnType<typeof makeSchema>>;
 
 interface Props {
     profile?: AdvertiserDetailsResponse; // undefined for "Add" mode
     advertiser_id?: string;
+    /** The profile belongs to an agency, which makes DICA required. */
+    isAgency?: boolean;
 }
 
-export default function BusinessForm({ profile, advertiser_id }: Props) {
+export default function BusinessForm({ profile, advertiser_id, isAgency = false }: Props) {
     const [editing, setEditing] = useState(false);
     const form = useForm<Values>({
-        resolver: zodResolver(schema),
+        resolver: zodResolver(makeSchema(isAgency)),
         defaultValues: {
             business_name: profile?.business_name ?? "",
             business_no: profile?.business_no ?? "",
@@ -132,7 +139,7 @@ export default function BusinessForm({ profile, advertiser_id }: Props) {
                                 <Field name="business_name" label="Business Name" disabled={disabled} />
                                 <Field name="business_no" label="Business No" disabled={disabled} />
                                 <Field name="business_type" label="Business Type" disabled={disabled} />
-                                <Field name="dica_number" label="Dica No" disabled={disabled} />
+                                <Field name="dica_number" label={isAgency ? "Dica No" : "Dica No (optional)"} disabled={disabled} />
                                 <Field name="website" label="Website" disabled={disabled} />
                                 <div className="grid grid-cols-2 gap-3">
                                     <SelectField name="country" label="Country" options={countries} disabled={disabled} />

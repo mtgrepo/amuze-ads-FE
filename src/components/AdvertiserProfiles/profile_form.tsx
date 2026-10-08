@@ -28,7 +28,7 @@ const formSchema = z.object({
     business_name: z.string().min(2),
     business_no: z.string().min(2),
     business_type: z.string().min(2),
-    dica_number: z.string().min(2),
+    dica_number: z.string().nullish(),
     website: z.string().optional(),
     address: z.string().min(3),
     photo: z.any().optional(),
@@ -44,7 +44,7 @@ interface PostProps {
         business_name: string
         business_no: string
         business_type: string
-        dica_number: string
+        dica_number: string | null
         website: string
         address: string
         country: string
@@ -111,6 +111,13 @@ export default function ProfileForm({
             }
         });
 
+        // DICA is required for agencies only.
+        const owner = (advertisersList ?? []).find((a: { id: string; type?: string }) => a.id === values.advertiser_id);
+        if (owner?.type === "agency" && !values.dica_number?.trim()) {
+            form.setError("dica_number", { message: "DICA number is required for agencies." });
+            return
+        }
+
         if (mode === "add") {
             if (!values.advertiser_id) {
                 form.setError("advertiser_id", {
@@ -176,7 +183,7 @@ export default function ProfileForm({
                             <FormControl>
                                 <Input type="text" placeholder="Enter business name"
                                     {...field}
-                                    value={field.value}
+                                    value={field.value ?? ""}
                                     onChange={(e) =>
                                         field.onChange(e.target.value)
                                     }
@@ -229,11 +236,11 @@ export default function ProfileForm({
                     name="dica_number"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Dica Nubmer</FormLabel>
+                            <FormLabel>DICA Number</FormLabel>
                             <FormControl>
-                                <Input type="text" placeholder="Enter dica number"
+                                <Input type="text" placeholder="Required for agencies"
                                     {...field}
-                                    value={field.value}
+                                    value={field.value ?? ""}
                                     onChange={(e) =>
                                         field.onChange(e.target.value)
                                     }

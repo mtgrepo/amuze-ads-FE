@@ -203,7 +203,7 @@ export default function ProfileActions({
 
             <div className="grid grid-cols-2 gap-3">
               <InfoRow label="Advertiser" value={name} icon={<BriefcaseBusiness className="w-4 h-4" />} />
-              <InfoRow label="DICA Number" value={dica_number} icon={<Phone className="w-4 h-4" />} />
+              <InfoRow label="DICA Number" value={dica_number || "—"} icon={<Phone className="w-4 h-4" />} />
               <InfoRow label="Business No" value={business_no} icon={<Binary className="w-4 h-4" />} />
               <InfoRow label="Business Type" value={business_type} icon={<Building2Icon className="w-4 h-4" />} />
               <InfoRow label="Country" value={country} icon={<Earth className="w-4 h-4" />} />

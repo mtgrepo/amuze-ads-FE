@@ -82,7 +82,7 @@ export default function AdvertiserDetails({ data }: Props) {
       </Card>
 
       <ContactForm data={data} />
-      <BusinessForm profile={profile} advertiser_id={data.id}/>
+      <BusinessForm profile={profile} advertiser_id={data.id} isAgency={data.type === "agency"} />
       {/* Agency clients have no wallet; they spend their agency's points. */}
       {!data.agencyId && <PointsCard accountId={data.id} />}
 

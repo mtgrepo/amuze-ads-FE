@@ -60,7 +60,7 @@ const columns: ColumnDef<ProfileResponse>[] = [
         accessorKey: "dica_number",
         header: "DICA Number",
         cell: ({ row }) => (
-            <div>{row.getValue("dica_number")}</div>
+            <div>{row.getValue("dica_number") || "—"}</div>
         ),
     },
     // {

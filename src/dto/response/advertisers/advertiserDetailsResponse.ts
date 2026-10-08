@@ -13,7 +13,7 @@ export interface AdvertiserDetailsResponse {
     business_name: string,
     business_no: string,
     business_type: string,
-    dica_number: string,
+    dica_number: string | null,
     website: string,
     address: string,
     timezone: string,
