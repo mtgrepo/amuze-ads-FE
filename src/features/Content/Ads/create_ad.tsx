@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import CreateAdForm from "../../../components/Content/Ads/create_ad_form";
 import type { CreatedAd } from "../../../components/Content/Ads/create_ad_form";
 import PaymentDialog from "../../../components/Content/Payment/payment_dialog";
+import BackButton from "../../../components/Common/back_button";
 
 export default function CreateAdPage() {
     const navigate = useNavigate();
@@ -11,6 +12,7 @@ export default function CreateAdPage() {
 
     return (
         <div className="max-w-4xl w-full mx-auto p-8">
+            <BackButton fallback="/ads" className="mb-4" />
             <CreateAdForm onCreated={setCreated} />
             {created && (
                 <PaymentDialog
