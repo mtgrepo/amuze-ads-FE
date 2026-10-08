@@ -69,12 +69,12 @@ const data = {
         ]
     },
     {
-      title: "Content",
+      title: "Ad Management",
       url: "#",
       icon: Newspaper,
       items: [
         {
-          title: "Ad Management",
+          title: "Ads",
           url: "/ads",
         },
         {

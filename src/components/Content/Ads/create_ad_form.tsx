@@ -78,16 +78,16 @@ export default function CreateAdForm({
       advertiserId: "",
       name: "",
       budgetPlan: "daily",
-      dailyBudget: 1,
-      totalBudget: 1,
+      dailyBudget: undefined,
+      totalBudget: undefined,
       startDate: undefined,
       endDate: undefined,
       creativeName: "",
       assetType: "",
       destinationLink: "",
       asset: undefined,
-      ageMin: 1,
-      ageMax: 1,
+      ageMin: undefined,
+      ageMax: undefined,
       gender: "",
       adType: "",
       placementKey: "",
@@ -481,7 +481,7 @@ export default function CreateAdForm({
                 name="destinationLink"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Destination Link</FormLabel>
+                    <FormLabel>Destination Link</FormLabel> <span className="text-xs text-blue-300">(Link to Redirect users when they click the ad)</span>
                     <FormControl>
                       <Input {...field} placeholder="https://..." />
                     </FormControl>
@@ -519,6 +519,7 @@ export default function CreateAdForm({
                   <FormControl>
                     <Input
                       type="number"
+                      placeholder="e.g. 18"
                       {...field}
                       onChange={(e) => field.onChange(Number(e.target.value))}
                     />
@@ -536,6 +537,7 @@ export default function CreateAdForm({
                   <FormControl>
                     <Input
                       type="number"
+                      placeholder="e.g. 65"
                       {...field}
                       onChange={(e) => field.onChange(Number(e.target.value))}
                     />
