@@ -5,6 +5,7 @@ import { useTopAdsQuery } from "../../Composable/Query/dailyAdStats/useDailyAdSt
 import type { TopAdItem } from "../../dto/response/dailyAdStats/dailyAdStatsResponse";
 import { compactNumber, placementLabel, rate, type DateRange } from "../Dashboard/admin/dashboard_utils";
 
+import { statusLabel } from "../../lib/status";
 // The backend returns at most this many ads, ranked by the fetched metric.
 const AD_LIMIT = 50;
 
@@ -117,7 +118,7 @@ export function AdsTable({ range, scopeId, owner, title }: {
                                     <td className="py-2.5 pr-4">
                                         <Link to={`/ads/${ad.adId}`} className="hover:underline">{ad.campaignName}</Link>
                                         {STATUS_TAG[ad.status] && (
-                                            <span className={`ml-2 rounded px-1.5 py-px text-[11px] capitalize ${STATUS_TAG[ad.status]}`}>{ad.status}</span>
+                                            <span className={`ml-2 rounded px-1.5 py-px text-[11px] ${STATUS_TAG[ad.status]}`}>{statusLabel(ad.status)}</span>
                                         )}
                                         <div className="text-xs text-muted-foreground">
                                             {owner !== "none" && <>{ad.advertiserName}{owner === "advertiser" && ad.agencyName && <> · via {ad.agencyName}</>} · </>}

@@ -24,6 +24,7 @@ import { useCampaignDeleteCommand } from "../../../Composable/Command/content/ca
 import { cn } from "../../../lib/utils";
 import type { CampaignResponse } from "../../../dto/response/content/campaignResponse";
 
+import { statusLabel } from "../../../lib/status";
 export default function CampaignActions({
     id,
     name,
@@ -262,7 +263,7 @@ export default function CampaignActions({
                             )}
                         >
                             <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                            {status}
+                            {statusLabel(status)}
                         </div>
                     </div>
 

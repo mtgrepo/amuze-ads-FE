@@ -73,7 +73,7 @@ export function CampaignComponent
     const statusOptions = [
         { value: "draft", label: "Draft" },
         { value: "active", label: "Active" },
-        { value: "pending", label: "Pending" },
+        { value: "pending", label: "Under Review" },
         { value: "paused", label: "Paused" },
         { value: "completed", label: "Completed" },
         { value: "rejected", label: "Rejected" },

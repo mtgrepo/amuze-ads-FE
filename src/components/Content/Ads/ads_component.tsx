@@ -83,7 +83,7 @@ export function AdComponent
   const statusOptions = [
     { label: "Active", value: "active" },
     { label: "Paused", value: "paused" },
-    { label: "Pending", value: "pending" },
+    { label: "Under Review", value: "pending" },
   ];
   return (
     <div className="w-full mx-auto">

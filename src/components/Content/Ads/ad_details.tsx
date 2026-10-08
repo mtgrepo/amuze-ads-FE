@@ -8,6 +8,7 @@ import { Button } from "../../ui/button";
 import BudgetForm from "./budget_form";
 import PaymentDialog from "../Payment/payment_dialog";
 
+import { statusLabel } from "../../../lib/status";
 interface Props {
     data: AdResponse;
 }
@@ -36,8 +37,8 @@ export default function AdDetails({ data }: Props) {
                         <h1 className="text-2xl font-bold capitalize">{adType} · {placementKey}</h1>
                         <p className="text-muted-foreground mt-1">Campaign: {campaign?.name}</p>
                     </div>
-                    <Badge className={cn("capitalize", statusVariant(status))} variant="outline">
-                        {status}
+                    <Badge className={cn(statusVariant(status))} variant="outline">
+                        {statusLabel(status)}
                     </Badge>
                 </CardContent>
             </Card>
@@ -104,7 +105,7 @@ export default function AdDetails({ data }: Props) {
                 <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <p className="text-sm font-semibold">Status</p>
-                        <p className="text-sm text-muted-foreground capitalize">{campaign?.status}</p>
+                        <p className="text-sm text-muted-foreground">{statusLabel(campaign?.status)}</p>
                     </div>
                     <div>
                         <p className="text-sm font-semibold">Model Type</p>

@@ -5,6 +5,7 @@ import type { CampaignResponse } from "../../../dto/response/content/campaignRes
 import CampaignActions from "./campaign_action";
 import { cn } from "../../../lib/utils";
 
+import { statusLabel } from "../../../lib/status";
 const columns: ColumnDef<CampaignResponse>[] = [
     {
         id: "select",
@@ -121,7 +122,7 @@ const columns: ColumnDef<CampaignResponse>[] = [
             const status = row.getValue("status");
             return (
                 <div className={cn(statusColor)}>
-                    {status as string}
+                    {statusLabel(status as string)}
                 </div>
             );
         },

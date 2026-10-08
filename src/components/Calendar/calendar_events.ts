@@ -5,14 +5,7 @@ import type { AdResponse } from "../../dto/response/content/adResponse";
 export const CALENDAR_STATUSES = ["draft", "pending", "active", "paused", "rejected", "expired"];
 export const DEFAULT_CALENDAR_STATUSES = CALENDAR_STATUSES.filter((s) => s !== "rejected" && s !== "expired");
 
-export const STATUS_LABELS: Record<string, string> = {
-    draft: "Draft",
-    pending: "Pending review",
-    active: "Active",
-    paused: "Paused",
-    rejected: "Rejected",
-    expired: "Expired",
-};
+export { STATUS_LABELS } from "../../lib/status";
 
 // Colours live in calendar.css as .cal-status-<status> (light and dark variants).
 export const statusClass = (status: string) =>

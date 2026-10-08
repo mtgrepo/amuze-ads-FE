@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../
 import type { AdResponse } from "../../../dto/response/content/adResponse";
 import AdsActions from "./ads_actions";
 
+import { statusLabel } from "../../../lib/status";
 const columns: ColumnDef<AdResponse>[] = [
     {
         id: "select",
@@ -122,7 +123,7 @@ const columns: ColumnDef<AdResponse>[] = [
                             </span>
                         </TooltipTrigger>
                         <TooltipContent side="right" align="center">
-                            {row.getValue("status")}
+                            {statusLabel(row.getValue("status") as string)}
                         </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
