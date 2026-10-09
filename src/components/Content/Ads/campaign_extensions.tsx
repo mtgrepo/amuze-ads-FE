@@ -8,8 +8,11 @@ import { Input } from "../../ui/input";
 import { Spinner } from "../../ui/spinner";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../../ui/dialog";
 import { cn } from "../../../lib/utils";
-import { useCampaignExtensionsQuery, useExtensionQuoteQuery } from "../../../Composable/Query/campaignExtension/useCampaignExtensionQuery";
-import { useCampaignExtensionCommands } from "../../../Composable/Command/campaignExtension/useCampaignExtensionCommands";
+import { useCampaignExtensionsQuery } from "../../../Composable/Query/campaignExtension/useCampaignExtensionsQuery";
+import { useExtensionQuoteQuery } from "../../../Composable/Query/campaignExtension/useExtensionQuoteQuery";
+import { useRequestExtensionCommand } from "../../../Composable/Command/campaignExtension/useRequestExtensionCommand";
+import { useApproveExtensionCommand } from "../../../Composable/Command/campaignExtension/useApproveExtensionCommand";
+import { useRejectExtensionCommand } from "../../../Composable/Command/campaignExtension/useRejectExtensionCommand";
 import {
     EXTENDABLE_CAMPAIGN_STATUSES,
     EXTENSION_STATUS_LABELS,
@@ -62,7 +65,7 @@ function ExtendDialog({ campaign, isAdmin, open, onOpenChange }: {
     const firstDay = firstExtraDay(endDate);
     const [newEndDate, setNewEndDate] = useState(() => addDays(firstDay, 6));
     const { quote, isFetching, error } = useExtensionQuoteQuery(campaign.id, newEndDate, open);
-    const { requestExtension, isRequesting } = useCampaignExtensionCommands();
+    const { requestExtension, isRequesting } = useRequestExtensionCommand();
 
     const shortfall = quote ? Math.max(quote.amount - quote.balance, 0) : 0;
     const canSubmit = !!quote && shortfall === 0 && !isFetching;
@@ -171,7 +174,9 @@ function ExtendDialog({ campaign, isAdmin, open, onOpenChange }: {
 export default function CampaignExtensions({ campaign, isAdmin = false }: { campaign: ExtendableCampaign; isAdmin?: boolean }) {
     const [dialogOpen, setDialogOpen] = useState(false);
     const { extensions, isLoading } = useCampaignExtensionsQuery(campaign.id);
-    const { approveExtension, rejectExtension, isReviewing } = useCampaignExtensionCommands();
+    const { approveExtension, isApproving } = useApproveExtensionCommand();
+    const { rejectExtension, isRejecting } = useRejectExtensionCommand();
+    const isReviewing = isApproving || isRejecting;
 
     const pending = extensions.find((e) => e.status === "pending");
     const canExtend = EXTENDABLE_CAMPAIGN_STATUSES.includes(campaign.status) && !pending;

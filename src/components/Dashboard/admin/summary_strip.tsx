@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useDashboardSummaryQuery } from "../../../Composable/Query/dashboard/useDashboardQuery";
+import { useDashboardSummaryQuery } from "../../../Composable/Query/dashboard/useDashboardSummaryQuery";
 import type { RevenueFigure } from "../../../dto/response/dashboard/dashboardResponse";
 import type { DateRange } from "./dashboard_utils";
 

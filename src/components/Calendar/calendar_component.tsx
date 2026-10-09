@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { useAdListQuery } from "../../Composable/Query/content/useAdListQuery";
-import { useAdvertisersQuery } from "../../Composable/Query/dailyAdStats/useDailyAdStatsQuery";
+import { useAdvertiserOptionsQuery } from "../../Composable/Query/dailyAdStats/useAdvertiserOptionsQuery";
 import type { AdResponse } from "../../dto/response/content/adResponse";
 import { CALENDAR_STATUSES, DEFAULT_CALENDAR_STATUSES, STATUS_LABELS, statusClass, toCalendarEvents } from "./calendar_events";
 import { renderCalendarPill } from "./calendar_pill";
@@ -20,7 +20,7 @@ export function CalendarComponent() {
     const [advertiserId, setAdvertiserId] = React.useState<string | undefined>();
     const [clientId, setClientId] = React.useState<string | undefined>();
 
-    const { advertisers } = useAdvertisersQuery();
+    const { advertisers } = useAdvertiserOptionsQuery();
     const accountOptions = advertisers.filter((a) => a.type === "agency" || !a.agencyId);
     const selectedAccount = advertisers.find((a) => a.id === advertiserId);
     const isAgencySelected = selectedAccount?.type === "agency";

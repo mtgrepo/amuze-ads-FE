@@ -1,4 +1,4 @@
-import { useAdminTrendQuery } from "../../../Composable/Query/dailyAdStats/useDailyAdStatsQuery";
+import { useAdminTrendQuery } from "../../../Composable/Query/dailyAdStats/useAdminTrendQuery";
 import { Panel, PanelHeader, PanelLoading } from "./panel";
 import { MetricChart } from "./metric_chart";
 import { eachDay, type DateRange } from "./dashboard_utils";

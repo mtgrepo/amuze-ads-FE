@@ -1,4 +1,4 @@
-import { useAdminOverviewQuery } from "../../../Composable/Query/dailyAdStats/useDailyAdStatsQuery";
+import { useAdminOverviewQuery } from "../../../Composable/Query/dailyAdStats/useAdminOverviewQuery";
 import { Panel, PanelLoading } from "./panel";
 import { compactNumber, percentChange, priorRange, rate, type DateRange } from "./dashboard_utils";
 

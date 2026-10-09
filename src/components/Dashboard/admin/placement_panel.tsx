@@ -1,4 +1,4 @@
-import { usePlacementBreakdownQuery } from "../../../Composable/Query/dailyAdStats/useDailyAdStatsQuery";
+import { usePlacementBreakdownQuery } from "../../../Composable/Query/dailyAdStats/usePlacementBreakdownQuery";
 import { Panel, PanelHeader, PanelLoading } from "./panel";
 import { compactNumber, placementLabel, rate, type DateRange } from "./dashboard_utils";
 

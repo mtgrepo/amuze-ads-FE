@@ -2,11 +2,9 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { ChevronRight } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-    useAdminOverviewQuery,
-    useAdminTrendQuery,
-    useAdvertisersQuery,
-} from "../../Composable/Query/dailyAdStats/useDailyAdStatsQuery";
+import { useAdminOverviewQuery } from "../../Composable/Query/dailyAdStats/useAdminOverviewQuery";
+import { useAdminTrendQuery } from "../../Composable/Query/dailyAdStats/useAdminTrendQuery";
+import { useAdvertiserOptionsQuery } from "../../Composable/Query/dailyAdStats/useAdvertiserOptionsQuery";
 import { eachDay, parseLocalDate, priorRange, type DateRange } from "../../components/Dashboard/admin/dashboard_utils";
 import { MetricStrip } from "../../components/Performance/metric_strip";
 import { ComparisonChart } from "../../components/Performance/comparison_chart";
@@ -29,7 +27,7 @@ export default function DailyAdStats() {
     const [accountId, setAccountId] = useState<string>();
     const [clientId, setClientId] = useState<string>();
 
-    const { advertisers } = useAdvertisersQuery();
+    const { advertisers } = useAdvertiserOptionsQuery();
     const accounts = advertisers.filter((a) => a.type === "agency" || !a.agencyId);
     const account = advertisers.find((a) => a.id === accountId);
     const agencyClients = account?.type === "agency" ? advertisers.filter((a) => a.agencyId === account.id) : [];

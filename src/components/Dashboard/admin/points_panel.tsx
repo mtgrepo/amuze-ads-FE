@@ -1,4 +1,4 @@
-import { usePointsSummaryQuery } from "../../../Composable/Query/dashboard/useDashboardQuery";
+import { usePointsSummaryQuery } from "../../../Composable/Query/dashboard/usePointsSummaryQuery";
 import { Panel, PanelHeader, PanelLoading } from "./panel";
 import type { DateRange } from "./dashboard_utils";
 

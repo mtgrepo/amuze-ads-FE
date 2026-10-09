@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useTopAdsQuery } from "../../../Composable/Query/dailyAdStats/useDailyAdStatsQuery";
+import { useTopAdsQuery } from "../../../Composable/Query/dailyAdStats/useTopAdsQuery";
 import { Panel, PanelHeader, PanelLoading } from "./panel";
 import { daysUntil, endsInLabel, rate, type DateRange } from "./dashboard_utils";
 

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowDown, ArrowUp } from "lucide-react";
-import { useTopAdsQuery } from "../../Composable/Query/dailyAdStats/useDailyAdStatsQuery";
+import { useTopAdsQuery } from "../../Composable/Query/dailyAdStats/useTopAdsQuery";
 import type { TopAdItem } from "../../dto/response/dailyAdStats/dailyAdStatsResponse";
 import { compactNumber, placementLabel, rate, type DateRange } from "../Dashboard/admin/dashboard_utils";
 

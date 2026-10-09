@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, CircleCheck } from "lucide-react";
-import { useAttentionQuery } from "../../../Composable/Query/dashboard/useDashboardQuery";
+import { useAttentionQuery } from "../../../Composable/Query/dashboard/useAttentionQuery";
 import { Panel, PanelHeader, PanelLoading } from "./panel";
 import { compactNumber, daysUntil, endsInLabel, placementLabel, waitingLabel } from "./dashboard_utils";
 
