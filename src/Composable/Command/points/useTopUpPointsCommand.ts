@@ -13,6 +13,7 @@ export const useTopUpPointsCommand = () => {
         },
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ['wallet'] });
+            qc.invalidateQueries({ queryKey: ['points-ledger'] });
             qc.invalidateQueries({ queryKey: ['payment-info'] });
             toast.success("Points added.");
         },

@@ -32,3 +32,14 @@ export const POINT_TYPE_LABELS: Record<PointLedgerType, string> = {
     spend: "Ad payment",
     refund: "Refund",
 };
+
+/** A ledger entry on the admin points page, with the wallet it belongs to. */
+export interface AdminLedgerEntry extends PointLedgerEntry {
+    advertiser: { id: string, name: string, type: "agency" | "advertiser" } | null
+}
+
+export interface PointsLedgerResponse {
+    /** Points all customers hold right now. */
+    totalBalance: number,
+    entries: AdminLedgerEntry[]
+}

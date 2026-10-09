@@ -25,3 +25,16 @@ export const topUpPoints = async (accountId: string, data: TopUpInput) => {
         throw new Error ("An unexpected error occurred")
     }
 }
+
+/** Every wallet's points history (admin). */
+export const getPointsLedger = async () => {
+    try {
+        const response = await axiosInstance.get(`/points/ledger`)
+        return response.data
+    } catch (error) {
+        if(error instanceof AxiosError) {
+            throw new Error(error.response?.data.message || "Failed to fetch points history")
+        }
+        throw new Error ("An unexpected error occurred")
+    }
+}

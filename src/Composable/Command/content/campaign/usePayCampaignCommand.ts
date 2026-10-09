@@ -13,6 +13,7 @@ export const usePayCampaignCommand = () => {
         },
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ['campaign-list'] });
+            qc.invalidateQueries({ queryKey: ['points-ledger'] });
             qc.invalidateQueries({ queryKey: ['ad-list'] });
             qc.invalidateQueries({ queryKey: ['ad-details'] });
             qc.invalidateQueries({ queryKey: ['transaction-list'] });
