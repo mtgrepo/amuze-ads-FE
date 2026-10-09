@@ -4,6 +4,11 @@ import { useAttentionQuery } from "../../../Composable/Query/dashboard/useDashbo
 import { Panel, PanelHeader, PanelLoading } from "./panel";
 import { compactNumber, daysUntil, endsInLabel, placementLabel, waitingLabel } from "./dashboard_utils";
 
+function shortDate(value: string): string {
+    const [y, m, d] = value.split("-").map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+}
+
 function AttentionRow({ tone, title, detail, to, action }: {
     tone: "warning" | "danger" | "neutral";
     title: string;
@@ -28,7 +33,7 @@ function AttentionRow({ tone, title, detail, to, action }: {
 
 export function AttentionPanel() {
     const { attention, isLoading } = useAttentionQuery();
-    const total = (attention?.pendingCount ?? 0) + (attention?.endingSoon.length ?? 0);
+    const total = (attention?.pendingCount ?? 0) + (attention?.pendingExtensionCount ?? 0) + (attention?.endingSoon.length ?? 0);
 
     return (
         <Panel>
@@ -40,7 +45,7 @@ export function AttentionPanel() {
                     <CircleCheck className="size-5 text-muted-foreground" />
                     <div className="text-sm">You're all caught up</div>
                     <div className="text-xs text-muted-foreground">
-                        Campaigns waiting for approval and ones ending soon will show up here.
+                        Campaigns and extensions waiting for approval, and campaigns ending soon, will show up here.
                     </div>
                 </div>
             ) : (
@@ -54,6 +59,16 @@ export function AttentionPanel() {
                             action="Review"
                         />
                     )}
+                    {attention.pendingExtensions.map((item) => (
+                        <AttentionRow
+                            key={item.extensionId}
+                            tone="warning"
+                            title={`${item.campaignName}: extension to ${shortDate(item.newEndDate)}`}
+                            detail={`${item.advertiserName} · ${item.days} ${item.days === 1 ? "day" : "days"} · ${item.amount.toLocaleString()} pts paid · waiting ${waitingLabel(item.waitingSince)}`}
+                            to={`/ads/${item.adId}`}
+                            action="Review"
+                        />
+                    ))}
                     {attention.endingSoon.map((item) => (
                         <AttentionRow
                             key={item.campaignId}

@@ -14,6 +14,9 @@ export interface AttentionResponse {
     pending: (AttentionItem & { waitingSince: string })[];
     endingSoon: (AttentionItem & { endDate: string })[];
     endingSoonDays: number;
+    /** Paid campaign extensions waiting for approval, oldest first. */
+    pendingExtensionCount: number;
+    pendingExtensions: (AttentionItem & { extensionId: string; amount: number; days: number; newEndDate: string; waitingSince: string })[];
 }
 
 export interface PointsSummaryResponse {

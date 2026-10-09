@@ -6,6 +6,7 @@ import type { AdResponse } from "../../../dto/response/content/adResponse";
 import { cn } from "../../../lib/utils";
 import { Button } from "../../ui/button";
 import BudgetForm from "./budget_form";
+import CampaignExtensions from "./campaign_extensions";
 import PaymentDialog from "../Payment/payment_dialog";
 
 import { statusLabel } from "../../../lib/status";
@@ -120,6 +121,8 @@ export default function AdDetails({ data }: Props) {
 
             {/* BUDGET — editable only while draft */}
             {campaign && <BudgetForm campaign={campaign} />}
+
+            {campaign && <CampaignExtensions campaign={campaign} isAdmin />}
 
             {status === "draft" && campaign && (
                 <PaymentDialog
