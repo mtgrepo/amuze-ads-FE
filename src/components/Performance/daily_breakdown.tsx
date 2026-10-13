@@ -6,7 +6,7 @@ import type { DayTotals } from "./performance_types";
 const COLLAPSED_DAYS = 7;
 
 /** One row per day, newest first, with every count and rate. */
-export function DailyBreakdown({ days }: { days: DayTotals[] }) {
+export function DailyBreakdown({ days, subject }: { days: DayTotals[]; subject?: string }) {
     const [expanded, setExpanded] = useState(false);
     const newestFirst = [...days].reverse();
     const visible = expanded ? newestFirst : newestFirst.slice(0, COLLAPSED_DAYS);
@@ -16,7 +16,7 @@ export function DailyBreakdown({ days }: { days: DayTotals[] }) {
         <section className="rounded-xl border bg-card p-5">
             <div className="flex items-baseline justify-between gap-4">
                 <h2 className="text-sm font-medium">Daily breakdown</h2>
-                <span className="text-xs text-muted-foreground">Newest first</span>
+                <span className="text-xs text-muted-foreground">{subject ? `${subject} · newest first` : "Newest first"}</span>
             </div>
             <div className="mt-3 overflow-x-auto">
                 <table className="w-full text-sm">

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { useTopAdsQuery } from "../../Composable/Query/dailyAdStats/useTopAdsQuery";
 import type { TopAdItem } from "../../dto/response/dailyAdStats/dailyAdStatsResponse";
@@ -50,11 +51,14 @@ const STATUS_TAG: Record<string, string> = {
  * Ads in the range, sortable by any column.
  * owner: "advertiser" shows who owns each ad (admin), "client" shows the agency's client, "none" for an advertiser's own ads.
  */
-export function AdsTable({ range, scopeId, owner, title }: {
+export function AdsTable({ range, scopeId, owner, title, selectedAdId, onSelectAd }: {
     range: DateRange;
     scopeId?: string;
     owner: "advertiser" | "client" | "none";
     title: string;
+    selectedAdId?: string;
+    /** Called with the clicked ad, or undefined when the selected ad is clicked again. */
+    onSelectAd?: (adId: string | undefined) => void;
 }) {
     const [sortKey, setSortKey] = useState<SortKey>("clicks");
     const [descending, setDescending] = useState(true);
@@ -81,7 +85,7 @@ export function AdsTable({ range, scopeId, owner, title }: {
             <div className="flex items-baseline justify-between gap-4">
                 <h2 className="text-sm font-medium">{title}</h2>
                 <span className="text-xs text-muted-foreground">
-                    Sorted by {sortedLabel}{rows.length >= AD_LIMIT ? ` · top ${AD_LIMIT}` : ""}
+                    {onSelectAd ? "Click an ad to see only its performance · " : ""}sorted by {sortedLabel}{rows.length >= AD_LIMIT ? ` · top ${AD_LIMIT}` : ""}
                 </span>
             </div>
             {isLoading ? (
@@ -113,10 +117,25 @@ export function AdsTable({ range, scopeId, owner, title }: {
                         </thead>
                         <tbody>
                             {rows.map((ad, index) => (
-                                <tr key={ad.adId} className="border-t">
+                                <tr
+                                    key={ad.adId}
+                                    onClick={onSelectAd ? () => onSelectAd(ad.adId === selectedAdId ? undefined : ad.adId) : undefined}
+                                    onKeyDown={onSelectAd ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelectAd(ad.adId === selectedAdId ? undefined : ad.adId); } } : undefined}
+                                    tabIndex={onSelectAd ? 0 : undefined}
+                                    aria-selected={onSelectAd ? ad.adId === selectedAdId : undefined}
+                                    className={cn(
+                                        "border-t",
+                                        onSelectAd && "cursor-pointer transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none",
+                                        ad.adId === selectedAdId && "bg-primary/10 hover:bg-primary/10",
+                                    )}
+                                >
                                     <td className="py-2.5 text-xs text-muted-foreground tabular-nums">{index + 1}</td>
                                     <td className="py-2.5 pr-4">
-                                        <Link to={`/ads/${ad.adId}`} className="hover:underline">{ad.campaignName}</Link>
+                                        {onSelectAd ? (
+                                            <span className="font-medium">{ad.campaignName}</span>
+                                        ) : (
+                                            <Link to={`/ads/${ad.adId}`} className="hover:underline">{ad.campaignName}</Link>
+                                        )}
                                         {STATUS_TAG[ad.status] && (
                                             <span className={`ml-2 rounded px-1.5 py-px text-[11px] ${STATUS_TAG[ad.status]}`}>{statusLabel(ad.status)}</span>
                                         )}

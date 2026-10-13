@@ -14,12 +14,14 @@ function Change({ value }: { value: number | null }) {
 const RATE_LABEL: Partial<Record<Metric, string>> = { clicks: "CTR", watches: "view", engagements: "eng." };
 
 /** The four actions plus active ads. Each action cell also picks what the chart shows. */
-export function MetricStrip({ current, previous, selected, onSelect, activeAdsNote, isLoading }: {
+export function MetricStrip({ current, previous, selected, onSelect, activeAdsNote, lastCell, isLoading }: {
     current?: PeriodTotals;
     previous?: PeriodTotals;
     selected: Metric;
     onSelect: (metric: Metric) => void;
     activeAdsNote: string;
+    /** Replaces the active-ads cell, e.g. a single ad's spend. */
+    lastCell?: { label: string; value: string; note: string };
     isLoading: boolean;
 }) {
     const metrics: Metric[] = ["impressions", "clicks", "watches", "engagements"];
@@ -59,9 +61,9 @@ export function MetricStrip({ current, previous, selected, onSelect, activeAdsNo
                 );
             })}
             <div className="px-4 py-3.5">
-                <div className="text-xs text-muted-foreground">Active ads</div>
-                <div className="mt-0.5 text-2xl font-medium tracking-tight tabular-nums">{current?.activeAds ?? 0}</div>
-                <div className="text-xs text-muted-foreground">{activeAdsNote}</div>
+                <div className="text-xs text-muted-foreground">{lastCell?.label ?? "Active ads"}</div>
+                <div className="mt-0.5 text-2xl font-medium tracking-tight tabular-nums">{lastCell?.value ?? current?.activeAds ?? 0}</div>
+                <div className="text-xs text-muted-foreground">{lastCell?.note ?? activeAdsNote}</div>
             </div>
         </div>
     );
