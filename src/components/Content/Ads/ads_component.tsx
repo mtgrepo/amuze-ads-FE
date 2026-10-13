@@ -84,6 +84,7 @@ export function AdComponent
     { label: "Active", value: "active" },
     { label: "Paused", value: "paused" },
     { label: "Under Review", value: "pending" },
+    { label: "Expired", value: "expired" },
   ];
   return (
     <div className="w-full mx-auto">

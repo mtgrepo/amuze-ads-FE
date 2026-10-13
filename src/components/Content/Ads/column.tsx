@@ -1,7 +1,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox"
-import { CircleCheck, ClockFading, FilePen, Mars, PauseCircle, Venus, VenusAndMars } from "lucide-react";
+import { CalendarX, CircleCheck, ClockFading, FilePen, Mars, PauseCircle, Venus, VenusAndMars, XCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../ui/tooltip";
 import type { AdResponse } from "../../../dto/response/content/adResponse";
 import AdsActions from "./ads_actions";
@@ -109,6 +109,12 @@ const columns: ColumnDef<AdResponse>[] = [
                     break;
                 case "draft":
                     icon = <FilePen color="gray" />;
+                    break;
+                case "expired":
+                    icon = <CalendarX color="gray" />;
+                    break;
+                case "rejected":
+                    icon = <XCircle color="red" />;
                     break;
                 default:
                     icon = null;
