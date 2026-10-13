@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Badge } from "../../ui/badge";
+import { Link } from "react-router-dom";
 import { useState } from "react";
-import { CreditCard, MapPin, UserSearch, VenusAndMars } from "lucide-react";
+import { ChartLine, CreditCard, MapPin, UserSearch, VenusAndMars } from "lucide-react";
 import type { AdResponse } from "../../../dto/response/content/adResponse";
 import { cn } from "../../../lib/utils";
 import { Button } from "../../ui/button";
@@ -38,9 +39,14 @@ export default function AdDetails({ data }: Props) {
                         <h1 className="text-2xl font-bold capitalize">{adType} · {placementKey}</h1>
                         <p className="text-muted-foreground mt-1">Campaign: {campaign?.name}</p>
                     </div>
-                    <Badge className={cn(statusVariant(status))} variant="outline">
-                        {statusLabel(status)}
-                    </Badge>
+                    <div className="flex items-center gap-3">
+                        <Link to={`/daily-ads-status?ad=${data.id}`} className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
+                            <ChartLine className="h-4 w-4" /> View performance
+                        </Link>
+                        <Badge className={cn(statusVariant(status))} variant="outline">
+                            {statusLabel(status)}
+                        </Badge>
+                    </div>
                 </CardContent>
             </Card>
 
