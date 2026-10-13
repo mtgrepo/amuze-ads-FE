@@ -82,7 +82,6 @@ export function AdComponent
   ]
   const statusOptions = [
     { label: "Active", value: "active" },
-    { label: "Paused", value: "paused" },
     { label: "Under Review", value: "pending" },
     { label: "Expired", value: "expired" },
   ];

@@ -6,7 +6,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CheckCircle, CircleCheck, CreditCard, Info, MoreHorizontal, Pause, Wallet, XCircle } from "lucide-react";
+import { CheckCircle, CreditCard, Info, MoreHorizontal, Wallet, XCircle } from "lucide-react";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../ui/button";
@@ -18,7 +18,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from "../../ui/dialog";
-import { useUpdateAdStatusCommand } from "../../../Composable/Command/content/ads/useUpdateAdStatusCommand";
 import { useAdApproveCommand } from "../../../Composable/Command/content/ads/useAdApproveCommand";
 import { useAdRejectCommand } from "../../../Composable/Command/content/ads/useAdRejectCommand";
 import type { AdResponse } from "../../../dto/response/content/adResponse";
@@ -27,23 +26,13 @@ import BudgetForm from "./budget_form";
 
 export default function AdsActions({ id, status, adSet }: AdResponse) {
     const navigate = useNavigate();
-    const [statusDialogOpen, setStatusDialogOpen] = React.useState(false);
     const [payOpen, setPayOpen] = React.useState(false);
     const [budgetOpen, setBudgetOpen] = React.useState(false);
     const [approveOpen, setApproveOpen] = React.useState(false);
     const [rejectOpen, setRejectOpen] = React.useState(false);
 
-    const { updateAdStatusCommand, isPending } = useUpdateAdStatusCommand();
     const { approveAdCommand, isPending: isApproving } = useAdApproveCommand();
     const { rejectAdCommand, isPending: isRejecting } = useAdRejectCommand();
-
-    const isActive = status === "active";
-    const newStatus = isActive ? "paused" : "active";
-
-    const handleChangeStatus = async () => {
-        await updateAdStatusCommand({ id, status: newStatus });
-        setStatusDialogOpen(false);
-    };
 
     const handleApprove = async () => {
         await approveAdCommand(id);
@@ -110,24 +99,6 @@ export default function AdsActions({ id, status, adSet }: AdResponse) {
                         </>
                     )}
 
-                    {(status === "active" || status === "paused") && (
-                        <DropdownMenuItem
-                            onClick={() => setStatusDialogOpen(true)}
-                            className={isActive ? "text-yellow-600 focus:text-yellow-600" : "text-green-600 focus:text-green-600"}
-                        >
-                            {isActive ? (
-                                <>
-                                    <Pause className="mr-2 h-4 w-4" />
-                                    Pause
-                                </>
-                            ) : (
-                                <>
-                                    <CircleCheck className="mr-2 h-4 w-4" />
-                                    Activate
-                                </>
-                            )}
-                        </DropdownMenuItem>
-                    )}
                 </DropdownMenuContent>
             </DropdownMenu>
 
@@ -172,43 +143,6 @@ export default function AdsActions({ id, status, adSet }: AdResponse) {
                         </Button>
                         <Button variant="destructive" onClick={handleReject} disabled={isRejecting}>
                             {isRejecting ? 'Rejecting...' : 'Reject'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* CHANGE STATUS DIALOG */}
-            <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
-                <DialogContent className="sm:max-w-md rounded-2xl">
-                    <DialogHeader>
-                        <DialogTitle>
-                            {isActive ? "Pause ad?" : "Activate ad?"}
-                        </DialogTitle>
-                        <DialogDescription>
-                            {isActive
-                                ? "This ad will be paused and will stop serving."
-                                : "This ad will be activated and start serving."}
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <DialogFooter className="gap-2">
-                        <Button variant="outline" onClick={() => setStatusDialogOpen(false)}>
-                            Cancel
-                        </Button>
-                        <Button
-                            className={
-                                isActive
-                                    ? "bg-yellow-600 hover:bg-yellow-700 text-white"
-                                    : "bg-green-600 hover:bg-green-700 text-white"
-                            }
-                            onClick={handleChangeStatus}
-                            disabled={isPending}
-                        >
-                            {isPending
-                                ? "Updating..."
-                                : isActive
-                                    ? "Pause"
-                                    : "Activate"}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
