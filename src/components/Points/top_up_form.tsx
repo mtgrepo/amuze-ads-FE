@@ -15,6 +15,7 @@ import { Textarea } from "../ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { Spinner } from "../ui/spinner"
 import { useTopUpPointsCommand } from "../../Composable/Command/points/useTopUpPointsCommand"
+import { usePreventScriptTag } from "@/lib/scriptTag"
 
 const formSchema = z.object({
     amount: z.number().int().min(1, { message: "Amount must be at least 1." }),
@@ -37,6 +38,8 @@ export default function TopUpForm({ accountId, onSuccess }: TopUpFormProps) {
         resolver: zodResolver(formSchema),
         defaultValues: { amount: 1000, type: "paid", note: "" },
     })
+
+    usePreventScriptTag(form);
 
     async function onSubmit(values: Values) {
         try {

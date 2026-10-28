@@ -14,6 +14,7 @@ import { Calendar } from "../../ui/calendar"
 import { Spinner } from "../../ui/spinner"
 import { cn } from "../../../lib/utils"
 import { useUpdateCampaignBudgetCommand } from "../../../Composable/Command/content/campaign/useUpdateCampaignBudgetCommand"
+import { usePreventScriptTag } from "@/lib/scriptTag"
 
 const schema = z.object({
     budgetPlan: z.enum(["daily", "total"]),
@@ -80,6 +81,7 @@ export default function BudgetForm({ campaign, embedded = false, onDone }: Budge
         resolver: zodResolver(schema),
         defaultValues: toValues(),
     });
+    usePreventScriptTag(form);
 
     useEffect(() => {
         form.reset(toValues());

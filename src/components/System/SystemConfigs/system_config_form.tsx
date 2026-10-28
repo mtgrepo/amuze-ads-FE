@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useSystemConfigCreateCommand } from "../../../Composable/Command/system/useSystemConfigCreateCommand"
 import { Spinner } from "../../ui/spinner"
 import { useSystemConfigUpdateCommand } from "../../../Composable/Command/system/useSystemConfigUpdateCommand"
+import { usePreventScriptTag } from "@/lib/scriptTag"
 
 const formSchema = z.object({
     category: z.string().min(1, {
@@ -64,6 +65,8 @@ export default function SystemConfigForm({
             description: "",
         },
     })
+    usePreventScriptTag(form);
+    
     const { createSystemConfigCommand, isPending: createPending } = useSystemConfigCreateCommand();
     const { updateSystemConfigCommand, isPending: updatePending } = useSystemConfigUpdateCommand();
 

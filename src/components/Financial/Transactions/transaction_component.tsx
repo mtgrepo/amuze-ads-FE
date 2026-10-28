@@ -170,7 +170,7 @@ export function TransactionComponent({ data }: TransactionProps) {
                     </div>
                 </div>
             </div>
-            <div className="overflow-hidden rounded-md border">
+            <div className="grid grid-cols-1 overflow-hidden rounded-md border">
                 <Table>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (

@@ -19,6 +19,7 @@ import type { AdvertisersResponse } from "../../dto/response/advertisers/adverti
 import { Textarea } from "../ui/textarea"
 import ImageUpload from "../Common/image_upload"
 import { Spinner } from "../ui/spinner"
+import { usePreventScriptTag } from "@/lib/scriptTag"
 
 // Validation schema
 const formSchema = z.object({
@@ -77,6 +78,8 @@ export default function ProfileForm({
             photo: "",
         },
     })
+
+    usePreventScriptTag(form)
 
     //fetch all advertiser to use in dropdown
     const { advertisersList } = useAdvertisersQuery();

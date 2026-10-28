@@ -20,6 +20,7 @@ import { Separator } from "../ui/separator";
 import { toast } from "sonner";
 import { useAdvertiserUpdateCommand } from "../../Composable/Command/advertiser/useAdvertiserUpdateCommand";
 import { Spinner } from "../ui/spinner";
+import { usePreventScriptTag } from "@/lib/scriptTag";
 
 const schema = z.object({
     name: z.string().min(2, "Name required"),
@@ -37,6 +38,8 @@ export default function ContactForm({ data }: { data: AdvertisersResponse }) {
     const form = useForm<Values>({
         resolver: zodResolver(schema),
     });
+
+    usePreventScriptTag(form);
 
     useEffect(() => {
 

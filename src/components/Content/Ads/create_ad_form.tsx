@@ -32,6 +32,7 @@ import { useCreateFullCampaignCommand } from "../../../Composable/Command/conten
 import type { AdvertisersResponse } from "../../../dto/response/advertisers/advertisersResponse";
 import { cn } from "../../../lib/utils";
 import { AD_TYPE_OPTIONS, ASSET_TYPE_LABELS, DISPLAY_FORMATS } from "./ad_formats";
+import { usePreventScriptTag } from "@/lib/scriptTag";
 
 const formSchema = z
   .object({
@@ -103,6 +104,8 @@ export default function CreateAdForm({
     },
   });
 
+  usePreventScriptTag(form);
+
   const adType = form.watch("adType");
   const placementKey = form.watch("placementKey");
   const assetType = form.watch("assetType");
@@ -118,8 +121,7 @@ export default function CreateAdForm({
   const selectableAdvertisers = (advertisersList ?? []).filter(
     (a: AdvertisersResponse) => a.type === "advertiser",
   );
-  const { createFullCampaignCommand, isPending } =
-    useCreateFullCampaignCommand();
+  const { createFullCampaignCommand, isPending } = useCreateFullCampaignCommand();
 
   const budgetPlan = form.watch("budgetPlan");
   const dailyBudget = form.watch("dailyBudget");

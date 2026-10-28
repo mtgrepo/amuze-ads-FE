@@ -18,6 +18,7 @@ import { useAdvertiserUpdateCommand } from "../../Composable/Command/advertiser/
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { useAdvertisersQuery } from "../../Composable/Query/advertiser/useAdvertisersQuery"
 import type { AdvertisersResponse } from "../../dto/response/advertisers/advertisersResponse"
+import { safeString, usePreventScriptTag } from "@/lib/scriptTag"
 
 const NO_AGENCY = "none"
 
@@ -27,9 +28,9 @@ const formSchema = z.object({
     type: z.enum(["advertiser", "agency"]),
     agencyId: z.string(),
     email: z.union([z.email(), z.literal("")]),
-    phone: z.string(),
+    phone: safeString(z.string()),
     status: z.string().min(1, { message: "Status is required." }),
-    password: z.string().optional(),
+    password: safeString(z.string()).optional(),
     verified: z.boolean(),
 }).superRefine((v, ctx) => {
     const isClient = v.type === "advertiser" && v.agencyId !== NO_AGENCY
@@ -84,6 +85,8 @@ export default function AdvertiserForm({
         },
     })
 
+    usePreventScriptTag(form)
+
     const accountType = form.watch("type");
     const agencyId = form.watch("agencyId");
     const isClient = accountType === "advertiser" && agencyId !== NO_AGENCY;
@@ -123,9 +126,9 @@ export default function AdvertiserForm({
             }
             form.reset();
             onSuccess?.()
-        } catch (err) {
+        } catch (err: any) {
             console.error(err)
-            toast.error("Something went wrong!")
+            toast.error(err?.message)
         }
     }
 
