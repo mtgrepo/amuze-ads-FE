@@ -11,6 +11,8 @@ interface ObjectivesPickerProps {
     assetType?: string;
     /** The package price, for the running total. */
     planCost: number;
+    /** What the objectives already cost when unchanged (saved prices); otherwise priced at today's prices. */
+    objectivesCost?: number;
     disabled?: boolean;
 }
 
@@ -18,7 +20,7 @@ interface ObjectivesPickerProps {
  * Optional results to buy on top of the package: how many impressions, clicks or watches.
  * Only the checked rows are bought; the server prices them again at save.
  */
-export function ObjectivesPicker({ value, onChange, assetType, planCost, disabled }: ObjectivesPickerProps) {
+export function ObjectivesPicker({ value, onChange, assetType, planCost, objectivesCost, disabled }: ObjectivesPickerProps) {
     const { prices, isLoading } = useObjectivePricesQuery();
     if (isLoading) return <div className="h-24 animate-pulse rounded-xl bg-muted" />;
     if (prices.length === 0) return null;
@@ -30,7 +32,7 @@ export function ObjectivesPicker({ value, onChange, assetType, planCost, disable
     const setCount = (type: ObjectiveType, count: number) =>
         onChange(value.map((o) => (o.objectiveType === type ? { ...o, targetCount: count } : o)));
 
-    const objectives = objectivesTotal(value, prices, assetType);
+    const objectives = objectivesCost ?? objectivesTotal(value, prices, assetType);
 
     return (
         <div className="space-y-3">

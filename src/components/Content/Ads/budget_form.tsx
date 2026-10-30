@@ -60,7 +60,7 @@ export default function BudgetForm({ campaign, assetType, embedded = false, onDo
     const isDraft = campaign.status === "draft";
     const { updateCampaignBudgetCommand, isPending } = useUpdateCampaignBudgetCommand();
     const { packages: onSale } = useActivePackagesQuery();
-    const { objectives: savedObjectives } = useCampaignObjectivesQuery(campaign.id);
+    const { objectives: savedObjectives, isLoading: objectivesLoading } = useCampaignObjectivesQuery(campaign.id);
     const { prices: objectivePrices } = useObjectivePricesQuery();
     const { saveCampaignObjectivesCommand, isPending: savingObjectives } = useSaveCampaignObjectivesCommand();
     const savedPicks: ObjectiveInput[] = savedObjectives
@@ -72,12 +72,12 @@ export default function BudgetForm({ campaign, assetType, embedded = false, onDo
     const picks = editedPicks ?? savedPicks;
 
     // The draft's own copy of its package: it keeps the price the customer was shown.
-    const current: PackageTerms = {
+    const current: PackageTerms | undefined = campaign.packageId ? {
         id: campaign.packageId,
         name: campaign.packageName,
         durationDays: Number(campaign.packageDays),
         price: Number(campaign.packagePrice),
-    };
+    } : undefined;
     const initial = (): PackageChoice => ({
         packageId: campaign.packageId,
         packageQuantity: Number(campaign.packageQuantity),
@@ -136,7 +136,18 @@ export default function BudgetForm({ campaign, assetType, embedded = false, onDo
             <PackagePicker value={choice} onChange={setChoice} current={current} />
             <div className="space-y-2">
                 <p className="text-sm font-medium">Objectives <span className="font-normal text-muted-foreground">(optional)</span></p>
-                <ObjectivesPicker value={picks} onChange={setEditedPicks} assetType={assetType} planCost={summary.planCost} />
+                {objectivesLoading ? (
+                    <div className="h-24 animate-pulse rounded-xl bg-muted" />
+                ) : (
+                    <ObjectivesPicker
+                        value={picks}
+                        onChange={setEditedPicks}
+                        assetType={assetType}
+                        planCost={summary.planCost}
+                        // Untouched picks keep the price they were saved at; that's what Pay will charge.
+                        objectivesCost={editedPicks === null ? objectiveCost : undefined}
+                    />
+                )}
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex justify-end gap-2">
