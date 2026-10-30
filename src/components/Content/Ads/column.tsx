@@ -39,11 +39,11 @@ const columns: ColumnDef<AdResponse>[] = [
         ),
     },
     {
-        id: "budgetPlan",
-        accessorFn: (row) => row.adSet.campaign.budgetPlan,
-        header: "Budget Plan",
+        id: "package",
+        accessorFn: (row) => `${row.adSet.campaign.packageQuantity} × ${row.adSet.campaign.packageName}`,
+        header: "Package",
         cell: ({ row }) => (
-            <div className="capitalize">{row.getValue("budgetPlan")}</div>
+            <div className="whitespace-nowrap">{row.getValue("package")}</div>
         ),
     },
     {

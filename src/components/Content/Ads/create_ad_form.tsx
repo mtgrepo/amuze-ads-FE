@@ -1,9 +1,6 @@
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useEffect } from "react";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -23,25 +20,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover";
-import { Calendar } from "../../ui/calendar";
 import ImageUpload from "../../Common/image_upload";
 import { Spinner } from "../../ui/spinner";
 import { useAdvertisersQuery } from "../../../Composable/Query/advertiser/useAdvertisersQuery";
 import { useCreateFullCampaignCommand } from "../../../Composable/Command/content/campaign/useCreateFullCampaignCommand";
 import type { AdvertisersResponse } from "../../../dto/response/advertisers/advertisersResponse";
-import { cn } from "../../../lib/utils";
 import { AD_TYPE_OPTIONS, ASSET_TYPE_LABELS, DISPLAY_FORMATS } from "./ad_formats";
+import { PackagePicker } from "./package_picker";
+import { summarize } from "./package_terms";
+import { useActivePackagesQuery } from "../../../Composable/Query/adPackage/useActivePackagesQuery";
 
 const formSchema = z
   .object({
     advertiserId: z.string().min(1, { message: "Advertiser is required." }),
     name: z.string().min(1, { message: "Campaign name is required." }),
-    budgetPlan: z.enum(["daily", "total"]),
-    dailyBudget: z.number({ message: "Daily budget is required." }).min(0).optional(),
-    totalBudget: z.number({ message: "Total budget is required." }).min(1, { message: "Total budget is required." }).optional(),
+    packageId: z.string().min(1, { message: "Pick a package." }),
+    packageQuantity: z.number().int().min(1, { message: "Buy at least 1." }),
     startDate: z.date({ message: "Start date is required." }),
-    endDate: z.date({ message: "End date is required." }),
     creativeName: z.string().min(1, { message: "Creative name is required." }),
     assetType: z.string().min(1, { message: "Asset type is required." }),
     destinationLink: z
@@ -55,18 +50,6 @@ const formSchema = z
     gender: z.string().min(1, { message: "Gender is required." }),
     adType: z.string().min(1, { message: "Ad type is required." }),
     placementKey: z.string().min(1, { message: "Placement is required." }),
-  })
-  // The budget field the user fills in depends on the plan. `when` runs these checks even while
-  // other fields are still invalid, so an empty form flags the right budget box at once.
-  .refine((data) => data.budgetPlan !== "total" || (data.totalBudget ?? 0) >= 1, {
-    message: "Total budget is required.",
-    path: ["totalBudget"],
-    when: () => true,
-  })
-  .refine((data) => data.budgetPlan !== "daily" || (data.dailyBudget ?? 0) >= 1, {
-    when: () => true,
-    message: "Daily budget is required.",
-    path: ["dailyBudget"],
   });
 
 type Values = z.infer<typeof formSchema>;
@@ -86,11 +69,9 @@ export default function CreateAdForm({
     defaultValues: {
       advertiserId: "",
       name: "",
-      budgetPlan: "daily",
-      dailyBudget: undefined,
-      totalBudget: undefined,
+      packageId: "",
+      packageQuantity: 1,
       startDate: undefined,
-      endDate: undefined,
       creativeName: "",
       assetType: "",
       destinationLink: "",
@@ -121,26 +102,16 @@ export default function CreateAdForm({
   const { createFullCampaignCommand, isPending } =
     useCreateFullCampaignCommand();
 
-  const budgetPlan = form.watch("budgetPlan");
-  const dailyBudget = form.watch("dailyBudget");
-  const startDate = form.watch("startDate");
-  const endDate = form.watch("endDate");
-
-  useEffect(() => {
-    if (budgetPlan === "daily") {
-      if (startDate && endDate && dailyBudget && dailyBudget >= 1) {
-        const msPerDay = 1000 * 60 * 60 * 24;
-        const days =
-          Math.floor((endDate.getTime() - startDate.getTime()) / msPerDay) + 1;
-        form.setValue("totalBudget", dailyBudget * Math.max(days, 1));
-      }
-    } else {
-      form.setValue("dailyBudget", 0);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [budgetPlan, dailyBudget, startDate, endDate]);
+  const { packages: packagesOnSale } = useActivePackagesQuery();
+  const packageChoice = {
+    packageId: form.watch("packageId"),
+    packageQuantity: form.watch("packageQuantity"),
+    startDate: form.watch("startDate"),
+  };
+  const packageSummary = summarize(packageChoice, packagesOnSale);
 
   const onSubmit = async (values: Values) => {
+    if (packageSummary.tooLong) return;
     const formData = new FormData();
     Object.entries(values).forEach(([key, value]) => {
       if (value === null || value === undefined) return;
@@ -222,141 +193,21 @@ export default function CreateAdForm({
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="budgetPlan"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Budget Plan</FormLabel>
-                  <FormControl>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select budget plan" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="daily">Daily Budget</SelectItem>
-                        <SelectItem value="total">Total Budget</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="dailyBudget"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Daily Budget</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      disabled={budgetPlan === "total"}
-                      value={field.value ?? ""}
-                      onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="totalBudget"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Total Budget</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      disabled={budgetPlan === "daily"}
-                      value={field.value ?? ""}
-                      onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="startDate"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Start Date</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground",
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        captionLayout="dropdown"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="endDate"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>End Date</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground",
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        captionLayout="dropdown"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="md:col-span-2">
+              <PackagePicker
+                value={packageChoice}
+                onChange={(next) => {
+                  form.setValue("packageId", next.packageId, { shouldValidate: form.formState.isSubmitted });
+                  form.setValue("packageQuantity", next.packageQuantity, { shouldValidate: form.formState.isSubmitted });
+                  form.setValue("startDate", next.startDate as Date, { shouldValidate: form.formState.isSubmitted });
+                }}
+                errors={{
+                  packageId: form.formState.errors.packageId?.message,
+                  packageQuantity: form.formState.errors.packageQuantity?.message,
+                  startDate: form.formState.errors.startDate?.message,
+                }}
+              />
+            </div>
           </CardContent>
         </Card>
 

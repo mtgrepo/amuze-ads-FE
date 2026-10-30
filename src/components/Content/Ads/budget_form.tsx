@@ -1,42 +1,26 @@
-import { useEffect, useState } from "react"
-import { z } from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { useState } from "react"
 import { format } from "date-fns"
-import { CalendarIcon, EditIcon, Lock, Wallet } from "lucide-react"
+import { EditIcon, Lock, Wallet } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
-import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover"
-import { Calendar } from "../../ui/calendar"
 import { Spinner } from "../../ui/spinner"
-import { cn } from "../../../lib/utils"
 import { useUpdateCampaignBudgetCommand } from "../../../Composable/Command/content/campaign/useUpdateCampaignBudgetCommand"
-
-const schema = z.object({
-    budgetPlan: z.enum(["daily", "total"]),
-    dailyBudget: z.number().min(0),
-    totalBudget: z.number().min(1, { message: "Total budget is required." }),
-    startDate: z.date({ message: "Start date is required." }),
-    endDate: z.date({ message: "End date is required." }),
-}).refine((data) => data.budgetPlan !== "daily" || data.dailyBudget >= 1, {
-    message: "Daily budget is required.",
-    path: ["dailyBudget"],
-}).refine((data) => data.endDate >= data.startDate, {
-    message: "End date must be on or after the start date.",
-    path: ["endDate"],
-})
-
-type Values = z.infer<typeof schema>
+import { useActivePackagesQuery } from "../../../Composable/Query/adPackage/useActivePackagesQuery"
+import { daysLabel } from "../../../dto/response/adPackage/adPackageResponse"
+import { PackagePicker } from "./package_picker"
+import { offeredPackages, summarize, type PackageChoice, type PackageTerms } from "./package_terms"
 
 interface BudgetFormProps {
     campaign: {
         id: string
         status: string
-        budgetPlan: string
-        dailyBudget: number
+        packageId: string
+        packageName: string
+        packageDays: number
+        packagePrice: number
+        packageQuantity: number
+        planCost: number
+        objectiveCost: number
         totalBudget: number
         startDate: string | Date
         endDate: string | Date
@@ -62,185 +46,131 @@ const parseLocalDate = (value: string | Date) => {
     return new Date(year, month - 1, day);
 }
 
-// Budget and schedule set the amount paid, so they can change only while the ad is a draft.
+// The package and start date set the amount paid, so they can change only while the ad is a draft.
 export default function BudgetForm({ campaign, embedded = false, onDone }: BudgetFormProps) {
     const [editing, setEditing] = useState(embedded);
     const isDraft = campaign.status === "draft";
     const { updateCampaignBudgetCommand, isPending } = useUpdateCampaignBudgetCommand();
+    const { packages: onSale } = useActivePackagesQuery();
 
-    const toValues = (): Values => ({
-        budgetPlan: campaign.budgetPlan === "total" ? "total" : "daily",
-        dailyBudget: Number(campaign.dailyBudget),
-        totalBudget: Number(campaign.totalBudget),
+    // The draft's own copy of its package: it keeps the price the customer was shown.
+    const current: PackageTerms = {
+        id: campaign.packageId,
+        name: campaign.packageName,
+        durationDays: Number(campaign.packageDays),
+        price: Number(campaign.packagePrice),
+    };
+    const initial = (): PackageChoice => ({
+        packageId: campaign.packageId,
+        packageQuantity: Number(campaign.packageQuantity),
         startDate: parseLocalDate(campaign.startDate),
-        endDate: parseLocalDate(campaign.endDate),
     });
+    const [choice, setChoice] = useState<PackageChoice>(initial);
+    const [error, setError] = useState<string>();
+    const summary = summarize(choice, offeredPackages(onSale, current));
 
-    const form = useForm<Values>({
-        resolver: zodResolver(schema),
-        defaultValues: toValues(),
-    });
-
-    useEffect(() => {
-        form.reset(toValues());
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [campaign]);
-
-    const budgetPlan = form.watch("budgetPlan");
-    const dailyBudget = form.watch("dailyBudget");
-    const startDate = form.watch("startDate");
-    const endDate = form.watch("endDate");
-
-    useEffect(() => {
-        if (!editing) return;
-        if (budgetPlan === "daily") {
-            if (startDate && endDate && dailyBudget >= 1) {
-                const msPerDay = 1000 * 60 * 60 * 24;
-                const days = Math.round((endDate.getTime() - startDate.getTime()) / msPerDay) + 1;
-                form.setValue("totalBudget", dailyBudget * Math.max(days, 1));
-            }
-        } else {
-            form.setValue("dailyBudget", 0);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [editing, budgetPlan, dailyBudget, startDate, endDate]);
-
-    const disabled = !editing;
-
-    const onSubmit = async (values: Values) => {
-        await updateCampaignBudgetCommand({
-            id: campaign.id,
-            data: {
-                budgetPlan: values.budgetPlan,
-                dailyBudget: values.dailyBudget,
-                totalBudget: values.totalBudget,
-                startDate: toDateOnly(values.startDate),
-                endDate: toDateOnly(values.endDate),
-            },
-        });
-        setEditing(embedded);
-        onDone?.();
+    const startEditing = () => {
+        setChoice(initial());
+        setError(undefined);
+        setEditing(true);
     };
 
     const handleCancel = () => {
-        form.reset(toValues());
+        setChoice(initial());
+        setError(undefined);
         setEditing(embedded);
         onDone?.();
     };
 
-    const renderDateField = (name: "startDate" | "endDate", label: string) => (
-        <FormField control={form.control} name={name} render={({ field }) => (
-            <FormItem className="flex flex-col">
-                <FormLabel>{label}</FormLabel>
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <FormControl>
-                            <Button
-                                variant="outline"
-                                disabled={disabled}
-                                className={cn(
-                                    "w-full pl-3 text-left font-normal",
-                                    !field.value && "text-muted-foreground"
-                                )}
-                            >
-                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                        </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            captionLayout="dropdown"
-                        />
-                    </PopoverContent>
-                </Popover>
-                <FormMessage />
-            </FormItem>
-        )} />
-    );
+    const handleSave = async () => {
+        if (!choice.packageId || !choice.startDate || !(choice.packageQuantity >= 1)) {
+            setError("Pick a package, how many, and a start date.");
+            return;
+        }
+        if (summary.tooLong) return;
+        try {
+            await updateCampaignBudgetCommand({
+                id: campaign.id,
+                data: {
+                    packageId: choice.packageId,
+                    packageQuantity: choice.packageQuantity,
+                    startDate: toDateOnly(choice.startDate),
+                },
+            });
+            setEditing(embedded);
+            onDone?.();
+        } catch {
+            // The command already shows why.
+        }
+    };
+
+    const objectiveCost = Number(campaign.objectiveCost ?? 0);
 
     const formContent = (
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                            <FormField control={form.control} name="budgetPlan" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Budget Plan</FormLabel>
-                                    <FormControl>
-                                        <Select value={field.value} onValueChange={field.onChange} disabled={disabled}>
-                                            <SelectTrigger className="w-full"><SelectValue placeholder="Select budget plan" /></SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="daily">Daily Budget</SelectItem>
-                                                <SelectItem value="total">Total Budget</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )} />
-                            <FormField control={form.control} name="dailyBudget" render={({ field }) => (
-                                <FormItem><FormLabel>Daily Budget</FormLabel><FormControl>
-                                    <Input
-                                        type="number"
-                                        {...field}
-                                        disabled={disabled || budgetPlan === "total"}
-                                        onChange={(e) => field.onChange(Number(e.target.value))}
-                                    />
-                                </FormControl><FormMessage /></FormItem>
-                            )} />
-                            <FormField control={form.control} name="totalBudget" render={({ field }) => (
-                                <FormItem><FormLabel>Total Budget</FormLabel><FormControl>
-                                    <Input
-                                        type="number"
-                                        {...field}
-                                        disabled={disabled || budgetPlan === "daily"}
-                                        onChange={(e) => field.onChange(Number(e.target.value))}
-                                    />
-                                </FormControl><FormMessage /></FormItem>
-                            )} />
-                            <div />
-                            {renderDateField("startDate", "Start Date")}
-                            {renderDateField("endDate", "End Date")}
-                        </div>
-                        {editing && (
-                            <div className="flex justify-end gap-2">
-                                <Button type="button" variant="outline" onClick={handleCancel} disabled={isPending}>
-                                    Cancel
-                                </Button>
-                                <Button type="submit" disabled={isPending}>
-                                    {isPending && <Spinner />}
-                                    Save
-                                </Button>
-                            </div>
-                        )}
-                    </form>
-                </Form>
+        <div className="space-y-4">
+            <PackagePicker value={choice} onChange={setChoice} current={current} />
+            {objectiveCost > 0 && (
+                <p className="text-sm text-muted-foreground">
+                    Objectives add {objectiveCost.toLocaleString()} pts, so the total will be{" "}
+                    <span className="font-medium text-foreground">{(summary.planCost + objectiveCost).toLocaleString()} pts</span>.
+                </p>
+            )}
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={handleCancel} disabled={isPending}>Cancel</Button>
+                <Button type="button" onClick={handleSave} disabled={isPending || summary.tooLong}>
+                    {isPending && <Spinner />}
+                    Save
+                </Button>
+            </div>
+        </div>
     );
 
     if (embedded) return formContent;
+
+    const start = parseLocalDate(campaign.startDate);
+    const end = parseLocalDate(campaign.endDate);
 
     return (
         <Card className="rounded-2xl shadow-sm">
             <CardHeader className="flex justify-between items-center">
                 <CardTitle className="flex flex-row gap-3 items-center">
-                    <Wallet size={20} className="text-primary" /> Budget
+                    <Wallet size={20} className="text-primary" /> Package
                 </CardTitle>
                 {isDraft && !editing && (
-                    <Button type="button" size="sm" variant="outline" onClick={() => setEditing(true)}>
+                    <Button type="button" size="sm" variant="outline" onClick={startEditing}>
                         <EditIcon size={16} /> Edit
                     </Button>
                 )}
                 {!isDraft && (
                     <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Lock size={14} /> Budget is locked after payment.
+                        <Lock size={14} /> Locked after payment. Extend to add time.
                     </span>
                 )}
             </CardHeader>
             <CardContent>
-                {formContent}
+                {editing ? formContent : (
+                    <dl className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm md:grid-cols-4">
+                        <div>
+                            <dt className="text-muted-foreground">Package</dt>
+                            <dd className="mt-1 font-medium">{campaign.packageQuantity} × {campaign.packageName}</dd>
+                            <dd className="text-xs text-muted-foreground">{Number(campaign.packagePrice).toLocaleString()} pts per {daysLabel(Number(campaign.packageDays))}</dd>
+                        </div>
+                        <div>
+                            <dt className="text-muted-foreground">Runs</dt>
+                            <dd className="mt-1 font-medium">{format(start, "d MMM")} – {format(end, "d MMM yyyy")}</dd>
+                        </div>
+                        <div>
+                            <dt className="text-muted-foreground">Package cost</dt>
+                            <dd className="mt-1 font-medium tabular-nums">{Number(campaign.planCost).toLocaleString()} pts</dd>
+                            {objectiveCost > 0 && <dd className="text-xs text-muted-foreground">+ {objectiveCost.toLocaleString()} pts objectives</dd>}
+                        </div>
+                        <div>
+                            <dt className="text-muted-foreground">Total</dt>
+                            <dd className="mt-1 text-lg font-semibold tabular-nums">{Number(campaign.totalBudget).toLocaleString()} pts</dd>
+                        </div>
+                    </dl>
+                )}
             </CardContent>
         </Card>
     )

@@ -28,7 +28,8 @@ import { statusLabel } from "../../../lib/status";
 export default function CampaignActions({
     id,
     name,
-    dailyBudget,
+    packageName,
+    packageQuantity,
     totalBudget,
     spentAmount,
     startDate,
@@ -279,10 +280,10 @@ export default function CampaignActions({
                                 </h3>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {/* Daily Budget */}
+                                {/* Package */}
                                 <div className="flex flex-col gap-1 rounded-lg p-5 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                                    <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wide">Daily Budget</p>
-                                    <p className="text-slate-900 dark:text-white text-2xl font-bold leading-tight">{dailyBudget.toLocaleString()}</p>
+                                    <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wide">Package</p>
+                                    <p className="text-slate-900 dark:text-white text-2xl font-bold leading-tight">{packageQuantity} × {packageName}</p>
                                 </div>
                                 {/* Total Budget */}
                                 <div className="flex flex-col gap-1 rounded-lg p-5 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">

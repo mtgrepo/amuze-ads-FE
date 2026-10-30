@@ -6,7 +6,7 @@ import { refreshAfterExtensionChange } from "./refreshAfterExtensionChange";
 export const useRequestExtensionCommand = () => {
     const qc = useQueryClient();
     const mutation = useMutation({
-        mutationFn: ({ campaignId, newEndDate }: { campaignId: string; newEndDate: string }) => requestExtension(campaignId, newEndDate),
+        mutationFn: ({ campaignId, quantity }: { campaignId: string; quantity: number }) => requestExtension(campaignId, quantity),
         onSuccess: (response) => {
             refreshAfterExtensionChange(qc);
             toast.success(response?.message ?? "Extension submitted");

@@ -45,10 +45,11 @@ const columns: ColumnDef<CampaignResponse>[] = [
         ),
     },
     {
-        accessorKey: "dailyBudget",
-        header: "Daily Budget",
+        id: "package",
+        accessorFn: (row) => `${row.packageQuantity} × ${row.packageName}`,
+        header: "Package",
         cell: ({ row }) => (
-            <div className="capitalize">{row.getValue("dailyBudget")}</div>
+            <div className="whitespace-nowrap">{row.getValue("package")}</div>
         ),
     },
     {

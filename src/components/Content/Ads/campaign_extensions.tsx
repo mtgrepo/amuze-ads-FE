@@ -24,6 +24,8 @@ interface ExtendableCampaign {
     name: string;
     status: string;
     endDate: Date | string;
+    packageName: string;
+    packageDays: number;
 }
 
 const toDateString = (value: Date | string) =>
@@ -63,8 +65,11 @@ function ExtendDialog({ campaign, isAdmin, open, onOpenChange }: {
 }) {
     const endDate = toDateString(campaign.endDate);
     const firstDay = firstExtraDay(endDate);
-    const [newEndDate, setNewEndDate] = useState(() => addDays(firstDay, 6));
-    const { quote, isFetching, error } = useExtensionQuoteQuery(campaign.id, newEndDate, open);
+    const unitDays = Number(campaign.packageDays);
+    const [quantity, setQuantity] = useState(1);
+    const { quote, isFetching, error } = useExtensionQuoteQuery(campaign.id, quantity, open);
+    // Quick picks: a few days for short packages, a few units for long ones.
+    const quickPicks = unitDays === 1 ? [1, 7, 30] : [1, 2, 3];
     const { requestExtension, isRequesting } = useRequestExtensionCommand();
 
     const shortfall = quote ? Math.max(quote.amount - quote.balance, 0) : 0;
@@ -73,7 +78,7 @@ function ExtendDialog({ campaign, isAdmin, open, onOpenChange }: {
 
     const submit = async () => {
         try {
-            await requestExtension({ campaignId: campaign.id, newEndDate });
+            await requestExtension({ campaignId: campaign.id, quantity });
             onOpenChange(false);
         } catch {
             // The command already shows why.
@@ -87,25 +92,30 @@ function ExtendDialog({ campaign, isAdmin, open, onOpenChange }: {
                     <DialogTitle>Extend campaign</DialogTitle>
                     <DialogDescription>
                         {isExpired
-                            ? `"${campaign.name}" ended on ${shortDate(endDate)}. It restarts today and runs until the new end date.`
-                            : `"${campaign.name}" ends on ${shortDate(endDate)}. Choose how long it should keep running.`}
+                            ? `"${campaign.name}" ended on ${shortDate(endDate)}. Add more ${campaign.packageName} to restart it today.`
+                            : `"${campaign.name}" ends on ${shortDate(endDate)}. Add more ${campaign.packageName} to keep it running from ${shortDate(firstDay)}.`}
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-2">
-                    <label htmlFor="new-end-date" className="text-sm font-medium">New end date</label>
+                    <label htmlFor="extend-quantity" className="text-sm font-medium">
+                        How many more {campaign.packageName} <span className="font-normal text-muted-foreground">({unitDays === 1 ? "1 day" : `${unitDays} days`} each)</span>
+                    </label>
                     <Input
-                        id="new-end-date"
-                        type="date"
-                        min={firstDay}
-                        value={newEndDate}
-                        onChange={(e) => e.target.value && setNewEndDate(e.target.value)}
+                        id="extend-quantity"
+                        inputMode="numeric"
+                        className="w-28 tabular-nums"
+                        value={quantity || ""}
+                        onChange={(e) => {
+                            const digits = e.target.value.replace(/\D/g, "");
+                            setQuantity(digits === "" ? 0 : Number(digits));
+                        }}
                     />
                     <div className="flex gap-1.5">
-                        {[7, 14, 30].map((days) => (
-                            <Button key={days} type="button" size="sm" variant="outline" className="h-7 text-xs"
-                                onClick={() => setNewEndDate(addDays(firstDay, days - 1))}>
-                                +{days} days
+                        {quickPicks.map((n) => (
+                            <Button key={n} type="button" size="sm" variant={quantity === n ? "secondary" : "outline"} className="h-7 text-xs"
+                                onClick={() => setQuantity(n)}>
+                                +{n} {unitDays === 1 ? (n === 1 ? "day" : "days") : campaign.packageName}
                             </Button>
                         ))}
                     </div>
@@ -115,7 +125,7 @@ function ExtendDialog({ campaign, isAdmin, open, onOpenChange }: {
                     {error ? (
                         <p className="text-destructive">{error.message}</p>
                     ) : !quote ? (
-                        <p className="text-muted-foreground">{isFetching ? "Pricing…" : "Pick a new end date"}</p>
+                        <p className="text-muted-foreground">{isFetching ? "Pricing…" : "Choose how many to add"}</p>
                     ) : (
                         <>
                             <div className="flex justify-between">
@@ -123,8 +133,8 @@ function ExtendDialog({ campaign, isAdmin, open, onOpenChange }: {
                                 <span>{shortDate(quote.startDate)} – {shortDate(quote.newEndDate)} ({quote.days} {quote.days === 1 ? "day" : "days"})</span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Rate</span>
-                                <span className="tabular-nums">{quote.dailyRate.toLocaleString()} pts / day</span>
+                                <span className="text-muted-foreground">Price</span>
+                                <span className="tabular-nums">{quote.quantity} × {quote.unitPrice.toLocaleString()} pts ({quote.packageName})</span>
                             </div>
                             <div className="flex justify-between border-t pt-2">
                                 <span className="text-muted-foreground">Cost</span>

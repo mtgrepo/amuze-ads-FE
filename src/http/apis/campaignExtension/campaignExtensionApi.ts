@@ -27,9 +27,9 @@ export const getPendingExtensions = async () => {
     }
 };
 
-export const getExtensionQuote = async (campaignId: string, newEndDate: string) => {
+export const getExtensionQuote = async (campaignId: string, quantity: number) => {
     try {
-        const params = new URLSearchParams({ campaignId, newEndDate });
+        const params = new URLSearchParams({ campaignId, quantity: String(quantity) });
         const response = await axiosInstance.get(`/campaign-extensions/quote?${params}`);
         return response.data;
     } catch (error) {
@@ -37,9 +37,9 @@ export const getExtensionQuote = async (campaignId: string, newEndDate: string) 
     }
 };
 
-export const requestExtension = async (campaignId: string, newEndDate: string) => {
+export const requestExtension = async (campaignId: string, quantity: number) => {
     try {
-        const response = await axiosInstance.post(`/campaign-extensions`, { campaignId, newEndDate });
+        const response = await axiosInstance.post(`/campaign-extensions`, { campaignId, quantity });
         return response.data;
     } catch (error) {
         fail(error, "Couldn't extend the campaign");

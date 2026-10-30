@@ -7,6 +7,8 @@ export interface CampaignExtensionResponse {
     startDate: string;
     previousEndDate: string;
     newEndDate: string;
+    /** Units of the campaign's package bought. */
+    quantity: number;
     days: number;
     /** Points charged. 1 point = 1 MMK. */
     amount: number;
@@ -23,7 +25,11 @@ export interface ExtensionQuoteResponse {
     startDate: string;
     newEndDate: string;
     days: number;
-    dailyRate: number;
+    quantity: number;
+    packageName: string;
+    /** Days and points per unit, from the campaign's own copy of its package. */
+    unitDays: number;
+    unitPrice: number;
     amount: number;
     payerName: string;
     balance: number;
