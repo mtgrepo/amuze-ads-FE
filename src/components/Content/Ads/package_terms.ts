@@ -36,6 +36,9 @@ export function offeredPackages(onSale: PackageTerms[], current?: PackageTerms):
     return live ? onSale.map((p) => (p.id === current.id ? own : p)) : [own, ...onSale];
 }
 
+/** A number field's text as a whole count: blank, negative or fractional input rounds down to what can be bought. */
+export const wholeNumber = (text: string) => Math.max(0, Math.trunc(Number(text)) || 0);
+
 /** Run length, end date and price for a choice. */
 export function summarize(choice: PackageChoice, packages: PackageTerms[]): PackageSummary {
     const terms = packages.find((p) => p.id === choice.packageId);

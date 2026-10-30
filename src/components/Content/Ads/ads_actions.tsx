@@ -151,7 +151,7 @@ export default function AdsActions({ id, status, adSet, adCreative }: AdResponse
             {/* EDIT BUDGET DIALOG — drafts only; the budget is locked after payment */}
             {status === "draft" && adSet?.campaign && (
                 <Dialog open={budgetOpen} onOpenChange={setBudgetOpen}>
-                    <DialogContent className="sm:max-w-2xl rounded-2xl">
+                    <DialogContent className="sm:max-w-2xl rounded-2xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>Edit budget</DialogTitle>
                             <DialogDescription>

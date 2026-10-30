@@ -1,6 +1,5 @@
-import { CheckCircle2, Target } from "lucide-react";
+import { CircleCheck, Target } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "../../../lib/utils";
 import { useCampaignObjectivesQuery } from "../../../Composable/Query/campaignObjective/useCampaignObjectivesQuery";
 import { OBJECTIVE_LABELS } from "../../../dto/response/campaignObjective/campaignObjectiveResponse";
 
@@ -13,31 +12,29 @@ export function ObjectiveProgressCard({ campaignId }: { campaignId: string }) {
     return (
         <Card className="rounded-2xl shadow-sm">
             <CardHeader>
-                <CardTitle className="flex flex-row items-center gap-3">
+                <CardTitle className="flex flex-row gap-3 items-center">
                     <Target size={20} className="text-primary" /> Objectives
                 </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-5">
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {picked.map((o) => {
                     const share = o.targetCount > 0 ? Math.min(o.delivered / o.targetCount, 1) : 0;
                     const met = o.delivered >= o.targetCount;
                     return (
-                        <div key={o.objectiveType} className="space-y-1.5">
-                            <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
-                                <span className="font-medium">{OBJECTIVE_LABELS[o.objectiveType]}</span>
-                                <span className="tabular-nums">
-                                    {met && <CheckCircle2 className="mr-1 inline h-4 w-4 text-emerald-600" />}
-                                    <span className="font-semibold">{o.delivered.toLocaleString()}</span>
-                                    <span className="text-muted-foreground"> / {o.targetCount.toLocaleString()}</span>
-                                    {met && <span className="ml-1 text-emerald-700 dark:text-emerald-400">Met</span>}
-                                </span>
-                            </div>
-                            <div className="h-2 overflow-hidden rounded-full bg-muted" role="progressbar"
+                        <div key={o.objectiveType}>
+                            <p className="flex items-center gap-1.5 text-sm font-semibold">
+                                {OBJECTIVE_LABELS[o.objectiveType]}
+                                {met && <CircleCheck className="h-4 w-4 text-green-600" aria-label="Target met" />}
+                            </p>
+                            <p className="text-sm text-muted-foreground tabular-nums">
+                                {o.delivered.toLocaleString()} / {o.targetCount.toLocaleString()}
+                            </p>
+                            <div className="mt-1.5 h-1 rounded-full bg-muted" role="progressbar"
                                 aria-label={`${OBJECTIVE_LABELS[o.objectiveType]} progress`}
                                 aria-valuenow={Math.round(share * 100)} aria-valuemin={0} aria-valuemax={100}>
-                                <div className={cn("h-full rounded-full", met ? "bg-emerald-500" : "bg-primary")} style={{ width: `${share * 100}%` }} />
+                                <div className={met ? "h-full rounded-full bg-green-600" : "h-full rounded-full bg-primary"} style={{ width: `${share * 100}%` }} />
                             </div>
-                            <p className="text-xs text-muted-foreground">{o.cost.toLocaleString()} pts paid</p>
+                            <p className="mt-1.5 text-xs text-muted-foreground">{o.cost.toLocaleString()} pts paid</p>
                         </div>
                     );
                 })}

@@ -2,13 +2,21 @@ import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { Button } from "@/components/ui/button"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import {
+    Form,
+    FormControl,
+    FormDescription,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Spinner } from "../ui/spinner"
 import { useCreatePackageCommand } from "../../Composable/Command/adPackage/useCreatePackageCommand"
 import { useUpdatePackageCommand } from "../../Composable/Command/adPackage/useUpdatePackageCommand"
-import { daysLabel, type AdPackageResponse } from "../../dto/response/adPackage/adPackageResponse"
+import type { AdPackageResponse } from "../../dto/response/adPackage/adPackageResponse"
 
 const wholeNumber = (label: string, min: number, max?: number) =>
     z.string().trim().refine((v) => /^\d+$/.test(v) && Number(v) >= min && (max === undefined || Number(v) <= max), {
@@ -16,18 +24,31 @@ const wholeNumber = (label: string, min: number, max?: number) =>
     })
 
 const formSchema = z.object({
-    name: z.string().trim().min(1, { message: "Name is required." }).max(100),
+    name: z.string().trim().min(1, {
+        message: "Name is required.",
+    }).max(100),
     durationDays: wholeNumber("Days per unit", 1, 366),
     price: wholeNumber("Price per unit", 1),
     description: z.string().optional(),
-    sortOrder: z.string().trim().refine((v) => v === "" || /^-?\d+$/.test(v), { message: "Order must be a whole number." }),
+    sortOrder: z.string().trim().refine((v) => v === "" || /^-?\d+$/.test(v), {
+        message: "Order must be a whole number.",
+    }),
 })
 
-type Values = z.infer<typeof formSchema>
+interface PackageFormProps {
+    mode: "add" | "edit"
+    pkg?: AdPackageResponse
+    onSuccess?: () => void
+}
 
-/** Create or edit a package. Editing never changes campaigns already bought with it. */
-export default function PackageForm({ pkg, onDone }: { pkg?: AdPackageResponse; onDone: () => void }) {
-    const form = useForm<Values>({
+// Editing a package never changes campaigns already bought with it; they keep their own copy.
+export default function PackageForm({
+    mode,
+    pkg,
+    onSuccess,
+}: PackageFormProps) {
+
+    const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             name: pkg?.name ?? "",
@@ -37,14 +58,10 @@ export default function PackageForm({ pkg, onDone }: { pkg?: AdPackageResponse; 
             sortOrder: pkg ? String(pkg.sortOrder) : "0",
         },
     })
-    const { createPackageCommand, isPending: creating } = useCreatePackageCommand()
-    const { updatePackageCommand, isPending: updating } = useUpdatePackageCommand()
-    const saving = creating || updating
+    const { createPackageCommand, isPending: createPending } = useCreatePackageCommand();
+    const { updatePackageCommand, isPending: updatePending } = useUpdatePackageCommand();
 
-    const days = Number(form.watch("durationDays")) || 0
-    const price = Number(form.watch("price")) || 0
-
-    const onSubmit = async (values: Values) => {
+    async function onSubmit(values: z.infer<typeof formSchema>) {
         const data = {
             name: values.name.trim(),
             durationDays: Number(values.durationDays),
@@ -53,70 +70,93 @@ export default function PackageForm({ pkg, onDone }: { pkg?: AdPackageResponse; 
             sortOrder: values.sortOrder === "" ? 0 : Number(values.sortOrder),
         }
         try {
-            if (pkg) await updatePackageCommand({ id: pkg.id, data })
-            else await createPackageCommand(data)
-            onDone()
+            if (mode === "edit" && pkg) {
+                await updatePackageCommand({ id: pkg.id, data })
+            } else {
+                await createPackageCommand(data)
+                form.reset()
+            }
+            onSuccess?.()
         } catch {
-            // The command already shows why.
+            // The command already shows why; keep the form open so it can be fixed.
         }
     }
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField control={form.control} name="name" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Name</FormLabel>
-                        <FormControl><Input placeholder="e.g. Daily, Weekly, Monthly" {...field} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )} />
-                <div className="grid grid-cols-2 gap-3">
-                    <FormField control={form.control} name="durationDays" render={({ field }) => (
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Days per unit</FormLabel>
-                            <FormControl><Input inputMode="numeric" placeholder="1" {...field} /></FormControl>
+                            <FormLabel>Name</FormLabel>
+                            <FormControl>
+                                <Input type="text" placeholder="e.g. Daily, Monthly" {...field} />
+                            </FormControl>
                             <FormMessage />
                         </FormItem>
-                    )} />
-                    <FormField control={form.control} name="price" render={({ field }) => (
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="durationDays"
+                    render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Price per unit (pts)</FormLabel>
-                            <FormControl><Input inputMode="numeric" placeholder="1000" {...field} /></FormControl>
+                            <FormLabel>Days Per Unit</FormLabel>
+                            <FormControl>
+                                <Input type="number" min={1} placeholder="Enter days" {...field} />
+                            </FormControl>
+                            <FormDescription>How long one unit runs. Customers choose how many units to buy.</FormDescription>
                             <FormMessage />
                         </FormItem>
-                    )} />
-                </div>
-                <FormField control={form.control} name="description" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Description <span className="font-normal text-muted-foreground">(optional)</span></FormLabel>
-                        <FormControl><Textarea rows={2} placeholder="Shown to customers when they pick a package" {...field} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )} />
-                <FormField control={form.control} name="sortOrder" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Order</FormLabel>
-                        <FormControl><Input inputMode="numeric" className="w-28" {...field} /></FormControl>
-                        <FormDescription>Lower numbers are listed first.</FormDescription>
-                        <FormMessage />
-                    </FormItem>
-                )} />
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="price"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Price Per Unit (pts)</FormLabel>
+                            <FormControl>
+                                <Input type="number" min={1} placeholder="Enter price" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Description</FormLabel>
+                            <FormControl>
+                                <Textarea rows={3} placeholder="Shown to customers when they pick a package" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="sortOrder"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Order</FormLabel>
+                            <FormControl>
+                                <Input type="number" placeholder="0" {...field} />
+                            </FormControl>
+                            <FormDescription>Lower numbers are listed first.</FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
 
-                <p className="rounded-lg bg-muted/60 p-3 text-sm text-muted-foreground">
-                    Customers buy this package in whole units; each unit runs for{" "}
-                    <span className="font-medium text-foreground">{days ? daysLabel(days) : "…"}</span> and costs{" "}
-                    <span className="font-medium text-foreground">{price ? `${price.toLocaleString()} pts` : "…"}</span>.
-                    {pkg && " Changes apply to new purchases only; ads already bought keep their price."}
-                </p>
-
-                <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={onDone} disabled={saving}>Cancel</Button>
-                    <Button type="submit" disabled={saving}>
-                        {saving && <Spinner />}
-                        {pkg ? "Save changes" : "Add package"}
-                    </Button>
-                </div>
+                <Button type="submit" className="w-full" disabled={createPending || updatePending}>
+                    {(createPending || updatePending) && <Spinner />}
+                    {mode === "add" ? "Add Package" : "Update Package"}
+                </Button>
             </form>
         </Form>
     )

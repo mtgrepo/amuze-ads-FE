@@ -1,12 +1,10 @@
 import { useState } from "react"
-import { format } from "date-fns"
 import { EditIcon, Lock, Wallet } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Spinner } from "../../ui/spinner"
 import { useUpdateCampaignBudgetCommand } from "../../../Composable/Command/content/campaign/useUpdateCampaignBudgetCommand"
 import { useActivePackagesQuery } from "../../../Composable/Query/adPackage/useActivePackagesQuery"
-import { daysLabel } from "../../../dto/response/adPackage/adPackageResponse"
 import { PackagePicker } from "./package_picker"
 import { offeredPackages, summarize, type PackageChoice, type PackageTerms } from "./package_terms"
 import { ObjectivesPicker } from "./objectives_picker"
@@ -130,46 +128,58 @@ export default function BudgetForm({ campaign, assetType, embedded = false, onDo
     };
 
     const objectiveCost = Number(campaign.objectiveCost ?? 0);
+    const disabled = !editing;
 
     const formContent = (
-        <div className="space-y-4">
-            <PackagePicker value={choice} onChange={setChoice} current={current} />
-            <div className="space-y-2">
-                <p className="text-sm font-medium">Objectives <span className="font-normal text-muted-foreground">(optional)</span></p>
-                {objectivesLoading ? (
-                    <div className="h-24 animate-pulse rounded-xl bg-muted" />
-                ) : (
+        <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                <PackagePicker
+                    value={editing ? choice : initial()}
+                    onChange={setChoice}
+                    current={current}
+                    // Outside editing, show what the campaign holds; extensions move its end date and cost.
+                    saved={editing ? undefined : { endDate: parseLocalDate(campaign.endDate), planCost: Number(campaign.planCost) }}
+                    disabled={disabled}
+                />
+                <div className="max-md:hidden" />
+            </div>
+            <div className="space-y-4">
+                <h4 className="text-sm font-semibold">Objectives <span className="font-normal text-muted-foreground">(optional)</span></h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                     <ObjectivesPicker
                         value={picks}
                         onChange={setEditedPicks}
                         assetType={assetType}
-                        planCost={summary.planCost}
+                        planCost={editing ? summary.planCost : Number(campaign.planCost)}
                         // Untouched picks keep the price they were saved at; that's what Pay will charge.
                         objectivesCost={editedPicks === null ? objectiveCost : undefined}
+                        // Wait for the saved objectives, so an early edit can't drop them.
+                        disabled={disabled || objectivesLoading}
                     />
-                )}
+                </div>
             </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={handleCancel} disabled={isPending || savingObjectives}>Cancel</Button>
-                <Button type="button" onClick={handleSave} disabled={isPending || savingObjectives || summary.tooLong}>
-                    {(isPending || savingObjectives) && <Spinner />}
-                    Save
-                </Button>
-            </div>
+            {editing && (
+                <>
+                    {error && <p className="text-destructive text-sm">{error}</p>}
+                    <div className="flex justify-end gap-2">
+                        <Button type="button" variant="outline" onClick={handleCancel} disabled={isPending || savingObjectives}>Cancel</Button>
+                        <Button type="button" onClick={handleSave} disabled={isPending || savingObjectives || summary.tooLong}>
+                            {(isPending || savingObjectives) && <Spinner />}
+                            Save
+                        </Button>
+                    </div>
+                </>
+            )}
         </div>
     );
 
     if (embedded) return formContent;
 
-    const start = parseLocalDate(campaign.startDate);
-    const end = parseLocalDate(campaign.endDate);
-
     return (
         <Card className="rounded-2xl shadow-sm">
             <CardHeader className="flex justify-between items-center">
                 <CardTitle className="flex flex-row gap-3 items-center">
-                    <Wallet size={20} className="text-primary" /> Package
+                    <Wallet size={20} className="text-primary" /> Budget
                 </CardTitle>
                 {isDraft && !editing && (
                     <Button type="button" size="sm" variant="outline" onClick={startEditing}>
@@ -178,33 +188,12 @@ export default function BudgetForm({ campaign, assetType, embedded = false, onDo
                 )}
                 {!isDraft && (
                     <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Lock size={14} /> Locked after payment. Extend to add time.
+                        <Lock size={14} /> Budget is locked after payment. Extend to add time.
                     </span>
                 )}
             </CardHeader>
             <CardContent>
-                {editing ? formContent : (
-                    <dl className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm md:grid-cols-4">
-                        <div>
-                            <dt className="text-muted-foreground">Package</dt>
-                            <dd className="mt-1 font-medium">{campaign.packageQuantity} × {campaign.packageName}</dd>
-                            <dd className="text-xs text-muted-foreground">{Number(campaign.packagePrice).toLocaleString()} pts per {daysLabel(Number(campaign.packageDays))}</dd>
-                        </div>
-                        <div>
-                            <dt className="text-muted-foreground">Runs</dt>
-                            <dd className="mt-1 font-medium">{format(start, "d MMM")} – {format(end, "d MMM yyyy")}</dd>
-                        </div>
-                        <div>
-                            <dt className="text-muted-foreground">Package cost</dt>
-                            <dd className="mt-1 font-medium tabular-nums">{Number(campaign.planCost).toLocaleString()} pts</dd>
-                            {objectiveCost > 0 && <dd className="text-xs text-muted-foreground">+ {objectiveCost.toLocaleString()} pts objectives</dd>}
-                        </div>
-                        <div>
-                            <dt className="text-muted-foreground">Total</dt>
-                            <dd className="mt-1 text-lg font-semibold tabular-nums">{Number(campaign.totalBudget).toLocaleString()} pts</dd>
-                        </div>
-                    </dl>
-                )}
+                {formContent}
             </CardContent>
         </Card>
     )

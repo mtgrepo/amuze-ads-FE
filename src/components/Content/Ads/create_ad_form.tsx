@@ -204,21 +204,19 @@ export default function CreateAdForm({
                 </FormItem>
               )}
             />
-            <div className="md:col-span-2">
-              <PackagePicker
-                value={packageChoice}
-                onChange={(next) => {
-                  form.setValue("packageId", next.packageId, { shouldValidate: form.formState.isSubmitted });
-                  form.setValue("packageQuantity", next.packageQuantity, { shouldValidate: form.formState.isSubmitted });
-                  form.setValue("startDate", next.startDate as Date, { shouldValidate: form.formState.isSubmitted });
-                }}
-                errors={{
-                  packageId: form.formState.errors.packageId?.message,
-                  packageQuantity: form.formState.errors.packageQuantity?.message,
-                  startDate: form.formState.errors.startDate?.message,
-                }}
-              />
-            </div>
+            <PackagePicker
+              value={packageChoice}
+              onChange={(next) => {
+                form.setValue("packageId", next.packageId, { shouldValidate: form.formState.isSubmitted });
+                form.setValue("packageQuantity", next.packageQuantity, { shouldValidate: form.formState.isSubmitted });
+                form.setValue("startDate", next.startDate as Date, { shouldValidate: form.formState.isSubmitted });
+              }}
+              errors={{
+                packageId: form.formState.errors.packageId?.message,
+                packageQuantity: form.formState.errors.packageQuantity?.message,
+                startDate: form.formState.errors.startDate?.message,
+              }}
+            />
           </CardContent>
         </Card>
 
@@ -450,9 +448,12 @@ export default function CreateAdForm({
         <Card className="rounded-2xl shadow-sm">
           <CardHeader>
             <CardTitle>Objectives <span className="text-sm font-normal text-muted-foreground">(optional)</span></CardTitle>
-            <p className="text-sm text-muted-foreground">Buy a number of impressions, clicks or watches on top of the package.</p>
+            <p className="text-sm text-muted-foreground">
+              Buy a number of impressions, clicks or watches on top of the package. Ads behind on a target are
+              shown more often, but results aren't guaranteed and the ad stops at its end date.
+            </p>
           </CardHeader>
-          <CardContent>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
             <ObjectivesPicker value={objectives} onChange={setObjectives} assetType={assetType} planCost={packageSummary.planCost} />
           </CardContent>
         </Card>
