@@ -126,7 +126,7 @@ export default function AdDetails({ data }: Props) {
             </Card>
 
             {/* BUDGET — editable only while draft */}
-            {campaign && <BudgetForm campaign={campaign} />}
+            {campaign && <BudgetForm campaign={campaign} assetType={adCreative?.assetType} />}
 
             {campaign && <CampaignExtensions campaign={campaign} isAdmin />}
 

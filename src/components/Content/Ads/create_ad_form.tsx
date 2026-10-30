@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -28,6 +29,10 @@ import type { AdvertisersResponse } from "../../../dto/response/advertisers/adve
 import { AD_TYPE_OPTIONS, ASSET_TYPE_LABELS, DISPLAY_FORMATS } from "./ad_formats";
 import { PackagePicker } from "./package_picker";
 import { summarize } from "./package_terms";
+import { ObjectivesPicker } from "./objectives_picker";
+import { billableObjectives } from "./objective_terms";
+import { useObjectivePricesQuery } from "../../../Composable/Query/campaignObjective/useObjectivePricesQuery";
+import type { ObjectiveInput } from "../../../dto/response/campaignObjective/campaignObjectiveResponse";
 import { useActivePackagesQuery } from "../../../Composable/Query/adPackage/useActivePackagesQuery";
 
 const formSchema = z
@@ -109,6 +114,8 @@ export default function CreateAdForm({
     startDate: form.watch("startDate"),
   };
   const packageSummary = summarize(packageChoice, packagesOnSale);
+  const [objectives, setObjectives] = useState<ObjectiveInput[]>([]);
+  const { prices: objectivePrices } = useObjectivePricesQuery();
 
   const onSubmit = async (values: Values) => {
     if (packageSummary.tooLong) return;
@@ -127,8 +134,12 @@ export default function CreateAdForm({
       }
     });
 
+    const picked = billableObjectives(objectives, objectivePrices, values.assetType);
+    if (picked.length) formData.append("objectives", JSON.stringify(picked));
+
     const created = await createFullCampaignCommand(formData);
     form.reset();
+    setObjectives([]);
     onCreated?.(created);
   };
 
@@ -433,6 +444,16 @@ export default function CreateAdForm({
                 </FormItem>
               )}
             />
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl shadow-sm">
+          <CardHeader>
+            <CardTitle>Objectives <span className="text-sm font-normal text-muted-foreground">(optional)</span></CardTitle>
+            <p className="text-sm text-muted-foreground">Buy a number of impressions, clicks or watches on top of the package.</p>
+          </CardHeader>
+          <CardContent>
+            <ObjectivesPicker value={objectives} onChange={setObjectives} assetType={assetType} planCost={packageSummary.planCost} />
           </CardContent>
         </Card>
 

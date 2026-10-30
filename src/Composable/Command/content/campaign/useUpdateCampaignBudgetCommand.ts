@@ -16,7 +16,8 @@ export const useUpdateCampaignBudgetCommand = () => {
             qc.invalidateQueries({ queryKey: ['campaign-list'] });
             qc.invalidateQueries({ queryKey: ['ad-list'] });
             qc.invalidateQueries({ queryKey: ['ad-details'] });
-            toast.success('Budget updated.');
+            qc.invalidateQueries({ queryKey: ['payment-info'] });
+            toast.success('Package updated.');
         },
         onError: (error: Error) => {
             toast.error(error.message || 'Failed to update budget.');

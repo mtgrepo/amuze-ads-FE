@@ -24,7 +24,7 @@ import type { AdResponse } from "../../../dto/response/content/adResponse";
 import PaymentDialog from "../Payment/payment_dialog";
 import BudgetForm from "./budget_form";
 
-export default function AdsActions({ id, status, adSet }: AdResponse) {
+export default function AdsActions({ id, status, adSet, adCreative }: AdResponse) {
     const navigate = useNavigate();
     const [payOpen, setPayOpen] = React.useState(false);
     const [budgetOpen, setBudgetOpen] = React.useState(false);
@@ -158,7 +158,7 @@ export default function AdsActions({ id, status, adSet }: AdResponse) {
                                 {adSet.campaign.name} — the budget can be changed until the ad is paid.
                             </DialogDescription>
                         </DialogHeader>
-                        <BudgetForm campaign={adSet.campaign} embedded onDone={() => setBudgetOpen(false)} />
+                        <BudgetForm campaign={adSet.campaign} assetType={adCreative?.assetType} embedded onDone={() => setBudgetOpen(false)} />
                     </DialogContent>
                 </Dialog>
             )}

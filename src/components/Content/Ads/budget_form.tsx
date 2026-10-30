@@ -9,6 +9,12 @@ import { useActivePackagesQuery } from "../../../Composable/Query/adPackage/useA
 import { daysLabel } from "../../../dto/response/adPackage/adPackageResponse"
 import { PackagePicker } from "./package_picker"
 import { offeredPackages, summarize, type PackageChoice, type PackageTerms } from "./package_terms"
+import { ObjectivesPicker } from "./objectives_picker"
+import { billableObjectives, sameObjectives } from "./objective_terms"
+import { useCampaignObjectivesQuery } from "../../../Composable/Query/campaignObjective/useCampaignObjectivesQuery"
+import { useObjectivePricesQuery } from "../../../Composable/Query/campaignObjective/useObjectivePricesQuery"
+import { useSaveCampaignObjectivesCommand } from "../../../Composable/Command/campaignObjective/useSaveCampaignObjectivesCommand"
+import type { ObjectiveInput } from "../../../dto/response/campaignObjective/campaignObjectiveResponse"
 
 interface BudgetFormProps {
     campaign: {
@@ -25,6 +31,8 @@ interface BudgetFormProps {
         startDate: string | Date
         endDate: string | Date
     }
+    /** The creative's asset type; watch objectives need a video. */
+    assetType?: string
     /** Render just the form, already editing (e.g. inside a dialog). */
     embedded?: boolean
     /** Called after Save succeeds or Cancel is pressed. */
@@ -47,11 +55,21 @@ const parseLocalDate = (value: string | Date) => {
 }
 
 // The package and start date set the amount paid, so they can change only while the ad is a draft.
-export default function BudgetForm({ campaign, embedded = false, onDone }: BudgetFormProps) {
+export default function BudgetForm({ campaign, assetType, embedded = false, onDone }: BudgetFormProps) {
     const [editing, setEditing] = useState(embedded);
     const isDraft = campaign.status === "draft";
     const { updateCampaignBudgetCommand, isPending } = useUpdateCampaignBudgetCommand();
     const { packages: onSale } = useActivePackagesQuery();
+    const { objectives: savedObjectives } = useCampaignObjectivesQuery(campaign.id);
+    const { prices: objectivePrices } = useObjectivePricesQuery();
+    const { saveCampaignObjectivesCommand, isPending: savingObjectives } = useSaveCampaignObjectivesCommand();
+    const savedPicks: ObjectiveInput[] = savedObjectives
+        .filter((o) => o.selected)
+        .map((o) => ({ objectiveType: o.objectiveType, targetCount: o.targetCount }));
+    // Until the customer touches the objectives, show what's saved (it may load after the form opens),
+    // and never re-save it: re-saving would re-price it at today's prices.
+    const [editedPicks, setEditedPicks] = useState<ObjectiveInput[] | null>(null);
+    const picks = editedPicks ?? savedPicks;
 
     // The draft's own copy of its package: it keeps the price the customer was shown.
     const current: PackageTerms = {
@@ -71,12 +89,14 @@ export default function BudgetForm({ campaign, embedded = false, onDone }: Budge
 
     const startEditing = () => {
         setChoice(initial());
+        setEditedPicks(null);
         setError(undefined);
         setEditing(true);
     };
 
     const handleCancel = () => {
         setChoice(initial());
+        setEditedPicks(null);
         setError(undefined);
         setEditing(embedded);
         onDone?.();
@@ -97,6 +117,11 @@ export default function BudgetForm({ campaign, embedded = false, onDone }: Budge
                     startDate: toDateOnly(choice.startDate),
                 },
             });
+            const billable = billableObjectives(picks, objectivePrices, assetType);
+            if (editedPicks !== null && !sameObjectives(billable, savedPicks)) {
+                await saveCampaignObjectivesCommand({ campaignId: campaign.id, objectives: billable });
+            }
+            setEditedPicks(null);
             setEditing(embedded);
             onDone?.();
         } catch {
@@ -109,17 +134,15 @@ export default function BudgetForm({ campaign, embedded = false, onDone }: Budge
     const formContent = (
         <div className="space-y-4">
             <PackagePicker value={choice} onChange={setChoice} current={current} />
-            {objectiveCost > 0 && (
-                <p className="text-sm text-muted-foreground">
-                    Objectives add {objectiveCost.toLocaleString()} pts, so the total will be{" "}
-                    <span className="font-medium text-foreground">{(summary.planCost + objectiveCost).toLocaleString()} pts</span>.
-                </p>
-            )}
+            <div className="space-y-2">
+                <p className="text-sm font-medium">Objectives <span className="font-normal text-muted-foreground">(optional)</span></p>
+                <ObjectivesPicker value={picks} onChange={setEditedPicks} assetType={assetType} planCost={summary.planCost} />
+            </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={handleCancel} disabled={isPending}>Cancel</Button>
-                <Button type="button" onClick={handleSave} disabled={isPending || summary.tooLong}>
-                    {isPending && <Spinner />}
+                <Button type="button" variant="outline" onClick={handleCancel} disabled={isPending || savingObjectives}>Cancel</Button>
+                <Button type="button" onClick={handleSave} disabled={isPending || savingObjectives || summary.tooLong}>
+                    {(isPending || savingObjectives) && <Spinner />}
                     Save
                 </Button>
             </div>
