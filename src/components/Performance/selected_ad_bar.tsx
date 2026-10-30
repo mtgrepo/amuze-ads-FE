@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { ArrowRight, X } from "lucide-react";
 import { useAdDetailQuery } from "../../Composable/Query/content/useAdDetailQuery";
+import { useCampaignObjectivesQuery } from "../../Composable/Query/campaignObjective/useCampaignObjectivesQuery";
+import { OBJECTIVE_LABELS } from "../../dto/response/campaignObjective/campaignObjectiveResponse";
 import { statusLabel } from "../../lib/status";
 import { daysUntil, parseLocalDate, placementLabel } from "../Dashboard/admin/dashboard_utils";
 
@@ -17,6 +19,8 @@ const dateOnly = (value: unknown) => String(value ?? "").slice(0, 10);
 export function SelectedAdBar({ adId, onClear }: { adId: string; onClear: () => void }) {
     const { adDetail, isLoading } = useAdDetailQuery(adId);
     const campaign = adDetail?.adSet?.campaign;
+    const { objectives } = useCampaignObjectivesQuery(campaign?.id);
+    const picked = objectives.filter((o) => o.selected);
 
     if (isLoading || !adDetail || !campaign) {
         return <div className="h-[68px] animate-pulse rounded-xl border bg-muted/40" />;
@@ -47,6 +51,14 @@ export function SelectedAdBar({ adId, onClear }: { adId: string; onClear: () => 
                     <div className="text-muted-foreground">Runs</div>
                     <div className="tabular-nums">{format(parseLocalDate(start), "d MMM")} – {format(parseLocalDate(end), "d MMM yyyy")}</div>
                 </div>
+                {picked.length > 0 && (
+                    <div>
+                        <div className="text-muted-foreground">Objectives</div>
+                        <div className="tabular-nums">
+                            {picked.map((o) => `${OBJECTIVE_LABELS[o.objectiveType]} ${o.delivered.toLocaleString()} / ${o.targetCount.toLocaleString()}`).join(" · ")}
+                        </div>
+                    </div>
+                )}
                 <div className="w-32">
                     <div className="text-muted-foreground">{left < 0 ? "Ended" : left === 0 ? "Last day" : `${left} ${left === 1 ? "day" : "days"} left`}</div>
                     <div className="mt-1.5 h-1 rounded-full bg-muted">

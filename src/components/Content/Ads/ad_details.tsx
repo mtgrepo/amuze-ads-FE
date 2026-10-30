@@ -6,7 +6,8 @@ import { ChartLine, CreditCard, MapPin, UserSearch, VenusAndMars } from "lucide-
 import type { AdResponse } from "../../../dto/response/content/adResponse";
 import { cn } from "../../../lib/utils";
 import { Button } from "../../ui/button";
-import BudgetForm from "./budget_form";
+import BudgetForm from "./budget_form"
+import { ObjectiveProgressCard } from "./objective_progress";
 import CampaignExtensions from "./campaign_extensions";
 import PaymentDialog from "../Payment/payment_dialog";
 
@@ -127,6 +128,8 @@ export default function AdDetails({ data }: Props) {
 
             {/* BUDGET — editable only while draft */}
             {campaign && <BudgetForm campaign={campaign} assetType={adCreative?.assetType} />}
+
+            {campaign && <ObjectiveProgressCard campaignId={campaign.id} />}
 
             {campaign && <CampaignExtensions campaign={campaign} isAdmin />}
 
