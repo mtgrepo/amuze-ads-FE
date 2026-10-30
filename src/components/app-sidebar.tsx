@@ -85,6 +85,10 @@ const data = {
           title: "Calendar",
           url: "/calendar",
         },
+        {
+          title: "Packages",
+          url: "/packages",
+        },
       ],
     },
     {

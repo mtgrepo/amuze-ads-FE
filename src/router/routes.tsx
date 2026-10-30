@@ -19,6 +19,7 @@ import NotificationsPage from "../features/Notifications/notifications"
 import DailyAdStats from "@/features/Performance/daily_ad_stats"
 import TransactionsPage from "../features/Financial/Transactions/transactions"
 import PointsPage from "../features/Financial/Points/points"
+import AdPackagesPage from "../features/AdPackages/ad_packages"
 import CalendarPage from "../features/Calendar/calendar"
 
 const router = createBrowserRouter([
@@ -123,6 +124,12 @@ const router = createBrowserRouter([
                 path: "daily-ads-status",
                 element: <DailyAdStats />,
                 handle: { crumb: ["Performance", "Daily Ads Stats"] },
+            },
+            // ad packages
+            {
+                path: "packages",
+                element: <AdPackagesPage />,
+                handle: { crumb: ["Ad Management", "Packages"] },
             },
             // points
             {
