@@ -4,9 +4,13 @@ import { format } from "date-fns"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import type { RootState } from "../../redux/store/store"
-import { SummaryStrip } from "./admin/summary_strip"
-import { AttentionPanel } from "./admin/attention_panel"
-import { HeadlinePanel } from "./admin/headline_panel"
+import { Link } from "react-router-dom"
+import { Plus } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { NeedsYou } from "./admin/needs_you"
+import { MetricTiles } from "./admin/metric_tiles"
+import { ActivityPanel } from "./admin/activity_panel"
+import { useDashboardSummaryQuery } from "../../Composable/Query/dashboard/useDashboardSummaryQuery"
 import { DeliveryChart } from "./admin/delivery_chart"
 import { PointsPanel } from "./admin/points_panel"
 import { PlacementPanel } from "./admin/placement_panel"
@@ -41,13 +45,18 @@ export default function DashboardComponent() {
 
   const range = preset === "custom" ? customRange : presetRange(preset)
   const today = toLocalDateString(new Date())
+  const { summary } = useDashboardSummaryQuery(range.from, range.to)
+  const campaigns = summary?.campaigns
 
   return (
-    <div className="flex w-full flex-col gap-3 px-4 py-6 lg:px-6">
-      <div className="mb-3 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <div className="text-xs text-muted-foreground">{format(new Date(), "EEEE, d MMMM")}</div>
-          <h1 className="text-xl font-medium">{greeting()}{user?.name ? `, ${user.name}` : ""}</h1>
+    <div className="flex w-full flex-col gap-6 px-4 py-6 lg:px-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold tracking-tight">{greeting()}{user?.name ? `, ${user.name}` : ""}</h1>
+          <p className="text-sm text-muted-foreground">
+            {format(new Date(), "EEEE, d MMMM")}
+            {campaigns && <> · <span className="font-mono">{campaigns.active}</span> live · <span className="font-mono">{campaigns.pending}</span> waiting for review · <span className="font-mono">{campaigns.drafts}</span> unpaid drafts</>}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {preset === "custom" && (
@@ -70,7 +79,7 @@ export default function DashboardComponent() {
               />
             </div>
           )}
-          <div role="tablist" aria-label="Date range" className="flex rounded-lg border p-0.5">
+          <div role="tablist" aria-label="Date range" className="flex rounded-lg bg-accent p-0.5">
             {PRESETS.map((p) => (
               <button
                 key={p.value}
@@ -78,29 +87,30 @@ export default function DashboardComponent() {
                 aria-selected={preset === p.value}
                 onClick={() => setPreset(p.value)}
                 className={cn(
-                  "rounded-md px-3 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground",
-                  preset === p.value && "bg-muted text-foreground"
+                  "rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground",
+                  preset === p.value && "bg-card text-foreground shadow-sm ring-1 ring-border"
                 )}
               >
                 {p.label}
               </button>
             ))}
           </div>
+          <Button asChild>
+            <Link to="/ads/create"><Plus /> Create ad</Link>
+          </Button>
         </div>
       </div>
 
-      <SummaryStrip range={range} rangeLabel={RANGE_LABELS[preset]} />
+      <NeedsYou />
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_1.4fr]">
-        <AttentionPanel />
-        <HeadlinePanel range={range} rangeLabel={RANGE_LABELS[preset]} />
-      </div>
+      <MetricTiles range={range} />
 
       <DeliveryChart range={range} />
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <PointsPanel range={range} rangeLabel={RANGE_LABELS[preset]} />
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         <PlacementPanel range={range} />
+        <PointsPanel range={range} rangeLabel={RANGE_LABELS[preset]} />
+        <ActivityPanel />
       </div>
 
       <TopCampaigns range={range} />
