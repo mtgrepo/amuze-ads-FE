@@ -12,7 +12,8 @@ export const useSetPackageActiveCommand = () => {
         },
         onSuccess: (_data, variables) => {
             qc.invalidateQueries({ queryKey: ["ad-packages"] });
-            toast.success(variables.isActive ? "Package activated" : "Package deactivated");
+            // Turning one off is confirmed by the Packages screen's own toast, which offers Undo.
+            if (variables.isActive) toast.success("Package activated");
         },
         onError: (error: Error) => {
             toast.error(error.message);

@@ -1,275 +1,134 @@
 import * as React from "react";
-import {
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import type { SortingState } from "@tanstack/react-table";
-import type { VisibilityState } from "@tanstack/react-table";
-import type { ColumnFiltersState } from "@tanstack/react-table";
-import { ChevronDown, CirclePlus } from "lucide-react";
+import { Plus } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { PageSizeComponent } from "../Common/Pagination/page-number";
-import Paginator from "../Common/Pagination/paginator";
-import DrawerFormLayout from "../Common/Layout/drawer_form_layout";
-import DrawerButton from "../Common/drawer-button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 import type { AdPackageResponse } from "../../dto/response/adPackage/adPackageResponse";
-import columns from "./column";
-import PackageForm from "./package_form";
+import type { CampaignResponse } from "../../dto/response/content/campaignResponse";
+import { useSetPackageActiveCommand } from "../../Composable/Command/adPackage/useSetPackageActiveCommand";
+import PackageDrawer from "./package_form";
+import { perDays, pts } from "./package_format";
+
 type PackagesProps = {
   data: AdPackageResponse[];
+  /** Used to count ads bought with each package; undefined while loading. */
+  campaigns?: CampaignResponse[];
 };
 
-export function PackagesComponent({ data }: PackagesProps) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
-  const [pagination, setPagination] = React.useState({
-    pageIndex: 0,
-    pageSize: 10,
-  });
-  const [open, setOpen] = React.useState(false);
+const SWITCH = "h-6 w-10 px-[2px] [&_[data-slot=switch-thumb]]:size-[18px] [&_[data-slot=switch-thumb]]:data-[state=checked]:translate-x-4";
 
-  const table = useReactTable({
-    data,
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    onPaginationChange: setPagination,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-      pagination,
-    },
-  });
-  const totalRows = table.getFilteredRowModel().rows.length;
+// Packages are never deleted: campaigns keep a reference to the package they were bought with.
+export function PackagesComponent({ data, campaigns }: PackagesProps) {
+  // undefined = closed, null = adding a new package.
+  const [drawer, setDrawer] = React.useState<AdPackageResponse | null | undefined>(undefined);
+  const [confirmId, setConfirmId] = React.useState<string | null>(null);
+  const { setPackageActiveCommand, isPending } = useSetPackageActiveCommand();
 
-  const statusOptions = [
-    { value: "true", label: "Active" },
-    { value: "false", label: "Inactive" },
-  ];
+  const packages = React.useMemo(() => [...data].sort((a, b) => a.sortOrder - b.sortOrder), [data]);
+  // Drafts haven't been paid for, so they don't count as bought.
+  const bought = React.useMemo(() => {
+    const counts = new Map<string, number>();
+    campaigns?.forEach((c) => {
+      if (c.status !== "draft") counts.set(c.packageId, (counts.get(c.packageId) ?? 0) + 1);
+    });
+    return counts;
+  }, [campaigns]);
+  const boughtText = (id: string) => {
+    const n = bought.get(id) ?? 0;
+    return `${n.toLocaleString("en-US")} ${n === 1 ? "ad" : "ads"} bought`;
+  };
+
+  const confirmPkg = packages.find((p) => p.id === confirmId) ?? null;
+  const nextOrder = packages.length ? Math.max(...packages.map((p) => p.sortOrder)) + 1 : 0;
+
+  const setActive = async (id: string, isActive: boolean) => {
+    try {
+      await setPackageActiveCommand({ id, isActive });
+      return true;
+    } catch {
+      // The command already shows why.
+      return false;
+    }
+  };
+
+  const turnOff = async () => {
+    if (!confirmPkg) return;
+    const { id, name } = confirmPkg;
+    if (await setActive(id, false)) {
+      setConfirmId(null);
+      toast.success(`${name} is turned off`, {
+        description: "Ads already bought with it keep running.",
+        action: { label: "Undo", onClick: () => { void setActive(id, true); } },
+      });
+    }
+  };
 
   return (
-    <div className="w-full mx-auto">
-      <div className="flex flex-col gap-4 py-4">
-        {/* Filter Section */}
-        <div className="rounded-xl border-2 p-5 bg-card shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <h3 className="text-base font-semibold">Search Filters</h3>
-              <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
-                2 filters
-              </span>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="relative">
-              <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground">
-                Name
-              </label>
-              <Input
-                placeholder="Enter name..."
-                value={
-                  (table.getColumn("name")?.getFilterValue() as string) ?? ""
-                }
-                onChange={(event) =>
-                  table.getColumn("name")?.setFilterValue(event.target.value)
-                }
-                className="border-2 rounded-lg"
-              />
-            </div>
-            <div className="relative">
-              <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground z-10">
-                Status
-              </label>
-              <Select
-                value={
-                  (table.getColumn("isActive")?.getFilterValue() as string) ?? "all"
-                }
-                onValueChange={(value) =>
-                  table.getColumn("isActive")?.setFilterValue(
-                    value === "all" ? undefined : value
-                  )
-                }
-              >
-                <SelectTrigger className="w-full border-2 rounded-lg">
-                  <SelectValue placeholder="Select status..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  {statusOptions.map((st) => (
-                    <SelectItem key={st.value} value={st.value}>
-                      {st.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-row gap-3 justify-end items-center">
-          <p className="text-sm text-muted-foreground mr-auto">
-            Customers pick a package and how many units when they create an ad. Customers can't create ads until at least one package is active.
+    <div className="mx-auto flex w-full min-w-0 flex-col gap-5">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-[26px] font-semibold tracking-tight">Packages</h1>
+          <p className="max-w-[620px] leading-[1.45] text-muted-foreground">
+            What advertisers buy when they create an ad. They pick a package and how many; objectives are added on top. Changing a package never changes ads already bought.
           </p>
-          {/* drawer */}
-          <DrawerFormLayout
-            open={open}
-            setOpen={setOpen}
-            title="Package Form"
-            description="Add package here."
-            formContent={
-              <PackageForm
-                mode="add"
-                onSuccess={() => {
-                  setOpen(false);
-                }}
-              />
-            }
-            cancelButton={
-              <Button variant="outline" className="w-full my-3">
-                Cancel
-              </Button>
-            }
-            drawerButton={
-              <DrawerButton btn_icon={CirclePlus} title="Add package" />
-            }
-          />
-          {/* column filter */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size={"sm"}>
-                Columns <ChevronDown />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
-      </div>
-      <div className="overflow-hidden rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="text-muted-foreground flex-1 text-sm">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
+        <Button onClick={() => setDrawer(null)}><Plus /> Add package</Button>
+      </header>
+
+      {packages.length === 0 ? (
+        <div className="flex flex-col items-center gap-2 rounded-2xl border bg-card px-5 py-12 text-center">
+          <span className="font-medium">No packages yet</span>
+          <span className="text-sm text-muted-foreground">Advertisers can't create ads until at least one package is on.</span>
+          <Button className="mt-2" onClick={() => setDrawer(null)}><Plus /> Add package</Button>
         </div>
-        {totalRows > 0 && (
-          <div className="flex items-center gap-3">
-            <PageSizeComponent
-              pageSize={pagination.pageSize}
-              totalRows={totalRows}
-              onChange={(size) =>
-                setPagination(() => ({
-                  pageIndex: 0,
-                  pageSize: size === "all" ? totalRows : size,
-                }))
-              }
-            />
-            <Paginator
-              currentPage={table.getState().pagination.pageIndex + 1}
-              totalPages={table.getPageCount()}
-              onPageChange={(pageNumber) => table.setPageIndex(pageNumber - 1)}
-              showPreviousNext
-            />
+      ) : (
+        <div className="grid gap-3.5 [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]">
+          {packages.map((p) => (
+            <article key={p.id} className={cn("flex flex-col gap-2.5 rounded-2xl border bg-card p-[18px]", !p.isActive && "opacity-[0.72]")}>
+              <div className="flex items-start justify-between gap-2.5">
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <h2 className="text-[17px] font-semibold">{p.name}</h2>
+                  <span className="text-[13px] text-muted-foreground">{perDays(p.durationDays)}</span>
+                </div>
+                <Switch
+                  checked={p.isActive}
+                  disabled={isPending}
+                  aria-label={`${p.isActive ? "Turn off" : "Turn on"} ${p.name}`}
+                  onCheckedChange={(on) => { if (on) void setActive(p.id, true); else setConfirmId(p.id); }}
+                  className={SWITCH}
+                />
+              </div>
+              <span className="font-mono text-[26px] font-medium tracking-[-0.02em] tabular-nums">{pts(p.price)}</span>
+              <p className="min-h-[38px] text-[13px] leading-[1.45] text-foreground/80">{p.description}</p>
+              <div className="mt-auto flex items-center justify-between gap-2.5 border-t pt-3">
+                <span className="text-xs text-muted-foreground">
+                  {campaigns ? boughtText(p.id) : "…"}{p.isActive ? "" : " · off for new ads"}
+                </span>
+                <Button variant="outline" size="sm" className="h-8 bg-card text-[13px]" onClick={() => setDrawer(p)}>Edit</Button>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+
+      {drawer !== undefined && (
+        <PackageDrawer key={drawer?.id ?? "new"} pkg={drawer} nextOrder={nextOrder} onClose={() => setDrawer(undefined)} />
+      )}
+
+      <Dialog open={!!confirmPkg} onOpenChange={(open) => !open && setConfirmId(null)}>
+        <DialogContent role="alertdialog" showCloseButton={false} className="gap-3.5 rounded-2xl p-[22px] sm:max-w-[440px]">
+          <DialogTitle className="text-lg font-semibold">Turn off {confirmPkg?.name}?</DialogTitle>
+          <DialogDescription className="leading-normal text-foreground/80">
+            Advertisers can no longer pick it for new ads. The <span className="font-mono tabular-nums">{confirmPkg ? (bought.get(confirmPkg.id) ?? 0).toLocaleString("en-US") : 0}</span> ads already bought with it keep running and can still be extended.
+          </DialogDescription>
+          <div className="mt-1.5 flex justify-end gap-2.5">
+            <Button variant="outline" className="bg-card" onClick={() => setConfirmId(null)} disabled={isPending}>Keep it on</Button>
+            <Button variant="destructive" onClick={turnOff} disabled={isPending}>Turn off</Button>
           </div>
-        )}
-      </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
