@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import type { AdResponse } from "../../../dto/response/content/adResponse";
 import { EXTENDABLE_CAMPAIGN_STATUSES } from "../../../dto/response/campaignExtension/campaignExtensionResponse";
@@ -12,14 +12,14 @@ import { useAdApproveCommand } from "../../../Composable/Command/content/ads/use
 import { useAdRejectCommand } from "../../../Composable/Command/content/ads/useAdRejectCommand";
 import { OBJECTIVE_LABELS } from "../../../dto/response/campaignObjective/campaignObjectiveResponse";
 import { StatusBadge } from "../../Common/status_badge";
-import { parseLocalDate, placementLabel } from "../../Dashboard/admin/dashboard_utils";
+import { placementLabel } from "../../Dashboard/admin/dashboard_utils";
 import { ownerName, paidSplit, pts, runDates, runProgress, tileColor } from "./column";
 import { ExtendDialog } from "./campaign_extensions";
 import PaymentDialog from "../Payment/payment_dialog";
 import AdsActions from "./ads_actions";
+import { adHistory, historyDate, HISTORY_DOT } from "./ad_history";
 
 const GENDER: Record<string, string> = { all: "Everyone", male: "Men", female: "Women" };
-const day = (value: Date | string) => parseLocalDate(String(value).slice(0, 10));
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
     return (
@@ -46,12 +46,7 @@ export function AdSidePanel({ ad, onClose }: { ad: AdResponse | null; onClose: (
     const creative = adDetail?.id === ad.id ? adDetail.adCreative : undefined;
     const picked = objectives.filter((o) => o.selected);
         const canExtend = EXTENDABLE_CAMPAIGN_STATUSES.includes(campaign.status);
-    const history = [
-        ...extensions.filter((e) => e.status === "approved").map((e) => ({ text: `Extended to ${format(day(e.newEndDate), "d MMM")} (+${e.days} days)`, when: e.reviewedAt ?? e.createdAt })),
-        ...extensions.filter((e) => e.status === "pending").map((e) => ({ text: `Extension requested (+${e.days} days)`, when: e.createdAt })),
-        ...(ad.status === "active" || ad.status === "expired" ? [{ text: "Started serving", when: String(campaign.startDate) }] : []),
-        ...(ad.createdAt ? [{ text: "Created", when: ad.createdAt }] : []),
-    ].sort((a, b) => b.when.slice(0, 10).localeCompare(a.when.slice(0, 10))); // newest day first; same-day items keep this order
+    const history = adHistory(ad, extensions);
 
     const approve = async () => { await approveAdCommand(ad.id); onClose(); };
     const reject = async () => { await rejectAdCommand(ad.id); onClose(); };
@@ -121,9 +116,9 @@ export function AdSidePanel({ ad, onClose }: { ad: AdResponse | null; onClose: (
                             <ol className="flex flex-col gap-2.5">
                                 {history.map((h, i) => (
                                     <li key={i} className="flex gap-2.5 text-[13px]">
-                                        <span className="mt-1.5 size-[7px] shrink-0 rounded-full bg-muted-foreground/50" aria-hidden="true" />
+                                        <span className={cn("mt-1.5 size-[7px] shrink-0 rounded-full", HISTORY_DOT[h.tone])} aria-hidden="true" />
                                         <span className="flex-1">{h.text}</span>
-                                        <span className="whitespace-nowrap text-muted-foreground">{format(new Date(h.when), "d MMM")}</span>
+                                        <span className="whitespace-nowrap text-muted-foreground">{historyDate(h.when)}</span>
                                     </li>
                                 ))}
                             </ol>

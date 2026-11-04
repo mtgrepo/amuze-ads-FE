@@ -1,23 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
-import { CalendarPlus, Check, X } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
+import { CalendarPlus } from "lucide-react";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
 import { Spinner } from "../../ui/spinner";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../../ui/dialog";
 import { cn } from "../../../lib/utils";
-import { useCampaignExtensionsQuery } from "../../../Composable/Query/campaignExtension/useCampaignExtensionsQuery";
 import { useExtensionQuoteQuery } from "../../../Composable/Query/campaignExtension/useExtensionQuoteQuery";
 import { useRequestExtensionCommand } from "../../../Composable/Command/campaignExtension/useRequestExtensionCommand";
-import { useApproveExtensionCommand } from "../../../Composable/Command/campaignExtension/useApproveExtensionCommand";
-import { useRejectExtensionCommand } from "../../../Composable/Command/campaignExtension/useRejectExtensionCommand";
-import {
-    EXTENDABLE_CAMPAIGN_STATUSES,
-    EXTENSION_STATUS_LABELS,
-    type CampaignExtensionResponse,
-} from "../../../dto/response/campaignExtension/campaignExtensionResponse";
 
 interface ExtendableCampaign {
     id: string;
@@ -51,13 +42,7 @@ function firstExtraDay(endDate: string): string {
     return dayAfter > today ? dayAfter : today;
 }
 
-const STATUS_STYLE: Record<CampaignExtensionResponse["status"], string> = {
-    pending: "text-amber-700 dark:text-amber-400",
-    approved: "text-emerald-700 dark:text-emerald-400",
-    rejected: "text-muted-foreground",
-};
-
-/** Buy more of the campaign's package. Used by the Extensions card and the ads table's actions menu. */
+/** Buy more of the campaign's package. Used on the ad page, the ads list and its actions menu. */
 export function ExtendDialog({ campaign, isAdmin, open, onOpenChange }: {
     campaign: ExtendableCampaign;
     isAdmin: boolean;
@@ -175,97 +160,5 @@ export function ExtendDialog({ campaign, isAdmin, open, onOpenChange }: {
                 </DialogFooter>
             </DialogContent>
         </Dialog>
-    );
-}
-
-/**
- * Extensions of one campaign: extend it, see one under review, and its history.
- * Admins also approve or reject the pending one; their own extensions apply at once.
- */
-export default function CampaignExtensions({ campaign, isAdmin = false }: { campaign: ExtendableCampaign; isAdmin?: boolean }) {
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const { extensions, isLoading } = useCampaignExtensionsQuery(campaign.id);
-    const { approveExtension, isApproving } = useApproveExtensionCommand();
-    const { rejectExtension, isRejecting } = useRejectExtensionCommand();
-    const isReviewing = isApproving || isRejecting;
-
-    const pending = extensions.find((e) => e.status === "pending");
-    const canExtend = EXTENDABLE_CAMPAIGN_STATUSES.includes(campaign.status) && !pending;
-
-    if (!EXTENDABLE_CAMPAIGN_STATUSES.includes(campaign.status) && extensions.length === 0) return null;
-
-    return (
-        <Card className="rounded-xl">
-            <CardHeader className="flex flex-row items-center justify-between gap-4">
-                <CardTitle>Extensions</CardTitle>
-                {canExtend && (
-                    <Button size="sm" variant="outline" onClick={() => setDialogOpen(true)}>
-                        <CalendarPlus className="h-4 w-4" /> Extend
-                    </Button>
-                )}
-            </CardHeader>
-            <CardContent className="space-y-4">
-                {pending && (
-                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm">
-                        <div>
-                            <div className="font-medium">Extension to {shortDate(pending.newEndDate)} is under review</div>
-                            <div className="text-muted-foreground">
-                                {pending.days} {pending.days === 1 ? "day" : "days"} · {pending.amount.toLocaleString()} pts held
-                                {isAdmin ? "" : " · refunded if it's rejected"}
-                            </div>
-                        </div>
-                        {isAdmin && (
-                            <div className="flex gap-2">
-                                <Button size="sm" variant="outline" disabled={isReviewing} onClick={() => rejectExtension(pending.id).catch(() => undefined)}>
-                                    <X className="h-4 w-4" /> Reject
-                                </Button>
-                                <Button size="sm" disabled={isReviewing} onClick={() => approveExtension(pending.id).catch(() => undefined)}>
-                                    <Check className="h-4 w-4" /> Approve
-                                </Button>
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {isLoading ? (
-                    <div className="h-10 animate-pulse rounded bg-muted" />
-                ) : extensions.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                        {campaign.status === "expired"
-                            ? "This campaign has ended. Extend it to run it again."
-                            : `No extensions yet. Extend to keep it running past ${shortDate(toDateString(campaign.endDate))}.`}
-                    </p>
-                ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="text-left text-xs text-muted-foreground">
-                                    <th className="pb-2 font-normal">Extra period</th>
-                                    <th className="pb-2 pl-4 text-right font-normal">Days</th>
-                                    <th className="pb-2 pl-4 text-right font-normal">Cost</th>
-                                    <th className="pb-2 pl-4 font-normal">Status</th>
-                                    <th className="pb-2 pl-4 text-right font-normal">Requested</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {extensions.map((e) => (
-                                    <tr key={e.id} className="border-t">
-                                        <td className="py-2.5 whitespace-nowrap">{shortDate(e.startDate)} – {shortDate(e.newEndDate)}</td>
-                                        <td className="py-2.5 pl-4 text-right tabular-nums">{e.days}</td>
-                                        <td className="py-2.5 pl-4 text-right tabular-nums">{e.amount.toLocaleString()} pts</td>
-                                        <td className={cn("py-2.5 pl-4 whitespace-nowrap", STATUS_STYLE[e.status])}>{EXTENSION_STATUS_LABELS[e.status]}</td>
-                                        <td className="py-2.5 pl-4 text-right text-muted-foreground whitespace-nowrap">{format(new Date(e.createdAt), "d MMM yyyy")}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </CardContent>
-
-            {dialogOpen && (
-                <ExtendDialog campaign={campaign} isAdmin={isAdmin} open={dialogOpen} onOpenChange={setDialogOpen} />
-            )}
-        </Card>
     );
 }
