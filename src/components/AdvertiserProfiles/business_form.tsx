@@ -16,6 +16,7 @@ import { useAdvertiserProfileUpdateCommand } from "../../Composable/Command/adve
 import { Spinner } from "../ui/spinner";
 import type { AdvertiserDetailsResponse } from "../../dto/response/advertisers/advertiserDetailsResponse";
 import { useAdvertiserProfileCreateCommand } from "../../Composable/Command/advertiser-profile/useAdvertiserProfileCreateCommand";
+import { usePreventScriptTag } from "@/lib/scriptTag";
 
 // DICA is required for agencies (registered companies) only; small advertisers may not have one.
 const makeSchema = (isAgency: boolean) => z.object({
@@ -59,6 +60,8 @@ export default function BusinessForm({ profile, advertiser_id, isAgency = false 
             timezone: profile?.timezone ?? "",
         },
     });
+
+    usePreventScriptTag(form);
 
     const { updateAdvertiserProfileCommand, isPending } = useAdvertiserProfileUpdateCommand();
     const { createAdvertiserProfileCommand, isPending: isCreating } = useAdvertiserProfileCreateCommand();

@@ -43,8 +43,7 @@ export function NotiComponent
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
         []
     );
-    const [columnVisibility, setColumnVisibility] =
-        React.useState<VisibilityState>({});
+    const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
     const [pagination, setPagination] = React.useState({
         pageIndex: 0,
@@ -221,7 +220,7 @@ export function NotiComponent
                     </DropdownMenu>
                 </div>
             </div>
-            <div className="overflow-hidden rounded-md border">
+            <div className="grid grid-cols-1 overflow-hidden rounded-md border">
                 <Table>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (

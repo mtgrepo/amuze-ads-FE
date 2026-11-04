@@ -34,6 +34,7 @@ import { billableObjectives } from "./objective_terms";
 import { useObjectivePricesQuery } from "../../../Composable/Query/campaignObjective/useObjectivePricesQuery";
 import type { ObjectiveInput } from "../../../dto/response/campaignObjective/campaignObjectiveResponse";
 import { useActivePackagesQuery } from "../../../Composable/Query/adPackage/useActivePackagesQuery";
+import { usePreventScriptTag } from "@/lib/scriptTag";
 
 const formSchema = z
   .object({
@@ -88,6 +89,8 @@ export default function CreateAdForm({
       placementKey: "",
     },
   });
+
+  usePreventScriptTag(form);
 
   const adType = form.watch("adType");
   const placementKey = form.watch("placementKey");
