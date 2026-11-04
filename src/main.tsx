@@ -23,7 +23,7 @@ const queryClient = new QueryClient(({
 // Toast Wrapper
 function ThemedToaster() {
   const { theme } = useTheme()
-  return <Toaster richColors position="top-right" theme={theme === "system" ? "system" : theme} closeButton/>
+  return <Toaster position="bottom-right" theme={theme === "system" ? "system" : theme} closeButton/>
 }
 
 createRoot(document.getElementById('root')!).render(

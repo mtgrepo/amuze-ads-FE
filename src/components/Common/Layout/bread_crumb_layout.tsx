@@ -30,12 +30,6 @@ export default function BreadCrumbLayout({ matches }: BreadCrumbLayoutProps) {
     <Breadcrumb>
       <BreadcrumbList>
 
-        {/* Home link */}
-        <BreadcrumbItem>
-          <BreadcrumbLink href="/">Ad Network</BreadcrumbLink>
-        </BreadcrumbItem>
-        <BreadcrumbSeparator />
-
         {crumbs.map((match, index) => {
           const isLast = index === crumbs.length - 1
 
@@ -59,7 +53,10 @@ export default function BreadCrumbLayout({ matches }: BreadCrumbLayoutProps) {
                 {!(i === 0 && index === 0) && <BreadcrumbSeparator />}
                 <BreadcrumbItem>
                   {lastInLabels ? (
-                    <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                    <BreadcrumbPage className="font-medium">{item.label}</BreadcrumbPage>
+                  ) : !item.href ? (
+                    // A section name (e.g. "Accounts") is not a page of its own.
+                    <span>{item.label}</span>
                   ) : (
                     <BreadcrumbLink asChild>
                       <Link to={item.href || match.pathname}>{item.label}</Link>

@@ -1,147 +1,95 @@
-"use client"
-
 import * as React from "react"
 import {
-  BellRing,
-  BriefcaseBusiness,
-  ChartNoAxesCombinedIcon,
-  Layers,
-  Newspaper,
-  Settings,
-  UserCog,
-  Wallet,
+  ArrowLeftRight,
+  Bell,
+  CalendarDays,
+  ChartNoAxesCombined,
+  Coins,
+  LayoutDashboard,
+  Megaphone,
+  Package,
+  Settings2,
+  ShieldCheck,
+  Users,
 } from "lucide-react"
+import { Link } from "react-router-dom"
+import { useSelector } from "react-redux"
 
-import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
+import { NavMain, type NavGroup } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
-import { TeamSwitcher } from "@/components/team-switcher"
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { useSelector } from "react-redux"
 import type { RootState } from "../redux/store/store"
 
-// This is sample data.
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  teams: [
-    {
-      name: "Amuze Ad Portal",
-      logo: Layers,
-      plan: ""
-    },
-  ],
-  navMain: [
-    {
-      title: "Advertisers",
-      url: "#",
-      icon: BriefcaseBusiness,
-      isActive: true,
-      items: [
-        {
-          title: "Advertisers",
-          url: "/advertisers",
-        },
-        // {
-        //   title: "Advertiser Profiles",
-        //   url: "/advertiser-profiles",
-        // }
-      ],
-    },
-    {
-        title: "Financial",
-        url: "#",
-        icon: Wallet,
-        items: [
-            {
-                title: "Transactions",
-                url: "/transactions",
-            },
-            {
-                title: "Points",
-                url: "/points",
-            }
-        ]
-    },
-    {
-      title: "Ad Management",
-      url: "#",
-      icon: Newspaper,
-      items: [
-        {
-          title: "Ads",
-          url: "/ads",
-        },
-        {
-          title: "Calendar",
-          url: "/calendar",
-        },
-        {
-          title: "Packages",
-          url: "/packages",
-        },
-      ],
-    },
-    {
-      title: "Performance",
-      url: "#",
-      icon: ChartNoAxesCombinedIcon,
-      items: [
-        {
-          title: "Daily ads status",
-          url: "/daily-ads-status",
-        },
-      ],
-    },
-    {
-        title: "Notifications",
-        url: "#",
-        icon: BellRing,
-        items: [
-            {
-                title: "Notifications",
-                url: "/notifications",
-            }
-        ]
-    }
-  ],
-  projects: [
-    {
-      name: "Admin Users",
-      url: "/admin-users",
-      icon: UserCog,
-    },
-    {
-      name: "System Configs",
-      url: "/system-configs",
-      icon: Settings,
-    },
-  ],
-}
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-      const userData = useSelector((state: RootState) => state.auth.user);
+  const userData = useSelector((state: RootState) => state.auth.user)
+
+  const groups: NavGroup[] = [
+    {
+      items: [
+        { title: "Dashboard", url: "/", icon: LayoutDashboard },
+        { title: "Performance", url: "/daily-ads-status", icon: ChartNoAxesCombined },
+      ],
+    },
+    {
+      label: "Ad management",
+      items: [
+        { title: "Ads", url: "/ads", icon: Megaphone },
+        { title: "Calendar", url: "/calendar", icon: CalendarDays },
+        { title: "Packages", url: "/packages", icon: Package },
+      ],
+    },
+    {
+      label: "Accounts",
+      items: [
+        { title: "Advertisers", url: "/advertisers", icon: Users },
+        { title: "Points", url: "/points", icon: Coins },
+        { title: "Transactions", url: "/transactions", icon: ArrowLeftRight },
+      ],
+    },
+    {
+      label: "Inbox",
+      items: [{ title: "Notifications", url: "/notifications", icon: Bell }],
+    },
+    {
+      label: "Settings",
+      items: [
+        { title: "Admin users", url: "/admin-users", icon: ShieldCheck },
+        { title: "System configs", url: "/system-configs", icon: Settings2 },
+      ],
+    },
+  ]
 
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" asChild className="hover:bg-transparent">
+              <Link to="/">
+                <span className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-[15px] font-bold text-primary-foreground">A</span>
+                <span className="grid flex-1 text-left leading-tight">
+                  <span className="truncate font-semibold">Amuze Ads</span>
+                  <span className="truncate text-xs text-muted-foreground">Admin portal</span>
+                </span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
+        <NavMain groups={groups} />
       </SidebarContent>
       <SidebarFooter>
-          {userData && <NavUser user={userData} />}
+        {userData && <NavUser user={userData} />}
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

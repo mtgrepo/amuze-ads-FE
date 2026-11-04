@@ -41,13 +41,14 @@ const router = createBrowserRouter([
             {
                 path: "advertisers",
                 element: <Advertisers />,
-                handle: { crumb: "Advertisers" },
+                handle: { crumb: ["Accounts", "Advertisers"] },
             },
             {
                 path: "advertisers/:id",
                 element: <AdvertiserDetailsPage />,
                 handle: {
                     crumb: [
+                        "Accounts",
                         { label: "Advertisers", href: "/advertisers" },
                         { label: "Details" }
                     ]
@@ -57,24 +58,25 @@ const router = createBrowserRouter([
             {
                 path: "advertiser-profiles",
                 element: <ProfilePage />,
-                handle: { crumb: ['Advertiser', 'Profiles'] },
+                handle: { crumb: ["Accounts", "Advertiser profiles"] },
             },
             // ads
             {
                 path: "ads",
                 element: <Ads />,
-                handle: { crumb: ["Content", "Ads"] },
+                handle: { crumb: ["Ad management", "Ads"] },
             },
             {
                 path: "calendar",
                 element: <CalendarPage />,
-                handle: { crumb: ["Content", "Calendar"] },
+                handle: { crumb: ["Ad management", "Calendar"] },
             },
             {
                 path: "ads/create",
                 element: <CreateAdPage />,
                 handle: {
                     crumb: [
+                        "Ad management",
                         { label: "Ads", href: "/ads" },
                         { label: "Create" }
                     ]
@@ -85,6 +87,7 @@ const router = createBrowserRouter([
                 element: <AdDetailsPage />,
                 handle: {
                     crumb: [
+                        "Ad management",
                         { label: "Ads", href: "/ads" },
                         { label: "Details" }
                     ]
@@ -94,54 +97,54 @@ const router = createBrowserRouter([
             {
                 path: "ad-sets",
                 element: <AdSetPage />,
-                handle: { crumb: ["Content", "Ad Sets"] },
+                handle: { crumb: ["Ad management", "Ad sets"] },
             },
             {
                 path: "campaigns",
                 element: <CampaignPage />,
-                handle: { crumb: ["Content", "Campaigns"] },
+                handle: { crumb: ["Ad management", "Campaigns"] },
             },
             // Notifications 
             {
                 path: "notifications",
                 element: <NotificationsPage />,
-                handle: { crumb: ["Notifications"] },
+                handle: { crumb: ["Inbox", "Notifications"] },
             },
             // admin users
             {
                 path: "/admin-users",
                 element: <AdminUsers />,
-                handle: { crumb: ["System", "Admin Users"] },
+                handle: { crumb: ["Settings", "Admin users"] },
             },
             // system configs
             {
                 path: "system-configs",
                 element: <SystemConfigs />,
-                handle: { crumb: ["System", "System Configs"] },
+                handle: { crumb: ["Settings", "System configs"] },
             },
             // daily ads stats
             {
                 path: "daily-ads-status",
                 element: <DailyAdStats />,
-                handle: { crumb: ["Performance", "Daily Ads Stats"] },
+                handle: { crumb: ["Performance"] },
             },
             // ad packages
             {
                 path: "packages",
                 element: <AdPackagesPage />,
-                handle: { crumb: ["Ad Management", "Packages"] },
+                handle: { crumb: ["Ad management", "Packages"] },
             },
             // points
             {
                 path: "points",
                 element: <PointsPage />,
-                handle: { crumb: ["Financial", "Points"] },
+                handle: { crumb: ["Accounts", "Points"] },
             },
             // transactions
             {
                 path: "transactions",
                 element: <TransactionsPage />,
-                handle: { crumb: ["Financial", "Transactions"] },
+                handle: { crumb: ["Accounts", "Transactions"] },
             },
             {
                 path: "*",

@@ -10,6 +10,7 @@ import {
 import { ModeToggle } from "./components/Common/Themes/mode-toggle"
 import { Separator } from "./components/ui/separator"
 import BreadCrumbLayout from "./components/Common/Layout/bread_crumb_layout"
+import { AttentionBell } from "./components/Common/Layout/attention_bell"
 
 type MatchType = {
   pathname: string
@@ -29,8 +30,8 @@ function App() {
 
       <SidebarInset>
         {/* HEADER */}
-        <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between border-b bg-background px-4">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between gap-3 border-b bg-background/85 px-4 backdrop-blur lg:px-6">
+          <div className="flex min-w-0 items-center gap-3">
             <SidebarTrigger />
 
             <Separator
@@ -41,7 +42,10 @@ function App() {
             <BreadCrumbLayout matches={matches}/>
           </div>
 
-          <ModeToggle />
+          <div className="flex items-center gap-1">
+            <ModeToggle />
+            <AttentionBell />
+          </div>
         </header>
 
         {/* PAGE CONTENT */}
