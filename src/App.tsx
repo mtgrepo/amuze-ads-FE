@@ -28,7 +28,7 @@ function App() {
     <SidebarProvider>
       <AppSidebar />
 
-      <SidebarInset>
+      <SidebarInset className="min-w-0">
         {/* HEADER */}
         <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between gap-3 border-b bg-background/85 px-4 backdrop-blur lg:px-6">
           <div className="flex min-w-0 items-center gap-3">
@@ -49,7 +49,7 @@ function App() {
         </header>
 
         {/* PAGE CONTENT */}
-        <div className="flex flex-1 flex-col gap-4 p-4">
+        <div className="flex min-w-0 flex-1 flex-col gap-4 p-4">
           <Outlet />
         </div>
       </SidebarInset>

@@ -8,6 +8,11 @@ export interface AdResponse {
     adType: string,
     placementKey: string,
     status: string,
+    /** Running totals since the ad started. */
+    totalImpressions?: number,
+    totalClicks?: number,
+    totalWatches?: number,
+    totalCompletions?: number,
     adSet: AdSetResponse,
     adCreative: AdCreativeResponse
 }
