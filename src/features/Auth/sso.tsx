@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useDispatch } from "react-redux"
 import { useNavigate } from "react-router-dom"
-import { GalleryVerticalEnd } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Spinner } from "@/components/ui/spinner"
 import { loginSuccess } from "../../redux/auth/authSlice"
 import { adminSso } from "../../http/apis/auth/ssoApi"
 import { AMUZE_ADMIN_PORTAL_URL, goToAmuzeAdmin } from "../../lib/amuze"
@@ -43,31 +41,31 @@ export default function SsoPage() {
     }, [dispatch, navigate])
 
     return (
-        <div className="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
-            <div className="flex w-full max-w-sm flex-col items-center gap-6 text-center">
-                <div className="flex items-center gap-2 font-medium">
-                    <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
-                        <GalleryVerticalEnd className="size-4" />
-                    </div>
-                    Amuze Ad
-                </div>
-
+        <div className="flex min-h-svh flex-col items-center justify-center gap-[18px] bg-background p-6 text-foreground">
+            <section className="flex w-full max-w-[420px] flex-col items-center gap-4 rounded-[18px] border bg-card p-8 text-center">
+                <div className="flex size-11 items-center justify-center rounded-[11px] bg-primary text-xl font-bold text-primary-foreground" aria-hidden="true">A</div>
                 {error ? (
                     <>
-                        <div className="space-y-1">
-                            <p className="font-medium">Couldn't sign you in</p>
-                            <p className="text-sm text-muted-foreground">{error}</p>
-                        </div>
+                        <h1 className="text-xl font-semibold">We couldn't sign you in</h1>
+                        <p className="leading-normal text-muted-foreground">{error}</p>
+                        {!/admin portal/i.test(error) && (
+                            <p className="leading-normal text-muted-foreground">Open the Ads portal again from the AMUZE admin portal.</p>
+                        )}
                         {AMUZE_ADMIN_PORTAL_URL && (
-                            <Button onClick={goToAmuzeAdmin}>Back to AMUZE admin</Button>
+                            <div className="flex flex-wrap justify-center gap-2.5">
+                                <Button className="h-10 px-4" onClick={goToAmuzeAdmin}>Back to AMUZE admin</Button>
+                            </div>
                         )}
                     </>
                 ) : (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Spinner /> Signing you in…
-                    </div>
+                    <>
+                        <div role="status" aria-label="Signing in" className="size-7 animate-spin rounded-full border-[3px] border-primary/15 border-t-primary" />
+                        <h1 className="text-xl font-semibold">Signing you in with AMUZE</h1>
+                        <p className="leading-normal text-muted-foreground">This takes a second. You'll land on the dashboard.</p>
+                    </>
                 )}
-            </div>
+            </section>
+            <span className="text-xs text-muted-foreground">Amuze Ads · Admin portal</span>
         </div>
     )
 }
