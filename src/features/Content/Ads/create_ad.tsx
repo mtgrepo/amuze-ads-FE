@@ -3,17 +3,17 @@ import { useNavigate } from "react-router-dom";
 import CreateAdForm from "../../../components/Content/Ads/create_ad_form";
 import type { CreatedAd } from "../../../components/Content/Ads/create_ad_form";
 import PaymentDialog from "../../../components/Content/Payment/payment_dialog";
-import BackButton from "../../../components/Common/back_button";
 
 export default function CreateAdPage() {
     const navigate = useNavigate();
-    // Set once the draft is saved; opens the payment step. Pay or "Pay later" both end on the ads list.
+    // Set once the draft is saved via Pay; opens the payment step. Pay or "Pay later" both end on the ads list.
     const [created, setCreated] = useState<CreatedAd | null>(null);
 
     return (
-        <div className="max-w-4xl w-full mx-auto p-8">
-            <BackButton fallback="/ads" className="mb-4" />
-            <CreateAdForm onCreated={setCreated} />
+        <div className="flex w-full flex-1 flex-col">
+            <CreateAdForm
+                onCreated={(ad, intent) => (intent === "pay" ? setCreated(ad) : navigate("/ads"))}
+            />
             {created && (
                 <PaymentDialog
                     open
