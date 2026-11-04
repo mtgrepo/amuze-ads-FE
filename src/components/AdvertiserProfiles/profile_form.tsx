@@ -158,7 +158,7 @@ export default function ProfileForm({
                             <FormControl>
                                 <Select
                                     value={String(field.value || "")}
-                                    onValueChange={(val: any) => field.onChange(String(val))}
+                                    onValueChange={(val: string) => field.onChange(val)}
                                 >
                                     <SelectTrigger className="w-full">
                                         <SelectValue placeholder="Select Advertiser" />
@@ -310,7 +310,7 @@ export default function ProfileForm({
     )
 }
 
-function SelectField({ name, label, options, disabled }: any) {
+function SelectField({ name, label, options, disabled }: { name: string; label: string; options: string[]; disabled?: boolean }) {
     return (
         <FormField
             name={name}

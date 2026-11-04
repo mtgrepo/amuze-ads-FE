@@ -1,307 +1,250 @@
 import * as React from "react";
-import {
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import type { SortingState } from "@tanstack/react-table";
-import type { VisibilityState } from "@tanstack/react-table";
-import type { ColumnFiltersState } from "@tanstack/react-table";
-import { ChevronDown, CirclePlus } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { MoreHorizontal } from "lucide-react";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../ui/dialog";
+import type { AdvertisersResponse } from "../../dto/response/advertisers/advertisersResponse";
+import { useBalancesQuery } from "../../Composable/Query/points/useBalancesQuery";
+import { useAdListQuery } from "../../Composable/Query/content/useAdListQuery";
+import { useAdvertiserDeleteCommand } from "../../Composable/Command/advertiser/useAdvertiserDeleteCommand";
 import { PageSizeComponent } from "../Common/Pagination/page-number";
 import Paginator from "../Common/Pagination/paginator";
-import type { AdvertisersResponse } from "../../dto/response/advertisers/advertisersResponse";
-import columns from "./column";
-import DrawerFormLayout from "../Common/Layout/drawer_form_layout";
-import DrawerButton from "../Common/drawer-button";
-import AdvertiserForm from "./advertiser_form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-type AdvertisersProps = {
-  data: AdvertisersResponse[];
-};
+import { AdvertiserAvatar, AdvertiserStatusPill } from "./advertiser_status";
+import { AddAdvertiserSheet } from "./add_advertiser_sheet";
+import { EditAdvertiserSheet } from "./edit_advertiser_sheet";
+import { TopUpDialog } from "./top_up_dialog";
+import { DeactivateDialog } from "./deactivate_dialog";
+import { useAdvertiserActions } from "./use_advertiser_actions";
+import { isActive, kindOf, liveAdCounts, LOW_BALANCE, pts, since, typeLabel } from "./advertiser_utils";
 
-export function AdvertisersComponent({ data }: AdvertisersProps) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
-  const [pagination, setPagination] = React.useState({
-    pageIndex: 0,
-    pageSize: 10,
-  });
-  const [open, setOpen] = React.useState(false);
+type Tab = "all" | "advertiser" | "agency" | "client" | "unverified";
+const TABS: { key: Tab; label: string; test: (a: AdvertisersResponse) => boolean }[] = [
+  { key: "all", label: "All", test: () => true },
+  { key: "advertiser", label: "Advertisers", test: (a) => kindOf(a) === "advertiser" },
+  { key: "agency", label: "Agencies", test: (a) => kindOf(a) === "agency" },
+  { key: "client", label: "Agency clients", test: (a) => kindOf(a) === "client" },
+  { key: "unverified", label: "Not verified", test: (a) => !a.verified },
+];
 
-  const table = useReactTable({
-    data,
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    onPaginationChange: setPagination,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-      pagination,
-    },
-  });
-  const totalRows = table.getFilteredRowModel().rows.length;
+type Dialogs = { edit?: string; topUp?: string; deactivate?: string; remove?: string };
 
-  const statusOptions = [
-    { value: "active", label: "Active" },
-    { value: "suspended", label: "Suspended" },
-    { value: "banned", label: "Banned" },
-  ];
+export function AdvertisersComponent({ data }: { data: AdvertisersResponse[] }) {
+  const [tab, setTab] = React.useState<Tab>("all");
+  const [addOpen, setAddOpen] = React.useState(false);
+  const [dialogs, setDialogs] = React.useState<Dialogs>({});
+  const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 });
+  const qc = useQueryClient();
 
-  const verifiedOptions = [
-    { value: true, label: "Verified" },
-    { value: false, label: "Not Verified" },
-  ];
+  const walletIds = React.useMemo(() => data.filter((a) => kindOf(a) !== "client").map((a) => a.id), [data]);
+  const { balances, isLoading: balancesLoading } = useBalancesQuery(walletIds);
+  const { adListData } = useAdListQuery();
+  const live = React.useMemo(() => liveAdCounts(adListData ?? [], data), [adListData, data]);
+  const { reactivate, deactivate, verify, isPending } = useAdvertiserActions();
+  const { deleteAdvertiserCommand, isPending: deleting } = useAdvertiserDeleteCommand();
+
+  const rows = data.filter(TABS.find((t) => t.key === tab)!.test);
+  const pageCount = Math.max(1, Math.ceil(rows.length / pagination.pageSize));
+  const pageRows = rows.slice(pagination.pageIndex * pagination.pageSize, (pagination.pageIndex + 1) * pagination.pageSize);
+
+  const byId = (id?: string) => (id ? data.find((a) => a.id === id) : undefined);
+  const editing = byId(dialogs.edit);
+  const toppingUp = byId(dialogs.topUp);
+  const deactivating = byId(dialogs.deactivate);
+  const removing = byId(dialogs.remove);
+
+  const pickTab = (key: Tab) => {
+    setTab(key);
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  };
+
+  const confirmDeactivate = async () => {
+    if (!deactivating) return;
+    await deactivate(deactivating, live.get(deactivating.id) ?? 0);
+    setDialogs({});
+  };
+
+  const confirmDelete = async () => {
+    if (!removing) return;
+    try {
+      await deleteAdvertiserCommand(removing.id);
+      qc.invalidateQueries({ queryKey: ["advertisers"] });
+      setDialogs({});
+    } catch (err) {
+      toast.error("Couldn't delete", { description: err instanceof Error ? err.message : undefined });
+    }
+  };
 
   return (
-    <div className="w-full mx-auto">
-      <div className="flex flex-col gap-4 py-4">
-        {/* Filter Section */}
-        <div className="rounded-xl border-2 p-5 bg-card shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <h3 className="text-base font-semibold">Search Filters</h3>
-              <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
-                3 filters
+    <div className="mx-auto flex w-full min-w-0 flex-col gap-[18px]">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-[26px] font-semibold tracking-tight">Advertisers</h1>
+          <p className="text-muted-foreground">Businesses that buy ads, and the agencies that buy for their clients. Use ⋯ on a row to edit, verify or deactivate.</p>
+        </div>
+        <Button onClick={() => setAddOpen(true)}>Add advertiser</Button>
+      </header>
+
+      <div role="tablist" aria-label="Type" className="flex gap-[22px] overflow-x-auto overflow-y-hidden border-b">
+        {TABS.map((t) => {
+          const on = t.key === tab;
+          return (
+            <button
+              key={t.key}
+              type="button"
+              role="tab"
+              aria-selected={on}
+              onClick={() => pickTab(t.key)}
+              className={cn(
+                "-mb-px inline-flex h-9 items-center gap-2 whitespace-nowrap border-b-2 border-transparent px-1 text-sm font-medium text-foreground/70 hover:text-foreground",
+                on && "border-primary text-foreground"
+              )}
+            >
+              {t.label}
+              <span className={cn("rounded-[10px] px-[7px] py-px font-mono text-xs", on ? "bg-primary/10 text-primary" : "bg-muted text-foreground/70")}>
+                {data.filter(t.test).length}
               </span>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="relative">
-              <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground">
-                Name
-              </label>
-              <Input
-                placeholder="Enter name..."
-                value={
-                  (table.getColumn("name")?.getFilterValue() as string) ?? ""
-                }
-                onChange={(event) =>
-                  table.getColumn("name")?.setFilterValue(event.target.value)
-                }
-                className="border-2 rounded-lg"
-              />
-            </div>
-            <div className="relative">
-              <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground z-10">
-                Status
-              </label>
-              <Select
-                value={
-                  (table.getColumn("status")?.getFilterValue() as string) ?? "all"
-                }
-                onValueChange={(value) =>
-                  table.getColumn("status")?.setFilterValue(
-                    value === "all" ? undefined : value
-                  )
-                }
-              >
-                <SelectTrigger className="w-full border-2 rounded-lg">
-                  <SelectValue placeholder="Select type..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  {statusOptions
-                    ?.map((st: any) => (
-                      <SelectItem key={st.value} value={String(st.value)}>
-                        {st.label}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="relative">
-              <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground z-10">
-                Verified Status
-              </label>
-              <Select
-                value={
-                  (table.getColumn("verified")?.getFilterValue() as string) ?? "all"
-                }
-                onValueChange={(value) =>
-                  table.getColumn("verified")?.setFilterValue(
-                    value === "all" ? undefined : value
-                  )
-                }
-              >
-                <SelectTrigger className="w-full border-2 rounded-lg">
-                  <SelectValue placeholder="Select type..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  {verifiedOptions
-                    ?.map((st: any) => (
-                      <SelectItem key={st.value} value={st.value}>
-                        {st.label}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-row gap-3 justify-end">
-          {/* drawer */}
-          <DrawerFormLayout
-            open={open}
-            setOpen={setOpen}
-            title="Advertiser Form"
-            description="Add advertiser here."
-            formContent={
-              <AdvertiserForm
-                mode="add"
-                onSuccess={() => {
-                  setOpen(false);
-                }}
-              />
-            }
-            cancelButton={
-              <Button variant="outline" className="w-full my-3">
-                Cancel
-              </Button>
-            }
-            drawerButton={
-              <DrawerButton btn_icon={CirclePlus} title="Add advertiser" />
-            }
-          />
-          {/* column filter */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size={"sm"}>
-                Columns <ChevronDown />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+            </button>
+          );
+        })}
       </div>
-      <div className="grid grid-cols-1 overflow-hidden rounded-md border">
-        <Table>
+
+      <div className="overflow-x-auto rounded-[14px] border bg-card">
+        <Table className="min-w-[900px]">
           <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
+            <TableRow className="hover:bg-transparent">
+              {["Name", "Type", "Contact", "Balance", "Live ads", "Status"].map((h) => (
+                <TableHead key={h} className={cn("h-auto px-3 py-2.5 text-xs font-medium text-muted-foreground", (h === "Balance" || h === "Live ads") && "text-right")}>{h}</TableHead>
+              ))}
+              <TableHead className="h-auto w-[50px] px-3 py-2.5"><span className="sr-only">Actions</span></TableHead>
+            </TableRow>
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+            {pageRows.length ? pageRows.map((a) => {
+              const kind = kindOf(a);
+              const active = isActive(a);
+              const balance = balances.get(a.id);
+              const low = balance !== undefined && balance < LOW_BALANCE && active;
+              return (
+                <TableRow key={a.id} className={cn("hover:bg-transparent", !active && "text-muted-foreground")}>
+                  <TableCell className="p-3">
+                    <div className="flex items-center gap-3">
+                      <AdvertiserAvatar advertiser={a} />
+                      <div className="flex flex-col gap-0.5">
+                        <Link to={`/advertisers/${a.id}`} className="font-medium hover:text-primary hover:underline">{a.name}</Link>
+                        <span className="text-xs text-muted-foreground">Since {since(a.createdAt)}</span>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="p-3">{typeLabel(a, data)}</TableCell>
+                  <TableCell className="p-3">
+                    <div className="flex flex-col gap-0.5">
+                      <span>{a.email || "—"}</span>
+                      <span className="text-xs text-muted-foreground">{kind === "client" ? "Paid by agency" : a.phone || "—"}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className={cn("p-3 text-right font-mono tabular-nums", low && "font-medium text-destructive")}>
+                    {kind === "client" ? "—" : balance !== undefined ? pts(balance) : balancesLoading ? "…" : "—"}
+                  </TableCell>
+                  <TableCell className="p-3 text-right font-mono tabular-nums">{live.get(a.id) ?? 0}</TableCell>
+                  <TableCell className="p-3"><AdvertiserStatusPill advertiser={a} /></TableCell>
+                  <TableCell className="p-3 text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="size-[34px]" aria-label={`Actions for ${a.name}`}>
+                          <MoreHorizontal />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" aria-label="Advertiser actions" className="w-[200px] rounded-xl p-1.5">
+                        <DropdownMenuItem asChild className="cursor-pointer px-3 py-[9px]"><Link to={`/advertisers/${a.id}`}>View details</Link></DropdownMenuItem>
+                        <DropdownMenuItem className="cursor-pointer px-3 py-[9px]" onSelect={() => setDialogs({ edit: a.id })}>Edit</DropdownMenuItem>
+                        {kind !== "client" && (
+                          <DropdownMenuItem className="cursor-pointer px-3 py-[9px]" onSelect={() => setDialogs({ topUp: a.id })}>Add points</DropdownMenuItem>
+                        )}
+                        {!a.verified && active && (
+                          <DropdownMenuItem className="cursor-pointer px-3 py-[9px]" disabled={isPending} onSelect={() => verify(a)}>Mark as verified</DropdownMenuItem>
+                        )}
+                        <DropdownMenuSeparator className="mx-1 my-1.5" />
+                        {active ? (
+                          <DropdownMenuItem variant="destructive" className="cursor-pointer px-3 py-[9px]" onSelect={() => setDialogs({ deactivate: a.id })}>Deactivate</DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem className="cursor-pointer px-3 py-[9px]" disabled={isPending} onSelect={() => reactivate(a)}>Reactivate</DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem variant="destructive" className="cursor-pointer px-3 py-[9px]" onSelect={() => setDialogs({ remove: a.id })}>Delete</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No results.
+              );
+            }) : (
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={7} className="h-40 text-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="font-medium">{data.length === 0 ? "No advertisers yet" : "No advertisers here"}</span>
+                    <span className="text-sm text-muted-foreground">{data.length === 0 ? "Add the first one to start selling ads." : "Try another tab."}</span>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="text-muted-foreground flex-1 text-sm">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
+
+      {rows.length > 10 && (
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          <PageSizeComponent
+            pageSize={pagination.pageSize}
+            totalRows={rows.length}
+            onChange={(size) => setPagination({ pageIndex: 0, pageSize: size === "all" ? rows.length : size })}
+          />
+          <Paginator
+            currentPage={pagination.pageIndex + 1}
+            totalPages={pageCount}
+            onPageChange={(page) => setPagination((p) => ({ ...p, pageIndex: page - 1 }))}
+            showPreviousNext
+          />
         </div>
-        {totalRows > 0 && (
-          <div className="flex items-center gap-3">
-            <PageSizeComponent
-              pageSize={pagination.pageSize}
-              totalRows={totalRows}
-              onChange={(size) =>
-                setPagination(() => ({
-                  pageIndex: 0,
-                  pageSize: size === "all" ? totalRows : size,
-                }))
-              }
-            />
-            <Paginator
-              currentPage={table.getState().pagination.pageIndex + 1}
-              totalPages={table.getPageCount()}
-              onPageChange={(pageNumber) => table.setPageIndex(pageNumber - 1)}
-              showPreviousNext
-            />
+      )}
+
+      <AddAdvertiserSheet open={addOpen} onOpenChange={setAddOpen} advertisers={data} />
+      {editing && <EditAdvertiserSheet key={editing.id} advertiser={editing} onClose={() => setDialogs({})} />}
+      {toppingUp && (
+        <TopUpDialog accountId={toppingUp.id} name={toppingUp.name} open onOpenChange={(o) => { if (!o) setDialogs({}); }} />
+      )}
+      {deactivating && (
+        <DeactivateDialog
+          open
+          name={deactivating.name}
+          kind={kindOf(deactivating)}
+          liveAds={live.get(deactivating.id) ?? 0}
+          balance={balances.get(deactivating.id)}
+          pending={isPending}
+          onOpenChange={(o) => { if (!o) setDialogs({}); }}
+          onConfirm={confirmDeactivate}
+        />
+      )}
+      <Dialog open={!!removing} onOpenChange={(o) => { if (!o) setDialogs({}); }}>
+        <DialogContent role="alertdialog" showCloseButton={false} className="flex w-[min(460px,100%)] flex-col gap-3.5 rounded-2xl bg-card p-[22px] sm:max-w-[460px]">
+          <DialogTitle className="text-lg font-semibold">Delete {removing?.name}?</DialogTitle>
+          <DialogDescription className="text-sm leading-normal text-foreground/80">
+            This removes the account for good and can't be undone. To stop them for now, deactivate instead.
+          </DialogDescription>
+          <div className="mt-1.5 flex justify-end gap-2.5">
+            <Button variant="outline" className="bg-card" onClick={() => setDialogs({})}>Cancel</Button>
+            <Button variant="destructive" disabled={deleting} onClick={confirmDelete}>Delete</Button>
           </div>
-        )}
-      </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
