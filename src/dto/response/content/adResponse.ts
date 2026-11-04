@@ -13,6 +13,7 @@ export interface AdResponse {
     totalClicks?: number,
     totalWatches?: number,
     totalCompletions?: number,
+    createdAt?: string,
     adSet: AdSetResponse,
     adCreative: AdCreativeResponse
 }

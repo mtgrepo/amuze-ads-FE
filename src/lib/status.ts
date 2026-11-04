@@ -1,7 +1,7 @@
 /** Display names for campaign and ad statuses. The backend values stay as they are (e.g. "pending"). */
 export const STATUS_LABELS: Record<string, string> = {
     draft: "Draft",
-    pending: "Under Review",
+    pending: "Pending review",
     active: "Active",
     paused: "Paused",
     rejected: "Rejected",
