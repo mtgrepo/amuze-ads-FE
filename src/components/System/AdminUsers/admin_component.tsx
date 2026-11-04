@@ -1,215 +1,102 @@
 import * as React from "react";
-import {
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import type { SortingState } from "@tanstack/react-table";
-import type { VisibilityState } from "@tanstack/react-table";
-import type { ColumnFiltersState } from "@tanstack/react-table";
-import { ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import columns  from "./column";
+import { useSelector } from "react-redux";
+import { Info } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { AdminUserResponse } from "../../../dto/response/system/adminUserResponse";
-import { PageSizeComponent } from "../../Common/Pagination/page-number";
-import Paginator from "../../Common/Pagination/paginator";
-type AdminProps = {
-  data: AdminUserResponse[];
-};
+import type { RootState } from "../../../redux/store/store";
+import { tileColor } from "../../Content/Ads/column";
 
-export function AdminComponent({ data }: AdminProps) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
-  const [pagination, setPagination] = React.useState({
-    pageIndex: 0,
-    pageSize: 10,
-  });
+const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 
-  const table = useReactTable({
-    data,
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    onPaginationChange: setPagination,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-      pagination,
-    },
-  });
-  const totalRows = table.getFilteredRowModel().rows.length;
-  return (
-    <div className="w-full mx-auto">
-      <div className="flex flex-col gap-4 py-4">
-        {/* Filter Section */}
-        <div className="rounded-xl border-2 p-5 bg-card shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <h3 className="text-base font-semibold">Search Filters</h3>
-              <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
-                1 filter
-              </span>
+const time = (d: Date) => d.toLocaleTimeString("en-GB", { hour: "numeric", minute: "2-digit" });
+
+/** "Today, 9:12", "Yesterday, 17:40", then "28 Oct" (with the year once it isn't this year). */
+function lastSignIn(iso: string | null, now: number) {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+    const days = Math.round((today.getTime() - new Date(d).setHours(0, 0, 0, 0)) / 86_400_000);
+    if (days === 0) return `Today, ${time(d)}`;
+    if (days === 1) return `Yesterday, ${time(d)}`;
+    return d.toLocaleDateString("en-GB", d.getFullYear() === today.getFullYear() ? { day: "numeric", month: "short" } : { day: "numeric", month: "short", year: "numeric" });
+}
+
+const longDate = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+
+const TH = "whitespace-nowrap border-b px-3 py-2.5 text-left text-xs font-medium text-muted-foreground";
+const TD = "border-b px-3 py-3 align-middle";
+
+export function AdminComponent({ data }: { data: AdminUserResponse[] }) {
+    const [now] = React.useState(() => Date.now());
+    const me = useSelector((state: RootState) => state.auth.user?.id);
+
+    // You first, then active admins by most recent sign-in, removed ones last.
+    const rows = React.useMemo(() => [...data].sort((a, b) =>
+        Number(b.id === me) - Number(a.id === me)
+        || Number(b.isActive) - Number(a.isActive)
+        || new Date(b.lastLogin ?? 0).getTime() - new Date(a.lastLogin ?? 0).getTime()
+    ), [data, me]);
+
+    return (
+        <div className="mx-auto flex w-full min-w-0 flex-col gap-[18px] pb-12">
+            <header className="flex flex-col gap-1">
+                <h1 className="text-[26px] font-semibold tracking-tight">Admin users</h1>
+                <p className="text-muted-foreground">People who can use this portal.</p>
+            </header>
+
+            <div className="flex items-start gap-3.5 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3.5 leading-normal text-info-soft-foreground">
+                <Info className="mt-px size-5 flex-none" aria-hidden="true" />
+                <span>Admins are added and removed in the AMUZE admin portal. They show up here after their first sign-in, so there is nothing to add on this page.</span>
             </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="relative">
-              <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground">
-                Name
-              </label>
-              <Input
-                placeholder="Enter name..."
-                value={
-                  (table.getColumn("name")?.getFilterValue() as string) ?? ""
-                }
-                onChange={(event) =>
-                  table.getColumn("name")?.setFilterValue(event.target.value)
-                }
-                className="border-2 rounded-lg"
-              />
+
+            <div className="overflow-x-auto rounded-[14px] border bg-card">
+                <table className="w-full min-w-[760px] border-collapse text-sm">
+                    <thead>
+                        <tr>
+                            <th className={TH}>Name</th>
+                            <th className={TH}>Email</th>
+                            <th className={TH}>Phone</th>
+                            <th className={TH}>Last sign-in</th>
+                            <th className={TH}>First sign-in</th>
+                            <th className={TH}>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody className="[&_tr:last-child_td]:border-b-0">
+                        {rows.length === 0 ? (
+                            <tr>
+                                <td colSpan={6} className="h-32 text-center text-muted-foreground">No one has signed in yet.</td>
+                            </tr>
+                        ) : rows.map((admin) => {
+                            const removed = !admin.isActive;
+                            return (
+                                <tr key={admin.id}>
+                                    <td className={TD}>
+                                        <div className="flex items-center gap-2.5">
+                                            <span
+                                                className={cn("inline-flex size-8 flex-none items-center justify-center rounded-full text-xs font-semibold", removed ? "bg-muted text-foreground/70" : "text-white")}
+                                                style={removed ? undefined : { background: tileColor(admin.id) }}
+                                                aria-hidden="true"
+                                            >
+                                                {initials(admin.name)}
+                                            </span>
+                                            <span className={cn("font-medium", removed && "text-foreground/70")}>{admin.name}</span>
+                                            {admin.id === me && <span className="text-xs text-muted-foreground">· you</span>}
+                                        </div>
+                                    </td>
+                                    <td className={cn(TD, removed && "text-foreground/70")}>{admin.email ?? "—"}</td>
+                                    <td className={cn(TD, "font-mono tabular-nums")}>{admin.phone ?? "—"}</td>
+                                    <td className={TD}>{lastSignIn(admin.lastLogin, now)}</td>
+                                    <td className={TD}>{longDate(admin.createdAt)}</td>
+                                    <td className={cn(TD, removed ? "text-foreground/70" : "font-medium text-success-soft-foreground")}>
+                                        {removed ? "Removed in AMUZE" : "Active"}
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
             </div>
-          </div>
         </div>
-        <div className="flex flex-row gap-3 justify-end items-center">
-          {/* Admins are added automatically the first time they open the Ad portal from AMUZE. */}
-          <p className="text-sm text-muted-foreground mr-auto">
-            Admins are managed in the AMUZE admin portal and appear here after their first sign-in.
-          </p>
-          {/* column filter */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size={"sm"}>
-                Columns <ChevronDown />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-      <div className="overflow-hidden rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="text-muted-foreground flex-1 text-sm">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
-        {totalRows > 0 && (
-          <div className="flex items-center gap-3">
-            <PageSizeComponent
-              pageSize={pagination.pageSize}
-              totalRows={totalRows}
-              onChange={(size) =>
-                setPagination(() => ({
-                  pageIndex: 0,
-                  pageSize: size === "all" ? totalRows : size,
-                }))
-              }
-            />
-            <Paginator
-              currentPage={table.getState().pagination.pageIndex + 1}
-              totalPages={table.getPageCount()}
-              onPageChange={(pageNumber) => table.setPageIndex(pageNumber - 1)}
-              showPreviousNext
-            />
-          </div>
-        )}
-      </div>
-    </div>
-  );
+    );
 }
