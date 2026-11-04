@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Spinner } from "../ui/spinner"
+import { safeString, usePreventScriptTag } from "@/lib/scriptTag"
 import { useCreatePackageCommand } from "../../Composable/Command/adPackage/useCreatePackageCommand"
 import { useUpdatePackageCommand } from "../../Composable/Command/adPackage/useUpdatePackageCommand"
 import type { AdPackageResponse } from "../../dto/response/adPackage/adPackageResponse"
@@ -24,12 +25,12 @@ const wholeNumber = (label: string, min: number, max?: number) =>
     })
 
 const formSchema = z.object({
-    name: z.string().trim().min(1, {
+    name: safeString(z.string().trim().min(1, {
         message: "Name is required.",
-    }).max(100),
+    }).max(100)),
     durationDays: wholeNumber("Days per unit", 1, 366),
     price: wholeNumber("Price per unit", 1),
-    description: z.string().optional(),
+    description: safeString(z.string()).optional(),
     sortOrder: z.string().trim().refine((v) => v === "" || /^-?\d+$/.test(v), {
         message: "Order must be a whole number.",
     }),
@@ -58,6 +59,8 @@ export default function PackageForm({
             sortOrder: pkg ? String(pkg.sortOrder) : "0",
         },
     })
+    usePreventScriptTag(form)
+
     const { createPackageCommand, isPending: createPending } = useCreatePackageCommand();
     const { updatePackageCommand, isPending: updatePending } = useUpdatePackageCommand();
 
