@@ -11,9 +11,14 @@ function Change({ value }: { value: number | null }) {
     );
 }
 
-const RATE_LABEL: Partial<Record<Metric, string>> = { clicks: "CTR", watches: "view", engagements: "eng." };
+// The rate under a count: CTR = clicks / impressions, VCR = completions / watches, engagement rate = engagements / impressions.
+const RATE: Partial<Record<Metric, { label: string; part: (t: PeriodTotals) => number; base: (t: PeriodTotals) => number }>> = {
+    clicks: { label: "CTR", part: (t) => t.totalClicks, base: (t) => t.totalImpressions },
+    watches: { label: "VCR", part: (t) => t.totalCompletions, base: (t) => t.totalWatches },
+    engagements: { label: "eng.", part: (t) => t.totalEngagements, base: (t) => t.totalImpressions },
+};
 
-/** The four actions plus active ads. Each action cell also picks what the chart shows. */
+/** The five metrics plus active ads. Each metric cell also picks what the chart shows. */
 export function MetricStrip({ current, previous, selected, onSelect, activeAdsNote, lastCell, isLoading }: {
     current?: PeriodTotals;
     previous?: PeriodTotals;
@@ -24,15 +29,14 @@ export function MetricStrip({ current, previous, selected, onSelect, activeAdsNo
     lastCell?: { label: string; value: string; note: string };
     isLoading: boolean;
 }) {
-    const metrics: Metric[] = ["impressions", "clicks", "watches", "engagements"];
-    const impressions = current?.totalImpressions ?? 0;
+    const metrics: Metric[] = ["impressions", "reach", "clicks", "watches", "engagements"];
 
     return (
-        <div className="grid grid-cols-2 border-b sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 border-b sm:grid-cols-3 lg:grid-cols-6">
             {metrics.map((metric) => {
                 const value = current?.[TOTAL_KEY[metric]] ?? 0;
                 const change = percentChange(value, previous?.[TOTAL_KEY[metric]] ?? 0);
-                const rateLabel = RATE_LABEL[metric];
+                const rateOf = RATE[metric];
                 return (
                     <button
                         key={metric}
@@ -49,8 +53,8 @@ export function MetricStrip({ current, previous, selected, onSelect, activeAdsNo
                             {isLoading ? <span className="text-muted-foreground">…</span> : compactNumber(value)}
                         </div>
                         <div className="text-xs text-muted-foreground tabular-nums">
-                            {rateLabel ? (
-                                <>{rate(value, impressions)} {rateLabel}{change !== null && <> · <Change value={change} /></>}</>
+                            {rateOf ? (
+                                <>{current ? rate(rateOf.part(current), rateOf.base(current)) : "—"} {rateOf.label}{change !== null && <> · <Change value={change} /></>}</>
                             ) : change !== null ? (
                                 <><Change value={change} /> vs previous</>
                             ) : (

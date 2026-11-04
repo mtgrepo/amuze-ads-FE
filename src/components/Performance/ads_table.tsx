@@ -10,14 +10,15 @@ import { statusLabel } from "../../lib/status";
 // The backend returns at most this many ads, ranked by the fetched metric.
 const AD_LIMIT = 50;
 
-type SortKey = "impressions" | "clicks" | "ctr" | "watches" | "viewRate" | "engagements";
+type SortKey = "impressions" | "reach" | "clicks" | "ctr" | "watches" | "vcr" | "engagements";
 
 const COLUMNS: { key: SortKey; label: string }[] = [
     { key: "impressions", label: "Impr." },
+    { key: "reach", label: "Reach" },
     { key: "clicks", label: "Clicks" },
     { key: "ctr", label: "CTR" },
     { key: "watches", label: "Watches" },
-    { key: "viewRate", label: "View rate" },
+    { key: "vcr", label: "VCR" },
     { key: "engagements", label: "Eng." },
 ];
 
@@ -25,20 +26,22 @@ const ratio = (part: number, base: number) => (base ? part / base : -1);
 
 const SORT_VALUE: Record<SortKey, (ad: TopAdItem) => number> = {
     impressions: (ad) => ad.totalImpressions,
+    reach: (ad) => ad.totalReach,
     clicks: (ad) => ad.totalClicks,
     ctr: (ad) => ratio(ad.totalClicks, ad.totalImpressions),
     watches: (ad) => ad.totalWatches,
-    viewRate: (ad) => ratio(ad.totalWatches, ad.totalImpressions),
+    vcr: (ad) => ratio(ad.totalCompletions, ad.totalWatches),
     engagements: (ad) => ad.totalEngagements,
 };
 
-// Rates are sorted among the most-seen ads, since a rate needs impressions.
+// Reach and CTR are sorted among the most-seen ads, VCR among the most-watched; the server ranks by counts only.
 const FETCH_METRIC: Record<SortKey, string> = {
     impressions: "impressions",
+    reach: "impressions",
     clicks: "clicks",
     ctr: "impressions",
     watches: "watches",
-    viewRate: "impressions",
+    vcr: "watches",
     engagements: "engagements",
 };
 
@@ -145,10 +148,11 @@ export function AdsTable({ range, scopeId, owner, title, selectedAdId, onSelectA
                                         </div>
                                     </td>
                                     <td className="py-2.5 pl-4 text-right tabular-nums">{compactNumber(ad.totalImpressions)}</td>
+                                    <td className="py-2.5 pl-4 text-right tabular-nums">{compactNumber(ad.totalReach)}</td>
                                     <td className="py-2.5 pl-4 text-right tabular-nums">{ad.totalClicks.toLocaleString()}</td>
                                     <td className="py-2.5 pl-4 text-right tabular-nums">{rate(ad.totalClicks, ad.totalImpressions)}</td>
                                     <td className="py-2.5 pl-4 text-right tabular-nums">{ad.totalWatches.toLocaleString()}</td>
-                                    <td className="py-2.5 pl-4 text-right tabular-nums">{rate(ad.totalWatches, ad.totalImpressions)}</td>
+                                    <td className="py-2.5 pl-4 text-right tabular-nums">{rate(ad.totalCompletions, ad.totalWatches)}</td>
                                     <td className="py-2.5 pl-4 text-right tabular-nums">{ad.totalEngagements.toLocaleString()}</td>
                                 </tr>
                             ))}

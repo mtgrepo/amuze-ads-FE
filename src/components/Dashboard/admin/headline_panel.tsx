@@ -31,7 +31,9 @@ export function HeadlinePanel({ range, rangeLabel }: { range: DateRange; rangeLa
 
     const impressions = overviewData?.totalImpressions ?? 0;
     const clicks = overviewData?.totalClicks ?? 0;
+    const reach = overviewData?.totalReach ?? 0;
     const watches = overviewData?.totalWatches ?? 0;
+    const completions = overviewData?.totalCompletions ?? 0;
     const engagements = overviewData?.totalEngagements ?? 0;
     const clicksChange = percentChange(clicks, priorData?.totalClicks ?? 0);
 
@@ -55,9 +57,10 @@ export function HeadlinePanel({ range, rangeLabel }: { range: DateRange; rangeLa
                     </>
                 )}
             </div>
-            <dl className="mt-5 grid grid-cols-2 gap-4 border-t pt-4 sm:grid-cols-4">
+            <dl className="mt-5 grid grid-cols-2 gap-4 border-t pt-4 sm:grid-cols-3 xl:grid-cols-5">
                 <SubMetric label="Impressions" value={compactNumber(impressions)} change={percentChange(impressions, priorData?.totalImpressions ?? 0)} />
-                <SubMetric label="Watches" value={compactNumber(watches)} rateLabel={`${rate(watches, impressions)} view rate`} />
+                <SubMetric label="Reach" value={compactNumber(reach)} change={percentChange(reach, priorData?.totalReach ?? 0)} rateLabel="people" />
+                <SubMetric label="Watches" value={compactNumber(watches)} rateLabel={`${rate(completions, watches)} VCR`} />
                 <SubMetric label="Engagements" value={compactNumber(engagements)} rateLabel={`${rate(engagements, impressions)} eng. rate`} />
                 <SubMetric label="Live ads" value={String(overviewData?.activeAds ?? 0)} />
             </dl>

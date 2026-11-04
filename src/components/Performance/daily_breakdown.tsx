@@ -5,7 +5,7 @@ import type { DayTotals } from "./performance_types";
 
 const COLLAPSED_DAYS = 7;
 
-/** One row per day, newest first, with every count and rate. */
+/** One row per day, newest first, with every count and rate. Each day's reach is that day's distinct viewers. */
 export function DailyBreakdown({ days, subject }: { days: DayTotals[]; subject?: string }) {
     const [expanded, setExpanded] = useState(false);
     const newestFirst = [...days].reverse();
@@ -24,10 +24,11 @@ export function DailyBreakdown({ days, subject }: { days: DayTotals[]; subject?:
                         <tr className="text-xs text-muted-foreground">
                             <th className="pb-2 text-left font-normal">Date</th>
                             <th className="pb-2 pl-4 text-right font-normal">Impr.</th>
+                            <th className="pb-2 pl-4 text-right font-normal">Reach</th>
                             <th className="pb-2 pl-4 text-right font-normal">Clicks</th>
                             <th className="pb-2 pl-4 text-right font-normal">CTR</th>
                             <th className="pb-2 pl-4 text-right font-normal">Watches</th>
-                            <th className="pb-2 pl-4 text-right font-normal">View rate</th>
+                            <th className="pb-2 pl-4 text-right font-normal">VCR</th>
                             <th className="pb-2 pl-4 text-right font-normal">Eng.</th>
                         </tr>
                     </thead>
@@ -38,10 +39,11 @@ export function DailyBreakdown({ days, subject }: { days: DayTotals[]; subject?:
                                 <tr key={day.date} className={`border-t ${empty ? "text-muted-foreground" : ""}`}>
                                     <td className="whitespace-nowrap py-2.5">{format(parseLocalDate(day.date), "EEE, d MMM")}</td>
                                     <td className="py-2.5 pl-4 text-right tabular-nums">{compactNumber(day.impressions)}</td>
+                                    <td className="py-2.5 pl-4 text-right tabular-nums">{compactNumber(day.reach)}</td>
                                     <td className="py-2.5 pl-4 text-right tabular-nums">{day.clicks.toLocaleString()}</td>
                                     <td className="py-2.5 pl-4 text-right tabular-nums">{rate(day.clicks, day.impressions)}</td>
                                     <td className="py-2.5 pl-4 text-right tabular-nums">{day.watches.toLocaleString()}</td>
-                                    <td className="py-2.5 pl-4 text-right tabular-nums">{rate(day.watches, day.impressions)}</td>
+                                    <td className="py-2.5 pl-4 text-right tabular-nums">{rate(day.completions, day.watches)}</td>
                                     <td className="py-2.5 pl-4 text-right tabular-nums">{day.engagements.toLocaleString()}</td>
                                 </tr>
                             );
