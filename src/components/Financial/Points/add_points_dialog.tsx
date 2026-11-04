@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
 import type { z } from "zod";
@@ -30,6 +31,7 @@ export function AddPointsDialog({ wallet, onClose }: { wallet: { id: string; nam
     async function onSubmit(values: Values) {
         try {
             await topUpPointsCommand({ accountId: wallet.id, data: values });
+            toast.success(`${values.amount.toLocaleString()} pts added`, { description: `Added to ${wallet.name}. Recorded in Transactions.` });
             onClose();
         } catch {
             // The command already shows why.

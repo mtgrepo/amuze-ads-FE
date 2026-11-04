@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { verifyAdvertiser } from "../../../http/apis/advertisers/advertisersApi"
-import { toast } from "sonner";
 
 export const useAdvertiserVerifyCommand = () => {
     const qc = useQueryClient();
@@ -11,7 +10,7 @@ export const useAdvertiserVerifyCommand = () => {
             return response?.data;
         },
         onSuccess: () => {
-            toast.success("Advertiser verified successfully!");
+            qc.invalidateQueries({ queryKey: ["advertiser-details"] });
             qc.invalidateQueries({ queryKey: ["advertisers"] });
         }
     })

@@ -15,7 +15,6 @@ export const useTopUpPointsCommand = () => {
             qc.invalidateQueries({ queryKey: ['wallet'] });
             qc.invalidateQueries({ queryKey: ['points-ledger'] });
             qc.invalidateQueries({ queryKey: ['payment-info'] });
-            toast.success("Points added.");
         },
         onError: (error: Error) => {
             toast.error(error.message || "Failed to add points.");

@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { createAdvertiser } from "../../../http/apis/advertisers/advertisersApi"
 import type { AccountInput } from "../../../dto/input/advertiser/advertiserInput"
-import { toast } from "sonner";
 
 export const useAdvertiserCreateCommand = () => {
     const qc = useQueryClient();
@@ -13,7 +12,6 @@ export const useAdvertiserCreateCommand = () => {
         },
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["advertisers"] });
-            toast.success("Advertiser created successfully!");
         }
     })
     return {

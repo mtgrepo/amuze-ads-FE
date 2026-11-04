@@ -176,7 +176,7 @@ export function AdComponent({ data }: { data: AdResponse[] }) {
   const live = data.filter((ad) => ad.status === "active");
   const livePlan = live.reduce((s, ad) => s + Number(ad.adSet.campaign.planCost), 0);
   const liveObjectives = live.reduce((s, ad) => s + Number(ad.adSet.campaign.objectiveCost ?? 0), 0);
-  const liveOwners = new Set(live.map((ad) => ad.adSet.campaign.advertiserId)).size;
+  const liveOwners = new Set(live.map((ad) => ad.adSet.campaign.advertiser?.id)).size;
   const drafts = data.filter((ad) => ad.status === "draft");
   const oldestDraft = drafts.reduce((min, ad) => (ad.createdAt && new Date(ad.createdAt).getTime() < min ? new Date(ad.createdAt).getTime() : min), now);
   const oldestDays = Math.floor((now - oldestDraft) / 86_400_000);
