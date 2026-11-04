@@ -1,301 +1,152 @@
 import * as React from "react";
-import {
-    flexRender,
-    getCoreRowModel,
-    getFilteredRowModel,
-    getPaginationRowModel,
-    getSortedRowModel,
-    useReactTable,
-} from "@tanstack/react-table";
-import type { SortingState } from "@tanstack/react-table";
-import type { VisibilityState } from "@tanstack/react-table";
-import type { ColumnFiltersState } from "@tanstack/react-table";
-import { ChevronDown } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import {
-    DropdownMenu,
-    DropdownMenuCheckboxItem,
-    DropdownMenuContent,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
-import columns from "./column";
+import { cn } from "@/lib/utils";
 import type { NotificationsResponse } from "../../dto/response/notifications/notificationsResponse";
-import { PageSizeComponent } from "../Common/Pagination/page-number";
-import Paginator from "../Common/Pagination/paginator";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { fullDate, kindOf, KINDS, relativeTime, type Kind } from "./notification_utils";
 
-type NotiProps = {
-    data: NotificationsResponse[];
+type Filter = "all" | "unread" | "campaign" | "extension";
+
+const FILTERS: { key: Filter; label: string; test: (n: NotificationsResponse) => boolean }[] = [
+    { key: "all", label: "All", test: () => true },
+    // `read` is the advertiser's flag, not the admin's.
+    { key: "unread", label: "Not read yet", test: (n) => !n.read },
+    { key: "campaign", label: "Campaigns", test: (n) => kindOf(n) === "campaign" },
+    { key: "extension", label: "Extensions", test: (n) => kindOf(n) === "extension" },
+];
+
+const PAGE = 30;
+
+function Tag({ kind }: { kind: Kind }) {
+    return (
+        <span className={cn("inline-flex h-[22px] items-center self-start rounded-[11px] px-2 text-[11px] font-medium", KINDS[kind].className)}>
+            {KINDS[kind].label}
+        </span>
+    );
+}
+
+/** Where the reading pane's second button goes, by kind. */
+const NEXT: Partial<Record<Kind, { label: string; to: string }>> = {
+    campaign: { label: "Go to ads", to: "/ads" },
+    extension: { label: "Go to ads", to: "/ads" },
+    points: { label: "See transactions", to: "/transactions" },
 };
 
-export function NotiComponent
-    ({ data }: NotiProps) {
-    const [sorting, setSorting] = React.useState<SortingState>([]);
-    const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-        []
+export function NotiComponent({ data }: { data: NotificationsResponse[] }) {
+    const [now] = React.useState(() => Date.now());
+    const [filter, setFilter] = React.useState<Filter>("all");
+    const [openId, setOpenId] = React.useState<string | null>(null);
+    const [limit, setLimit] = React.useState(PAGE);
+
+    const sorted = React.useMemo(
+        () => [...data].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+        [data]
     );
-    const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
-    const [rowSelection, setRowSelection] = React.useState({});
-    const [pagination, setPagination] = React.useState({
-        pageIndex: 0,
-        pageSize: 10,
-    });
-    // const [open, setOpen] = React.useState(false);
-
-    const table = useReactTable({
-        data,
-        columns,
-        onSortingChange: setSorting,
-        onColumnFiltersChange: setColumnFilters,
-        getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        onColumnVisibilityChange: setColumnVisibility,
-        onRowSelectionChange: setRowSelection,
-        onPaginationChange: setPagination,
-        state: {
-            sorting,
-            columnFilters,
-            columnVisibility,
-            rowSelection,
-            pagination,
-        },
-    });
-    const totalRows = table.getFilteredRowModel().rows.length;
-
-    const statusOptions = [
-        { value: true, label: "Read" },
-        { value: false, label: "Unread" },
-    ];
+    const test = FILTERS.find((f) => f.key === filter)!.test;
+    const shown = sorted.filter(test);
+    const open = shown.find((n) => n.id === openId) ?? shown[0] ?? null;
+    const openKind = open ? kindOf(open) : null;
+    const next = openKind ? NEXT[openKind] : undefined;
 
     return (
-        <div className="w-full mx-auto">
-            <div className="flex flex-col gap-4 py-4">
-                {/* Filter Section */}
-                <div className="rounded-xl border-2 p-5 bg-card shadow-sm">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                            <h3 className="text-base font-semibold">Search Filters</h3>
-                            <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
-                                2 filters
-                            </span>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="relative">
-                            <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground">
-                                Title
-                            </label>
-                            <Input
-                                placeholder="Enter title..."
-                                value={
-                                    (table.getColumn("title")?.getFilterValue() as string) ?? ""
-                                }
-                                onChange={(event) =>
-                                    table.getColumn("title")?.setFilterValue(event.target.value)
-                                }
-                                className="border-2 rounded-lg"
-                            />
-                        </div>
+        <div className="mx-auto flex w-full min-w-0 flex-col gap-[18px] pb-12">
+            <header className="flex flex-wrap items-center justify-between gap-4">
+                <h1 className="text-[26px] font-semibold tracking-tight">Notifications</h1>
+                <div role="group" aria-label="Filter" className="flex gap-0.5 rounded-[9px] bg-muted p-[3px]">
+                    {FILTERS.map((f) => {
+                        const on = f.key === filter;
+                        return (
+                            <button
+                                key={f.key}
+                                type="button"
+                                aria-pressed={on}
+                                onClick={() => { setFilter(f.key); setLimit(PAGE); }}
+                                className={cn(
+                                    "h-[30px] rounded-[7px] px-3 text-[13px] font-medium text-foreground/70 hover:text-foreground",
+                                    on && "bg-card text-foreground shadow-sm ring-1 ring-border"
+                                )}
+                            >
+                                {f.label}
+                            </button>
+                        );
+                    })}
+                </div>
+            </header>
 
-                        <div className="relative">
-                            <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground z-10">
-                                Advertiser
-                            </label>
-                            <Select
-                                value={
-                                    (table.getColumn("name")?.getFilterValue() as string) ?? "all"
-                                }
-                                onValueChange={(value) =>
-                                    table.getColumn("name")?.setFilterValue(
-                                        value === "all" ? undefined : value
-                                    )
-                                }
-                            >
-                                <SelectTrigger className="w-full border-2 rounded-lg">
-                                    <SelectValue placeholder="Select service..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All</SelectItem>
-                                    {[...new Set(data.map((item) => item.advertiser.name))].map(
-                                        (service) => (
-                                            <SelectItem key={service} value={service}>
-                                                {service}
-                                            </SelectItem>
-                                        )
+            {shown.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 rounded-[14px] border bg-card px-5 py-16 text-center">
+                    <span className="font-medium">{data.length === 0 ? "No notifications yet" : "Nothing in this view"}</span>
+                    <span className="text-sm text-muted-foreground">
+                        {data.length === 0 ? "Messages sent to advertisers show up here." : "Try another filter."}
+                    </span>
+                </div>
+            ) : (
+                <div className="flex flex-wrap items-start gap-4">
+                    <section aria-label="Inbox" className="min-w-0 flex-[1_1_380px] overflow-hidden rounded-[14px] border bg-card">
+                        {shown.slice(0, limit).map((n) => {
+                            const current = n.id === open?.id;
+                            return (
+                                <button
+                                    key={n.id}
+                                    type="button"
+                                    onClick={() => setOpenId(n.id)}
+                                    aria-current={current ? "true" : undefined}
+                                    className={cn(
+                                        "flex w-full gap-3 border-b px-4 py-3.5 text-left last:border-b-0 hover:bg-muted/40",
+                                        current && "bg-primary/5 hover:bg-primary/5"
                                     )}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="relative">
-                            <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground z-10">
-                                Status
-                            </label>
-                            <Select
-                                value={
-                                    (table.getColumn("read")?.getFilterValue() as string) ?? "all"
-                                }
-                                onValueChange={(value) =>
-                                    table.getColumn("read")?.setFilterValue(
-                                        value === "all" ? undefined : value
-                                    )
-                                }
-                            >
-                                <SelectTrigger className="w-full border-2 rounded-lg">
-                                    <SelectValue placeholder="Select type..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All</SelectItem>
-                                    {statusOptions
-                                        ?.map((st: any) => (
-                                            <SelectItem key={st.value} value={st.value}>
-                                                {st.label}
-                                            </SelectItem>
-                                        ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                </div>
-                <div className="flex flex-row gap-3 justify-end">
-                    {/* drawer */}
-                    {/* <DrawerFormLayout
-                        open={open}
-                        setOpen={setOpen}
-                        title="Post Form"
-                        description="Add new post here."
-                        formContent={
-                            <PostForm
-                                mode="add"
-                                onSuccess={() => {
-                                    setOpen(false); //
-                                }}
-                            />
-                        }
-                        cancelButton={
-                            <Button variant="outline" className="w-full my-3">
-                                Cancel
-                            </Button>
-                        }
-                        drawerButton={
-                            <DrawerButton btn_icon={CirclePlus} title="Add post" />
-                        }
-                    /> */}
-                    {/* column filter */}
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size={"sm"}>
-                                Columns <ChevronDown />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            {table
-                                .getAllColumns()
-                                .filter((column) => column.getCanHide())
-                                .map((column) => {
-                                    return (
-                                        <DropdownMenuCheckboxItem
-                                            key={column.id}
-                                            className="capitalize"
-                                            checked={column.getIsVisible()}
-                                            onCheckedChange={(value) =>
-                                                column.toggleVisibility(!!value)
-                                            }
-                                        >
-                                            {column.id}
-                                        </DropdownMenuCheckboxItem>
-                                    );
-                                })}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            </div>
-            <div className="grid grid-cols-1 overflow-hidden rounded-md border">
-                <Table>
-                    <TableHeader>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => {
-                                    return (
-                                        <TableHead key={header.id}>
-                                            {header.isPlaceholder
-                                                ? null
-                                                : flexRender(
-                                                    header.column.columnDef.header,
-                                                    header.getContext()
-                                                )}
-                                        </TableHead>
-                                    );
-                                })}
-                            </TableRow>
-                        ))}
-                    </TableHeader>
-                    <TableBody>
-                        {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
-                                <TableRow
-                                    key={row.id}
-                                    data-state={row.getIsSelected() && "selected"}
                                 >
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext()
-                                            )}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell
-                                    colSpan={columns.length}
-                                    className="h-24 text-center"
-                                >
-                                    No results.
-                                </TableCell>
-                            </TableRow>
+                                    <span
+                                        className={cn("mt-1.5 size-2 flex-none rounded-full", n.read ? "bg-transparent" : "bg-primary")}
+                                        title={n.read ? undefined : "Not read by advertiser yet"}
+                                        aria-hidden="true"
+                                    />
+                                    <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
+                                        <span className="flex justify-between gap-2.5">
+                                            <span className="truncate font-medium">{n.title}</span>
+                                            <span className="whitespace-nowrap text-xs text-muted-foreground">{relativeTime(n.createdAt, now)}</span>
+                                        </span>
+                                        <span className="truncate text-xs text-muted-foreground">{n.message}</span>
+                                        <span className="flex min-w-0 items-center gap-2">
+                                            <Tag kind={kindOf(n)} />
+                                            <span className="truncate text-xs text-muted-foreground">To {n.advertiser?.name ?? "advertiser"}</span>
+                                            {!n.read && <span className="sr-only">Not read by advertiser yet</span>}
+                                        </span>
+                                    </span>
+                                </button>
+                            );
+                        })}
+                        {shown.length > limit && (
+                            <button type="button" onClick={() => setLimit((l) => l + PAGE)} className="w-full px-4 py-3 text-[13px] font-medium text-primary hover:bg-muted/40">
+                                Show {Math.min(PAGE, shown.length - limit)} more
+                            </button>
                         )}
-                    </TableBody>
-                </Table>
-            </div>
-            <div className="flex items-center justify-end space-x-2 py-4">
-                <div className="text-muted-foreground flex-1 text-sm">
-                    {table.getFilteredSelectedRowModel().rows.length} of{" "}
-                    {table.getFilteredRowModel().rows.length} row(s) selected.
+                    </section>
+
+                    {open && openKind && (
+                        <section aria-label="Message" className="flex min-w-0 flex-[1.4_1_420px] flex-col gap-3.5 rounded-[14px] border bg-card p-[22px]">
+                            <Tag kind={openKind} />
+                            <h2 className="text-xl font-semibold">{open.title}</h2>
+                            <span className="text-xs text-muted-foreground">
+                                To {open.advertiser?.name ?? "advertiser"} · {fullDate(open.createdAt)}
+                            </span>
+                            <p className="whitespace-pre-line leading-relaxed text-foreground/80">{open.message}</p>
+                            <span
+                                className={cn(
+                                    "inline-flex h-6 items-center self-start rounded-xl px-[9px] text-xs font-medium",
+                                    open.read ? "bg-success-soft text-success-soft-foreground" : "bg-muted text-foreground/70"
+                                )}
+                            >
+                                {open.read ? "Read by advertiser" : "Not read by advertiser yet"}
+                            </span>
+                            <div className="flex flex-wrap gap-2.5 border-t pt-3.5">
+                                <Button asChild><Link to={`/advertisers/${open.advertiserId}`}>Open advertiser</Link></Button>
+                                {next && <Button asChild variant="outline" className="bg-card"><Link to={next.to}>{next.label}</Link></Button>}
+                            </div>
+                        </section>
+                    )}
                 </div>
-                {totalRows > 0 && (
-                    <div className="flex items-center gap-3">
-                        <PageSizeComponent
-                            pageSize={pagination.pageSize}
-                            totalRows={totalRows}
-                            onChange={(size) =>
-                                setPagination(() => ({
-                                    pageIndex: 0,
-                                    pageSize: size === "all" ? totalRows : size,
-                                }))
-                            }
-                        />
-                        <Paginator
-                            currentPage={table.getState().pagination.pageIndex + 1}
-                            totalPages={table.getPageCount()}
-                            onPageChange={(pageNumber) => table.setPageIndex(pageNumber - 1)}
-                            showPreviousNext
-                        />
-                    </div>
-                )}
-            </div>
+            )}
         </div>
     );
 }
