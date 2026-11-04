@@ -75,16 +75,3 @@ export function SelectedAdBar({ adId, onClear }: { adId: string; onClear: () => 
         </section>
     );
 }
-
-/** The ad step in the Performance filter path; × goes back to all ads. */
-export function AdChip({ name, onClear }: { name?: string; onClear: () => void }) {
-    return (
-        <span className="inline-flex h-8 max-w-56 items-center gap-1 rounded-md border bg-primary/10 pl-2.5 pr-1 text-xs text-foreground">
-            <span className="truncate">Ad: {name ?? "…"}</span>
-            <button type="button" onClick={onClear} aria-label="Show all ads"
-                className="rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground">
-                <X className="size-3.5" />
-            </button>
-        </span>
-    );
-}

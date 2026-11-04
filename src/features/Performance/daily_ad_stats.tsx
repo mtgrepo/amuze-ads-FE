@@ -11,7 +11,8 @@ import { MetricStrip } from "../../components/Performance/metric_strip";
 import { ComparisonChart } from "../../components/Performance/comparison_chart";
 import { AdsTable } from "../../components/Performance/ads_table";
 import { DailyBreakdown } from "../../components/Performance/daily_breakdown";
-import { AdChip, SelectedAdBar } from "../../components/Performance/selected_ad_bar";
+import { SelectedAdBar } from "../../components/Performance/selected_ad_bar";
+import { AdFilter } from "../../components/Performance/ad_filter";
 import { useAdDetailQuery } from "../../Composable/Query/content/useAdDetailQuery";
 import { RangeControl } from "../../components/Performance/range_control";
 import { rangeForDays, toDayTotals, type Metric } from "../../components/Performance/performance_types";
@@ -93,10 +94,9 @@ export default function DailyAdStats() {
                                     </SelectContent>
                                 </Select>
                             </>
-                        ) : !account ? (
-                            <span className="ml-1 text-xs text-muted-foreground">Pick an agency to narrow to one of its clients</span>
                         ) : null}
-                        {adId && <AdChip name={adName} onClear={() => setAdId(undefined)} />}
+                        <ChevronRight className="size-3.5 text-muted-foreground" />
+                        <AdFilter scopeId={scopeId} value={adId} selectedName={adName} onChange={setAdId} />
                     </div>
                 </div>
                 <RangeControl range={range} onChange={setRange} />
@@ -127,7 +127,7 @@ export default function DailyAdStats() {
                 />
             </section>
 
-            <AdsTable range={range} scopeId={scopeId} owner="advertiser" title="Ads" selectedAdId={adId} onSelectAd={setAdId} />
+            <AdsTable range={range} scopeId={scopeId} owner="advertiser" title="Ads" selectedAdId={adId} />
             <DailyBreakdown days={current} subject={adName} />
         </div>
     );
