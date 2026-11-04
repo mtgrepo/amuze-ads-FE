@@ -2,6 +2,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAdListQuery } from "../../Composable/Query/content/useAdListQuery";
 import type { AdResponse } from "../../dto/response/content/adResponse";
 import { placementLabel } from "../Dashboard/admin/dashboard_utils";
+import { CRUMB_TRIGGER } from "./performance_types";
 
 const ALL = "all";
 
@@ -24,7 +25,7 @@ export function AdFilter({ scopeId, value, selectedName, onChange }: {
 
     return (
         <Select key={scopeId ?? ALL} value={value ?? ALL} onValueChange={(v) => onChange(v === ALL ? undefined : v)}>
-            <SelectTrigger size="sm" className="h-8 min-w-40 max-w-64 text-xs"><SelectValue /></SelectTrigger>
+            <SelectTrigger aria-label="Ad" className={CRUMB_TRIGGER}><SelectValue /></SelectTrigger>
             <SelectContent>
                 <SelectItem value={ALL}>All ads</SelectItem>
                 {selectedMissing && <SelectItem value={value}>{selectedName ?? "Selected ad"}</SelectItem>}

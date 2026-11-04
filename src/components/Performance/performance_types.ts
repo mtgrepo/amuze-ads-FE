@@ -52,6 +52,20 @@ export function toDayTotals(days: string[], trend: AdminTrendItem[]): DayTotals[
     }));
 }
 
+/** The filter-path select boxes (advertiser › client › ad). */
+export const CRUMB_TRIGGER = "h-9 max-w-60 rounded-[9px] bg-card text-[13px] font-medium";
+
+/** Table header / cell classes shared by the placement and day tables. */
+export const TH = "whitespace-nowrap border-b px-3 py-[9px] text-right text-xs font-medium text-muted-foreground";
+export const TD = "border-b border-border/60 px-3 py-[9px] text-right";
+
+/** Change against the previous period with one decimal, e.g. "+12.4%" / "−3.1%"; null when there's no previous value. */
+export function signedChange(current: number, previous: number): { text: string; up: boolean } | null {
+    if (!previous) return null;
+    const pct = ((current - previous) / previous) * 100;
+    return { text: `${pct >= 0 ? "+" : "−"}${Math.abs(pct).toFixed(1)}%`, up: pct >= 0 };
+}
+
 /** The last `days` days, ending today. */
 export function rangeForDays(days: number): DateRange {
     const to = new Date();
