@@ -178,7 +178,7 @@ export default function ProfileActions({
 
           {/* HEADER */}
           <div className="flex items-center gap-5 px-6 py-6 bg-muted/30 border-b">
-            <Avatar className="h-20 w-20 rounded-2xl shadow-sm">
+            <Avatar className="h-20 w-20 rounded-xl">
               <AvatarImage src={photo ?? ""} />
               <AvatarFallback>
                 {business_name?.slice(0, 2).toUpperCase()}

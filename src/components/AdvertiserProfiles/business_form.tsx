@@ -124,7 +124,7 @@ export default function BusinessForm({ profile, advertiser_id, isAgency = false 
     const timezones = ["UTC", "Asia/Yangon"];
 
     return (
-        <Card className="rounded-2xl shadow-sm">
+        <Card className="rounded-xl">
             <CardHeader className="flex justify-between">
                 <CardTitle className="flex flex-row gap-3 items-center justify-center text-center text-xl">
                     <BriefcaseBusiness size={24} className="text-primary font-bold" /> Business Information

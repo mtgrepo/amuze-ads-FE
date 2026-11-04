@@ -10,13 +10,13 @@ export function ObjectiveProgressCard({ campaignId }: { campaignId: string }) {
     if (picked.length === 0) return null;
 
     return (
-        <Card className="rounded-2xl shadow-sm">
+        <Card className="rounded-xl">
             <CardHeader>
                 <CardTitle className="flex flex-row gap-3 items-center">
                     <Target size={20} className="text-primary" /> Objectives
                 </CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <CardContent className="flex flex-col gap-5">
                 {picked.map((o) => {
                     const share = o.targetCount > 0 ? Math.min(o.delivered / o.targetCount, 1) : 0;
                     const met = o.delivered >= o.targetCount;

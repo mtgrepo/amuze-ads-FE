@@ -73,7 +73,7 @@ export default function ContactForm({ data }: { data: AdvertisersResponse }) {
         : "-";
 
     return (
-        <Card className="rounded-2xl shadow-sm">
+        <Card className="rounded-xl">
             <CardHeader className="flex justify-between items-center">
                 <CardTitle className="flex flex-row gap-3 items-center justify-center text-center text-xl"><InfoIcon size={24} className="text-primary font-bold" /> Contact & Account Status</CardTitle>
                 {!editing && 

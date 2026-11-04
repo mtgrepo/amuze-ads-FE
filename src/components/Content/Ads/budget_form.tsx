@@ -176,7 +176,7 @@ export default function BudgetForm({ campaign, assetType, embedded = false, onDo
     if (embedded) return formContent;
 
     return (
-        <Card className="rounded-2xl shadow-sm">
+        <Card className="rounded-xl">
             <CardHeader className="flex justify-between items-center">
                 <CardTitle className="flex flex-row gap-3 items-center">
                     <Wallet size={20} className="text-primary" /> Budget

@@ -157,7 +157,7 @@ export default function CreateAdForm({
           </p>
         </div>
 
-        <Card className="rounded-2xl shadow-sm">
+        <Card className="rounded-xl">
           <CardHeader>
             <CardTitle>Advertiser</CardTitle>
           </CardHeader>
@@ -189,7 +189,7 @@ export default function CreateAdForm({
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl shadow-sm">
+        <Card className="rounded-xl">
           <CardHeader>
             <CardTitle>Campaign</CardTitle>
           </CardHeader>
@@ -223,7 +223,7 @@ export default function CreateAdForm({
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl shadow-sm">
+        <Card className="rounded-xl">
           <CardHeader>
             <CardTitle>Ad Type &amp; Placement</CardTitle>
           </CardHeader>
@@ -300,7 +300,7 @@ export default function CreateAdForm({
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl shadow-sm">
+        <Card className="rounded-xl">
           <CardHeader>
             <CardTitle>Creative</CardTitle>
           </CardHeader>
@@ -380,7 +380,7 @@ export default function CreateAdForm({
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl shadow-sm">
+        <Card className="rounded-xl">
           <CardHeader>
             <CardTitle>Targeting</CardTitle>
           </CardHeader>
@@ -448,7 +448,7 @@ export default function CreateAdForm({
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl shadow-sm">
+        <Card className="rounded-xl">
           <CardHeader>
             <CardTitle>Objectives <span className="text-sm font-normal text-muted-foreground">(optional)</span></CardTitle>
             <p className="text-sm text-muted-foreground">

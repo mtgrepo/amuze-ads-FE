@@ -94,7 +94,7 @@ export function SystemConfigComponent({ data }: SystemConfigProps) {
   return (
     <div className="w-full mx-auto space-y-6">
       {/* Search & Add */}
-      <Card className="rounded-2xl shadow-sm">
+      <Card className="rounded-xl">
         <CardContent className="flex items-center justify-between gap-4 p-5">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -130,7 +130,7 @@ export function SystemConfigComponent({ data }: SystemConfigProps) {
 
       {/* Category Cards */}
       {grouped.length === 0 ? (
-        <Card className="rounded-2xl shadow-sm">
+        <Card className="rounded-xl">
           <CardContent className="py-16 text-center">
             <div className="flex flex-col items-center gap-3">
               <div className="rounded-full bg-muted/60 p-4">
@@ -256,7 +256,7 @@ function CategoryCard({
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
-      <Card className="rounded-2xl shadow-sm overflow-hidden">
+      <Card className="rounded-xl overflow-hidden">
         <CollapsibleTrigger asChild>
           <div className="flex items-center justify-between px-6 py-5 bg-muted/30 border-b cursor-pointer select-none hover:bg-muted/50 transition-colors">
             <div className="flex items-center gap-3">

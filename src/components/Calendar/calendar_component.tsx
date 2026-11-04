@@ -111,7 +111,7 @@ export function CalendarComponent() {
                 </div>
             </div>
 
-            <Card className="rounded-2xl shadow-sm">
+            <Card className="rounded-xl">
                 <CardContent className="campaign-calendar p-4">
                     {isLoading ? (
                         <p className="text-center text-muted-foreground py-10">Loading.....</p>

@@ -46,7 +46,7 @@ export default function AdvertiserDetails({ data }: Props) {
     <div className="max-w-7xl w-full mx-auto p-8 space-y-6">
 
       {/* PROFILE HEADER */}
-      <Card className="rounded-2xl shadow-sm">
+      <Card className="rounded-xl">
         <CardContent className="flex items-center justify-between p-6">
           <div className="flex items-center gap-6">
             <Avatar className="w-32 h-32 border-4 border-slate-300 dark:border-slate-700 shadow-md">

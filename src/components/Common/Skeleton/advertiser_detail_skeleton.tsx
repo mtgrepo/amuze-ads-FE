@@ -5,7 +5,7 @@ export function AdvertiserDetailsSkeleton() {
   return (
     <div className="max-w-7xl w-full mx-auto p-8 space-y-6">
       {/* Profile Header Skeleton */}
-      <Card className="rounded-2xl shadow-sm">
+      <Card className="rounded-xl">
         <CardContent className="flex items-center gap-6 p-6">
           <Skeleton className="w-32 h-32 rounded-full" />
           <div className="space-y-3">
@@ -16,7 +16,7 @@ export function AdvertiserDetailsSkeleton() {
       </Card>
 
       {/* Contact Form Skeleton */}
-      <Card className="rounded-2xl shadow-sm">
+      <Card className="rounded-xl">
         <CardHeader>
           <Skeleton className="h-6 w-44" />
         </CardHeader>
@@ -33,7 +33,7 @@ export function AdvertiserDetailsSkeleton() {
       </Card>
 
       {/* Business Form Skeleton */}
-      <Card className="rounded-2xl shadow-sm">
+      <Card className="rounded-xl">
         <CardHeader>
           <Skeleton className="h-6 w-52" />
         </CardHeader>

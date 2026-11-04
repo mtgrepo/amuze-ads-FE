@@ -195,7 +195,7 @@ export default function CampaignExtensions({ campaign, isAdmin = false }: { camp
     if (!EXTENDABLE_CAMPAIGN_STATUSES.includes(campaign.status) && extensions.length === 0) return null;
 
     return (
-        <Card className="rounded-2xl shadow-sm">
+        <Card className="rounded-xl">
             <CardHeader className="flex flex-row items-center justify-between gap-4">
                 <CardTitle>Extensions</CardTitle>
                 {canExtend && (

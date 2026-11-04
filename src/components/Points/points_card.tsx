@@ -10,7 +10,7 @@ export default function PointsCard({ accountId }: { accountId: string }) {
     const { wallet, isLoading } = useWalletQuery(accountId);
 
     return (
-        <Card className="rounded-2xl shadow-sm">
+        <Card className="rounded-xl">
             <CardHeader className="flex justify-between items-center">
                 <CardTitle className="flex flex-row gap-3 items-center text-xl">
                     <Coins size={24} className="text-primary" /> Points

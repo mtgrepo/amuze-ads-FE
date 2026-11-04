@@ -1,184 +1,174 @@
-import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
-import { Badge } from "../../ui/badge";
-import { Link } from "react-router-dom";
 import { useState } from "react";
-import { ChartLine, CreditCard, MapPin, UserSearch, VenusAndMars } from "lucide-react";
-import type { AdResponse } from "../../../dto/response/content/adResponse";
-import { cn } from "../../../lib/utils";
+import { Link } from "react-router-dom";
+import { format } from "date-fns";
+import { CalendarPlus, ChartLine, CreditCard, ExternalLink } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Button } from "../../ui/button";
-import BudgetForm from "./budget_form"
+import type { AdResponse } from "../../../dto/response/content/adResponse";
+import { EXTENDABLE_CAMPAIGN_STATUSES } from "../../../dto/response/campaignExtension/campaignExtensionResponse";
+import { useAdminOverviewQuery } from "../../../Composable/Query/dailyAdStats/useAdminOverviewQuery";
+import { StatusBadge } from "../../Common/status_badge";
+import { parseLocalDate, placementLabel, rate, toLocalDateString } from "../../Dashboard/admin/dashboard_utils";
+import BudgetForm from "./budget_form";
 import { ObjectiveProgressCard } from "./objective_progress";
-import CampaignExtensions from "./campaign_extensions";
+import CampaignExtensions, { ExtendDialog } from "./campaign_extensions";
 import PaymentDialog from "../Payment/payment_dialog";
+import AdsActions from "./ads_actions";
 
-import { statusLabel } from "../../../lib/status";
-interface Props {
-    data: AdResponse;
+const GENDER: Record<string, string> = { all: "Everyone", male: "Men", female: "Women" };
+const dateOnly = (value: Date | string) => String(value).slice(0, 10);
+const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+
+function Detail({ label, children }: { label: string; children: React.ReactNode }) {
+    return (
+        <div className="min-w-0">
+            <dt className="text-xs text-muted-foreground">{label}</dt>
+            <dd className="mt-1 text-sm font-medium break-words">{children}</dd>
+        </div>
+    );
 }
 
-const statusVariant = (status: string) => {
-    if (status === "active") return "bg-green-600/10 text-green-600 border-green-600/30";
-    if (status === "pending") return "bg-yellow-600/10 text-yellow-600 border-yellow-600/30";
-    if (status === "rejected") return "bg-destructive/10 text-destructive border-destructive/30";
-    return "bg-muted text-muted-foreground border-border";
-};
-
-export default function AdDetails({ data }: Props) {
+export default function AdDetails({ data }: { data: AdResponse }) {
     const [payOpen, setPayOpen] = useState(false);
-    if (!data) return <p>No data available</p>;
+    const [extendOpen, setExtendOpen] = useState(false);
+    // "Day X of Y" is worked out from when the page was opened.
+    const [now] = useState(() => Date.now());
+    const campaign = data?.adSet?.campaign;
+    // Reach and completions for the whole run so far.
+    const { overviewData } = useAdminOverviewQuery(campaign ? dateOnly(campaign.startDate) : undefined, toLocalDateString(new Date()), undefined, data?.id);
 
-    const { adType, placementKey, status, adSet, adCreative } = data;
-    const { campaign } = adSet;
-    const { advertiser } = campaign;
+    if (!data || !campaign) return <p className="p-8 text-muted-foreground">No data available</p>;
+
+    const { adSet, adCreative, status } = data;
+    const advertiser = campaign.advertiser;
+    const start = parseLocalDate(dateOnly(campaign.startDate));
+    const end = parseLocalDate(dateOnly(campaign.endDate));
+    const totalDays = Math.round((end.getTime() - start.getTime()) / 86_400_000) + 1;
+    const dayOf = Math.min(totalDays, Math.floor((now - start.getTime()) / 86_400_000) + 1);
+    const running = campaign.status === "active" && dayOf >= 1;
+    const canExtend = EXTENDABLE_CAMPAIGN_STATUSES.includes(campaign.status);
+
+    const impressions = data.totalImpressions ?? 0, clicks = data.totalClicks ?? 0, watches = data.totalWatches ?? 0;
+    const tiles = [
+        { label: "Impressions", value: impressions.toLocaleString(), sub: "since it started" },
+        { label: "Reach", value: (overviewData?.totalReach ?? 0).toLocaleString(), sub: impressions && overviewData?.totalReach ? `${(impressions / overviewData.totalReach).toFixed(1)} views each` : "people" },
+        { label: "Clicks", value: clicks.toLocaleString(), sub: `${rate(clicks, impressions)} CTR` },
+        { label: "Watches", value: adCreative?.assetType === "video" ? watches.toLocaleString() : "—", sub: adCreative?.assetType === "video" ? `${rate(data.totalCompletions ?? 0, watches)} VCR` : "Image ad" },
+        { label: "Engagements", value: (clicks + watches).toLocaleString(), sub: "clicks + watches" },
+    ];
 
     return (
-        <div className="max-w-5xl w-full mx-auto p-8 space-y-6">
-            {/* HEADER */}
-            <Card className="rounded-2xl shadow-sm">
-                <CardContent className="flex items-center justify-between p-6">
-                    <div>
-                        <h1 className="text-2xl font-bold capitalize">{adType} · {placementKey}</h1>
-                        <p className="text-muted-foreground mt-1">Campaign: {campaign?.name}</p>
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-5">
+            <header className="flex flex-wrap items-start justify-between gap-4">
+                <div className="flex min-w-0 items-center gap-4">
+                    <span className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-info-soft text-lg font-semibold text-info-soft-foreground">{initials(campaign.name)}</span>
+                    <div className="flex min-w-0 flex-col gap-1">
+                        <div className="flex flex-wrap items-center gap-2.5">
+                            <h1 className="text-2xl font-semibold tracking-tight">{campaign.name}</h1>
+                            <StatusBadge status={status} />
+                            {running && <span className="text-xs text-muted-foreground">day {dayOf} of {totalDays}</span>}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                            {advertiser?.name} · <span className="capitalize">{data.adType}</span> · {placementLabel(data.placementKey)}
+                        </p>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <Link to={`/daily-ads-status?ad=${data.id}`} className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
-                            <ChartLine className="h-4 w-4" /> View performance
-                        </Link>
-                        <Badge className={cn(statusVariant(status))} variant="outline">
-                            {statusLabel(status)}
-                        </Badge>
-                    </div>
-                </CardContent>
-            </Card>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                    <Button variant="outline" asChild>
+                        <Link to={`/daily-ads-status?ad=${data.id}`}><ChartLine /> View performance</Link>
+                    </Button>
+                    {status === "draft" && <Button onClick={() => setPayOpen(true)}><CreditCard /> Pay</Button>}
+                    {canExtend && <Button onClick={() => setExtendOpen(true)}><CalendarPlus /> Extend</Button>}
+                    <AdsActions {...data} />
+                </div>
+            </header>
 
-            {status === "draft" && campaign && (
-                <Card className="rounded-2xl shadow-sm border-primary/30 bg-primary/5">
-                    <CardContent className="p-6 flex items-center justify-between gap-4 text-sm">
-                        <span>This ad is a draft. Pay to publish it.</span>
-                        <Button size="sm" onClick={() => setPayOpen(true)}>
-                            <CreditCard className="h-4 w-4" /> Pay
-                        </Button>
-                    </CardContent>
-                </Card>
+            {status === "draft" && (
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-info-soft px-4 py-3 text-sm text-info-soft-foreground">
+                    <span><span className="font-semibold">This ad is a draft.</span> Nothing is charged until it's paid.</span>
+                    <Button size="sm" onClick={() => setPayOpen(true)}><CreditCard /> Pay now</Button>
+                </div>
             )}
 
-            {/* CREATIVE */}
-            <Card className="rounded-2xl shadow-sm overflow-hidden">
-                <CardHeader>
-                    <CardTitle>Creative</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    {adCreative?.assetType === "video" ? (
-                        <video src={adCreative.asset} controls className="w-full max-h-96 object-contain bg-black rounded-lg" />
-                    ) : (
-                        <img src={adCreative?.asset} alt={adCreative?.name} className="w-full max-h-96 object-contain rounded-lg border" />
-                    )}
-                    <div className="flex items-center gap-2 text-sm">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <a href={adCreative?.destinationLink} target="_blank" rel="noreferrer" className="text-primary underline break-all">
-                            {adCreative?.destinationLink}
-                        </a>
+            <section aria-label="Results" className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                {tiles.map((t) => (
+                    <div key={t.label} className="flex flex-col gap-1 rounded-xl border bg-card px-4 py-3.5">
+                        <span className="text-xs text-muted-foreground">{t.label}</span>
+                        <span className="font-mono text-xl font-medium tabular-nums">{t.value}</span>
+                        <span className="text-xs text-muted-foreground">{t.sub}</span>
                     </div>
-                </CardContent>
-            </Card>
+                ))}
+            </section>
 
-            {/* TARGETING */}
-            <Card className="rounded-2xl shadow-sm">
-                <CardHeader>
-                    <CardTitle>Targeting</CardTitle>
-                </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                        <label className="flex items-center gap-2 text-sm font-semibold">
-                            <UserSearch className="h-4 w-4 text-primary" />
-                            Age Range
-                        </label>
-                        <p className="text-sm text-muted-foreground">{adSet?.ageMin} – {adSet?.ageMax} years</p>
-                    </div>
-                    <div className="space-y-2">
-                        <label className="flex items-center gap-2 text-sm font-semibold">
-                            <VenusAndMars className="h-4 w-4 text-primary" />
-                            Gender
-                        </label>
-                        <p className="text-sm text-muted-foreground capitalize">{adSet?.gender}</p>
-                    </div>
-                </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+                <div className="flex min-w-0 flex-col gap-5">
+                    <Card>
+                        <CardHeader><CardTitle>Creative</CardTitle></CardHeader>
+                        <CardContent className="flex flex-col gap-4">
+                            {adCreative?.assetType === "video" ? (
+                                <video src={adCreative.asset} controls className="max-h-96 w-full rounded-lg bg-black object-contain" />
+                            ) : (
+                                <img src={adCreative?.asset} alt={adCreative?.name} className="max-h-96 w-full rounded-lg border bg-muted object-contain" />
+                            )}
+                            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                <Detail label="Creative name">{adCreative?.name ?? "—"}</Detail>
+                                <Detail label="File"><span className="capitalize">{adCreative?.assetType ?? "—"}</span></Detail>
+                                <Detail label="Tap goes to">
+                                    {adCreative?.destinationLink ? (
+                                        <a href={adCreative.destinationLink} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
+                                            <span className="truncate">{adCreative.destinationLink.replace(/^https?:\/\//, "")}</span> <ExternalLink className="size-3 shrink-0" />
+                                        </a>
+                                    ) : "—"}
+                                </Detail>
+                            </dl>
+                        </CardContent>
+                    </Card>
 
-            {/* CAMPAIGN */}
-            <Card className="rounded-2xl shadow-sm">
-                <CardHeader>
-                    <CardTitle>Campaign</CardTitle>
-                </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
-                        <p className="text-sm font-semibold">Status</p>
-                        <p className="text-sm text-muted-foreground">{statusLabel(campaign?.status)}</p>
-                    </div>
-                    <div>
-                        <p className="text-sm font-semibold">Model Type</p>
-                        <p className="text-sm text-muted-foreground capitalize">{campaign?.modelType}</p>
-                    </div>
-                    <div>
-                        <p className="text-sm font-semibold">Spent Amount</p>
-                        <p className="text-sm text-muted-foreground">{campaign?.spentAmount}</p>
-                    </div>
-                </CardContent>
-            </Card>
+                    <BudgetForm campaign={campaign} assetType={adCreative?.assetType} />
+                    <CampaignExtensions campaign={campaign} isAdmin />
+                </div>
 
-            {/* BUDGET — editable only while draft */}
-            {campaign && <BudgetForm campaign={campaign} assetType={adCreative?.assetType} />}
+                <div className="flex min-w-0 flex-col gap-5">
+                    <ObjectiveProgressCard campaignId={campaign.id} />
+                    <Card>
+                        <CardHeader><CardTitle>Audience</CardTitle></CardHeader>
+                        <CardContent>
+                            <dl className="grid grid-cols-2 gap-4">
+                                <Detail label="Age">{adSet.ageMin} – {adSet.ageMax}</Detail>
+                                <Detail label="Gender">{GENDER[adSet.gender] ?? adSet.gender}</Detail>
+                                <Detail label="Runs">{format(start, "d MMM")} – {format(end, "d MMM yyyy")}</Detail>
+                                <Detail label="Placement">{placementLabel(data.placementKey)}</Detail>
+                            </dl>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader><CardTitle>Advertiser</CardTitle></CardHeader>
+                        <CardContent className="flex flex-col gap-4">
+                            <div className="flex items-center gap-3">
+                                <span className="flex size-9 items-center justify-center rounded-full bg-info-soft text-xs font-semibold text-info-soft-foreground">{initials(advertiser?.name ?? "?")}</span>
+                                <div className="min-w-0">
+                                    <Link to={`/advertisers/${advertiser?.id}`} className="block truncate font-medium hover:text-primary hover:underline">{advertiser?.name}</Link>
+                                    <span className="block truncate text-xs text-muted-foreground">{[advertiser?.email, advertiser?.phone].filter(Boolean).join(" · ")}</span>
+                                </div>
+                            </div>
+                            {advertiser?.profiles?.[0] && (
+                                <dl className="grid grid-cols-2 gap-4 border-t pt-4">
+                                    <Detail label="Business">{advertiser.profiles[0].business_name}</Detail>
+                                    <Detail label="Type">{advertiser.profiles[0].business_type}</Detail>
+                                    {advertiser.profiles[0].website && <Detail label="Website">{advertiser.profiles[0].website}</Detail>}
+                                </dl>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
 
-            {campaign && <ObjectiveProgressCard campaignId={campaign.id} />}
-
-            {campaign && <CampaignExtensions campaign={campaign} isAdmin />}
-
-            {status === "draft" && campaign && (
-                <PaymentDialog
-                    open={payOpen}
-                    onOpenChange={setPayOpen}
-                    campaignId={campaign.id}
-                    campaignName={campaign.name}
-                    amount={campaign.totalBudget}
-                />
+            {status === "draft" && (
+                <PaymentDialog open={payOpen} onOpenChange={setPayOpen} campaignId={campaign.id} campaignName={campaign.name} amount={campaign.totalBudget} />
             )}
-
-            {/* ADVERTISER */}
-            <Card className="rounded-2xl shadow-sm">
-                <CardHeader>
-                    <CardTitle>Advertiser</CardTitle>
-                </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
-                        <p className="text-sm font-semibold">Name</p>
-                        <p className="text-sm text-muted-foreground">{advertiser?.name}</p>
-                    </div>
-                    <div>
-                        <p className="text-sm font-semibold">Email</p>
-                        <p className="text-sm text-muted-foreground">{advertiser?.email}</p>
-                    </div>
-                    <div>
-                        <p className="text-sm font-semibold">Phone</p>
-                        <p className="text-sm text-muted-foreground">{advertiser?.phone}</p>
-                    </div>
-                    {advertiser?.profiles?.[0] && (
-                        <>
-                            <div>
-                                <p className="text-sm font-semibold">Business Name</p>
-                                <p className="text-sm text-muted-foreground">{advertiser.profiles[0].business_name}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm font-semibold">Business Type</p>
-                                <p className="text-sm text-muted-foreground">{advertiser.profiles[0].business_type}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm font-semibold">Website</p>
-                                <p className="text-sm text-muted-foreground break-all">{advertiser.profiles[0].website}</p>
-                            </div>
-                        </>
-                    )}
-                </CardContent>
-            </Card>
+            {canExtend && extendOpen && (
+                <ExtendDialog campaign={campaign} isAdmin open={extendOpen} onOpenChange={setExtendOpen} />
+            )}
         </div>
     );
 }
