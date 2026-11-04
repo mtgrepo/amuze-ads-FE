@@ -57,7 +57,8 @@ const STATUS_STYLE: Record<CampaignExtensionResponse["status"], string> = {
     rejected: "text-muted-foreground",
 };
 
-function ExtendDialog({ campaign, isAdmin, open, onOpenChange }: {
+/** Buy more of the campaign's package. Used by the Extensions card and the ads table's actions menu. */
+export function ExtendDialog({ campaign, isAdmin, open, onOpenChange }: {
     campaign: ExtendableCampaign;
     isAdmin: boolean;
     open: boolean;

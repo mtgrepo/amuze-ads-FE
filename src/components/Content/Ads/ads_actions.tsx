@@ -6,7 +6,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CheckCircle, CreditCard, Info, MoreHorizontal, Wallet, XCircle } from "lucide-react";
+import { CalendarPlus, CheckCircle, CreditCard, Info, MoreHorizontal, Wallet, XCircle } from "lucide-react";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../ui/button";
@@ -23,6 +23,8 @@ import { useAdRejectCommand } from "../../../Composable/Command/content/ads/useA
 import type { AdResponse } from "../../../dto/response/content/adResponse";
 import PaymentDialog from "../Payment/payment_dialog";
 import BudgetForm from "./budget_form";
+import { ExtendDialog } from "./campaign_extensions";
+import { EXTENDABLE_CAMPAIGN_STATUSES } from "../../../dto/response/campaignExtension/campaignExtensionResponse";
 
 export default function AdsActions({ id, status, adSet, adCreative }: AdResponse) {
     const navigate = useNavigate();
@@ -30,6 +32,8 @@ export default function AdsActions({ id, status, adSet, adCreative }: AdResponse
     const [budgetOpen, setBudgetOpen] = React.useState(false);
     const [approveOpen, setApproveOpen] = React.useState(false);
     const [rejectOpen, setRejectOpen] = React.useState(false);
+    const [extendOpen, setExtendOpen] = React.useState(false);
+    const canExtend = !!adSet?.campaign && EXTENDABLE_CAMPAIGN_STATUSES.includes(adSet.campaign.status);
 
     const { approveAdCommand, isPending: isApproving } = useAdApproveCommand();
     const { rejectAdCommand, isPending: isRejecting } = useAdRejectCommand();
@@ -84,6 +88,13 @@ export default function AdsActions({ id, status, adSet, adCreative }: AdResponse
                                 Pay
                             </DropdownMenuItem>
                         </>
+                    )}
+
+                    {canExtend && (
+                        <DropdownMenuItem onClick={() => setExtendOpen(true)}>
+                            <CalendarPlus className="mr-2 h-4 w-4" />
+                            Extend
+                        </DropdownMenuItem>
                     )}
 
                     {status === "pending" && (
@@ -161,6 +172,11 @@ export default function AdsActions({ id, status, adSet, adCreative }: AdResponse
                         <BudgetForm campaign={adSet.campaign} assetType={adCreative?.assetType} embedded onDone={() => setBudgetOpen(false)} />
                     </DialogContent>
                 </Dialog>
+            )}
+
+            {/* EXTEND DIALOG — mounted only while open, so it fetches a fresh quote each time */}
+            {canExtend && extendOpen && adSet?.campaign && (
+                <ExtendDialog campaign={adSet.campaign} isAdmin open={extendOpen} onOpenChange={setExtendOpen} />
             )}
 
             {/* PAYMENT DIALOG */}
