@@ -1,204 +1,149 @@
 import * as React from "react";
-import {
-    flexRender,
-    getCoreRowModel,
-    getFilteredRowModel,
-    getPaginationRowModel,
-    getSortedRowModel,
-    useReactTable,
-} from "@tanstack/react-table";
-import type { ColumnFiltersState, SortingState } from "@tanstack/react-table";
-import { Coins } from "lucide-react";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
-import { PageSizeComponent } from "../../Common/Pagination/page-number";
-import Paginator from "../../Common/Pagination/paginator";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
-import { POINT_TYPE_LABELS } from "../../../dto/response/points/pointsResponse";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import type { PointsLedgerResponse } from "../../../dto/response/points/pointsResponse";
 import type { AdvertisersResponse } from "../../../dto/response/advertisers/advertisersResponse";
-import columns from "./column";
+import { AddPointsDialog } from "./add_points_dialog";
 
-const ALL = "all";
+const DAY = 86_400_000;
+const TOP_UPS = new Set(["purchase", "admin_paid", "admin_bonus"]);
 
-/** Every wallet's points history, filterable by advertiser and type. */
+const pts = (v: number) => `${v.toLocaleString("en-US")} pts`;
+const compact = (n: number) => new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 2 }).format(n);
+const plural = (n: number, one: string, many: string) => `${n.toLocaleString("en-US")} ${n === 1 ? one : many}`;
+
+function Total({ label, value, sub }: { label: string; value: string; sub: string }) {
+    return (
+        <div className="flex flex-col gap-1 rounded-[14px] border bg-card px-4 py-3.5">
+            <span className="text-xs text-muted-foreground">{label}</span>
+            <span className="font-mono text-[22px] font-medium tabular-nums">{value}</span>
+            <span className="text-xs text-muted-foreground">{sub}</span>
+        </div>
+    );
+}
+
+const runwayText = (days: number | null) =>
+    days === null ? "Not spending" : days < 1 ? "Less than a day" : days > 365 ? "Over a year" : plural(days, "day", "days");
+
+/** Who holds points, who is running low, and how long each balance lasts at the last 30 days' spend. */
 export function PointsComponent({ ledger, advertisers }: { ledger: PointsLedgerResponse; advertisers: AdvertisersResponse[] }) {
-    const [sorting, setSorting] = React.useState<SortingState>([]);
-    const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-    const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 });
+    const [now] = React.useState(() => Date.now());
+    const [topUp, setTopUp] = React.useState<{ id: string; name: string } | null>(null);
 
-    const table = useReactTable({
-        data: ledger.entries,
-        columns,
-        onSortingChange: setSorting,
-        onColumnFiltersChange: setColumnFilters,
-        getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        onPaginationChange: setPagination,
-        state: { sorting, columnFilters, pagination },
-    });
-    const totalRows = table.getFilteredRowModel().rows.length;
+    const { wallets, totals } = React.useMemo(() => {
+        const monthStart = new Date(new Date(now).getFullYear(), new Date(now).getMonth(), 1).getTime();
+        const since30 = now - 30 * DAY;
 
-    // Only standalone advertisers and agencies have wallets; agency clients spend their agency's points.
-    const walletOwners = advertisers
-        .filter((a) => a.type === "agency" || !a.agencyId)
-        .sort((a, b) => a.name.localeCompare(b.name));
-    const advertiserId = table.getColumn("advertiser")?.getFilterValue() as string | undefined;
-    const selected = walletOwners.find((a) => a.id === advertiserId);
-    // Every balance change goes through the ledger, so the newest entry holds the current balance.
-    const selectedBalance = advertiserId
-        ? ledger.entries.find((e) => e.advertiserId === advertiserId)?.balanceAfter ?? 0
-        : ledger.totalBalance;
-    const activeFilters = columnFilters.length;
+        // Entries are newest first, so the first one per wallet holds its current balance.
+        const balance = new Map<string, number>();
+        const spent30 = new Map<string, number>();
+        let added = 0, addedCount = 0, spent = 0, refunded = 0, refundCount = 0;
+        for (const e of ledger.entries) {
+            if (!balance.has(e.advertiserId)) balance.set(e.advertiserId, Number(e.balanceAfter));
+            const at = new Date(e.createdAt).getTime();
+            const amount = Number(e.amount);
+            if (e.type === "spend" && at >= since30) spent30.set(e.advertiserId, (spent30.get(e.advertiserId) ?? 0) - amount);
+            if (at < monthStart) continue;
+            if (TOP_UPS.has(e.type)) { added += amount; addedCount++; }
+            else if (e.type === "spend") spent -= amount;
+            else if (e.type === "refund") { refunded += amount; refundCount++; }
+        }
+
+        // Only standalone advertisers and agencies have wallets; agency clients spend their agency's points.
+        const clients = new Map<string, number>();
+        advertisers.forEach((a) => { if (a.agencyId) clients.set(a.agencyId, (clients.get(a.agencyId) ?? 0) + 1); });
+        const owners = advertisers.filter((a) => a.type === "agency" || !a.agencyId);
+        const max = Math.max(1, ...owners.map((a) => balance.get(a.id) ?? 0));
+
+        const wallets = owners.map((a) => {
+            const bal = balance.get(a.id) ?? 0;
+            const used = spent30.get(a.id) ?? 0;
+            const days = used > 0 ? Math.round(bal / (used / 30)) : null;
+            const kind = a.type === "agency" ? `Agency · ${plural(clients.get(a.id) ?? 0, "client", "clients")}` : "Advertiser";
+            return {
+                id: a.id, name: a.name, bal, used, days,
+                type: a.status === "active" ? kind : `${kind} · inactive`,
+                low: days !== null && days < 14,
+                width: Math.max(1, (bal / max) * 100),
+            };
+        }).sort((x, y) => y.bal - x.bal || x.name.localeCompare(y.name));
+
+        return {
+            wallets,
+            totals: [
+                { label: "Held in wallets", value: `${compact(ledger.totalBalance)} pts`, sub: `across ${plural(owners.length, "wallet", "wallets")}` },
+                { label: "Added this month", value: pts(added), sub: plural(addedCount, "top-up", "top-ups") },
+                { label: "Spent this month", value: pts(spent), sub: "ads, objectives, extensions" },
+                { label: "Refunded this month", value: pts(refunded), sub: plural(refundCount, "refund", "refunds") },
+            ],
+        };
+    }, [ledger, advertisers, now]);
 
     return (
-        <div className="w-full mx-auto">
-            <div className="flex flex-col gap-4 py-4">
-                {/* Balance */}
-                <div className="rounded-xl border-2 p-5 bg-card shadow-sm flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <span className="p-2 rounded-lg bg-primary/10 text-primary"><Coins className="h-5 w-5" /></span>
-                        <div>
-                            <p className="text-sm text-muted-foreground">
-                                {selected ? `${selected.name}'s balance` : "Points held by all customers"}
-                            </p>
-                            <p className="text-2xl font-bold tabular-nums">
-                                {selectedBalance.toLocaleString()} <span className="text-sm font-normal text-muted-foreground">points</span>
-                            </p>
-                        </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground">1 point = 1 MMK</p>
-                </div>
+        <div className="mx-auto flex w-full min-w-0 flex-col gap-[18px]">
+            <header className="flex flex-col gap-1">
+                <h1 className="text-[26px] font-semibold tracking-tight">Points</h1>
+                <p className="text-muted-foreground">Who has points, who is running low, and how long their balance lasts at the current spend.</p>
+            </header>
 
-                {/* Filter Section */}
-                <div className="rounded-xl border-2 p-5 bg-card shadow-sm">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                            <h3 className="text-base font-semibold">Search Filters</h3>
-                            <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
-                                {activeFilters} {activeFilters === 1 ? "filter" : "filters"}
-                            </span>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="relative">
-                            <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground z-10">
-                                Advertiser
-                            </label>
-                            <Select
-                                value={advertiserId ?? ALL}
-                                onValueChange={(value) => {
-                                    table.getColumn("advertiser")?.setFilterValue(value === ALL ? undefined : value);
-                                    table.setPageIndex(0);
-                                }}
-                            >
-                                <SelectTrigger className="w-full border-2 rounded-lg">
-                                    <SelectValue placeholder="Select advertiser..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value={ALL}>All advertisers</SelectItem>
-                                    {walletOwners.map((a) => (
-                                        <SelectItem key={a.id} value={a.id}>
-                                            {a.name}{a.type === "agency" ? " (Agency)" : ""}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="relative">
-                            <label className="absolute -top-2 left-3 px-1 bg-card text-xs font-medium text-muted-foreground z-10">
-                                Type
-                            </label>
-                            <Select
-                                value={(table.getColumn("type")?.getFilterValue() as string) ?? ALL}
-                                onValueChange={(value) => {
-                                    table.getColumn("type")?.setFilterValue(value === ALL ? undefined : value);
-                                    table.setPageIndex(0);
-                                }}
-                            >
-                                <SelectTrigger className="w-full border-2 rounded-lg">
-                                    <SelectValue placeholder="Select type..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value={ALL}>All</SelectItem>
-                                    {Object.entries(POINT_TYPE_LABELS).map(([value, label]) => (
-                                        <SelectItem key={value} value={value}>{label}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div className="grid grid-cols-1 overflow-hidden rounded-md border">
-                <Table>
+            <section aria-label="Totals" className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
+                {totals.map((t) => <Total key={t.label} {...t} />)}
+            </section>
+
+            <div className="overflow-x-auto rounded-[14px] border bg-card">
+                <Table className="min-w-[860px]">
                     <TableHeader>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => (
-                                    <TableHead key={header.id}>
-                                        {header.isPlaceholder
-                                            ? null
-                                            : flexRender(header.column.columnDef.header, header.getContext())}
-                                    </TableHead>
-                                ))}
-                            </TableRow>
-                        ))}
+                        <TableRow className="hover:bg-transparent">
+                            <TableHead className="h-auto px-3 py-2.5 text-xs font-medium text-muted-foreground">Wallet owner</TableHead>
+                            <TableHead className="h-auto w-[260px] px-3 py-2.5 text-xs font-medium text-muted-foreground">Balance</TableHead>
+                            <TableHead className="h-auto px-3 py-2.5 text-right text-xs font-medium text-muted-foreground">Spent, last 30 days</TableHead>
+                            <TableHead className="h-auto px-3 py-2.5 text-xs font-medium text-muted-foreground">Lasts about</TableHead>
+                            <TableHead className="h-auto px-3 py-2.5"><span className="sr-only">Actions</span></TableHead>
+                        </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
-                                <TableRow key={row.id}>
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={columns.length} className="h-24 text-center">
-                                    No points activity{activeFilters ? " for these filters" : " yet"}.
+                        {wallets.length ? wallets.map((w) => (
+                            <TableRow key={w.id} className="hover:bg-transparent">
+                                <TableCell className="p-3">
+                                    <div className="flex flex-col gap-0.5">
+                                        <Link to={`/advertisers/${w.id}`} className="font-medium text-foreground hover:text-primary hover:underline">{w.name}</Link>
+                                        <span className="text-xs text-muted-foreground">{w.type}</span>
+                                    </div>
+                                </TableCell>
+                                <TableCell className="p-3">
+                                    <div className="flex flex-col gap-1.5">
+                                        <span className="font-mono tabular-nums">{pts(w.bal)}</span>
+                                        <div className="h-[5px] rounded-[3px] bg-muted">
+                                            <div className={cn("h-[5px] rounded-[3px]", w.low ? "bg-warning" : "bg-primary")} style={{ width: `${w.width}%` }} />
+                                        </div>
+                                    </div>
+                                </TableCell>
+                                <TableCell className="p-3 text-right font-mono tabular-nums">{w.used ? pts(w.used) : "—"}</TableCell>
+                                <TableCell className="p-3">
+                                    <span className={w.low ? "font-medium text-warning" : "text-foreground/80"}>{runwayText(w.days)}</span>
+                                </TableCell>
+                                <TableCell className="p-3 text-right">
+                                    <Button variant="outline" size="sm" className="h-8 bg-card text-[13px]" onClick={() => setTopUp({ id: w.id, name: w.name })}>Add points</Button>
+                                </TableCell>
+                            </TableRow>
+                        )) : (
+                            <TableRow className="hover:bg-transparent">
+                                <TableCell colSpan={5} className="h-40 text-center">
+                                    <div className="flex flex-col items-center gap-2">
+                                        <span className="font-medium">No wallets yet</span>
+                                        <span className="text-sm text-muted-foreground">Advertisers and agencies get a wallet when their account is created.</span>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         )}
                     </TableBody>
                 </Table>
             </div>
-            <div className="flex items-center justify-end space-x-2 py-4">
-                <div className="text-muted-foreground flex-1 text-sm">
-                    {totalRows} record(s).
-                </div>
-                {totalRows > 0 && (
-                    <div className="flex items-center gap-3">
-                        <PageSizeComponent
-                            pageSize={pagination.pageSize}
-                            totalRows={totalRows}
-                            onChange={(size) =>
-                                setPagination(() => ({
-                                    pageIndex: 0,
-                                    pageSize: size === "all" ? totalRows : size,
-                                }))
-                            }
-                        />
-                        <Paginator
-                            currentPage={table.getState().pagination.pageIndex + 1}
-                            totalPages={table.getPageCount()}
-                            onPageChange={(pageNumber) => table.setPageIndex(pageNumber - 1)}
-                            showPreviousNext
-                        />
-                    </div>
-                )}
-            </div>
+            <span className="text-xs text-muted-foreground">Agency clients don't have wallets; their agency pays.</span>
+
+            {topUp && <AddPointsDialog key={topUp.id} wallet={topUp} onClose={() => setTopUp(null)} />}
         </div>
     );
 }

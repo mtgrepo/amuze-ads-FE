@@ -1,4 +1,4 @@
-import { z } from "zod"
+import type { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { Button } from "@/components/ui/button"
@@ -16,14 +16,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Spinner } from "../ui/spinner"
 import { useTopUpPointsCommand } from "../../Composable/Command/points/useTopUpPointsCommand"
 import { usePreventScriptTag } from "@/lib/scriptTag"
+import { topUpSchema } from "./top_up_schema"
 
-const formSchema = z.object({
-    amount: z.number().int().min(1, { message: "Amount must be at least 1." }),
-    type: z.enum(["paid", "bonus"]),
-    note: z.string().min(1, { message: "Note is required." }),
-})
 
-type Values = z.infer<typeof formSchema>
+type Values = z.infer<typeof topUpSchema>
 
 interface TopUpFormProps {
     accountId: string
@@ -35,7 +31,7 @@ export default function TopUpForm({ accountId, onSuccess }: TopUpFormProps) {
     const { topUpPointsCommand, isPending } = useTopUpPointsCommand();
 
     const form = useForm<Values>({
-        resolver: zodResolver(formSchema),
+        resolver: zodResolver(topUpSchema),
         defaultValues: { amount: 1000, type: "paid", note: "" },
     })
 
