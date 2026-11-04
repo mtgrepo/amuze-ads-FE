@@ -17,7 +17,9 @@ import { parseLocalDate, placementLabel, rate, toLocalDateString } from "../../D
 import BudgetForm from "./budget_form";
 import { ExtendDialog } from "./campaign_extensions";
 import PaymentDialog from "../Payment/payment_dialog";
-import AdsActions from "./ads_actions";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../../ui/dialog";
+import { useAdApproveCommand } from "../../../Composable/Command/content/ads/useAdApproveCommand";
+import { useAdRejectCommand } from "../../../Composable/Command/content/ads/useAdRejectCommand";
 import { pts, tileColor } from "./column";
 import { adHistory, historyDate, HISTORY_DOT } from "./ad_history";
 
@@ -99,6 +101,10 @@ function ExtensionsSection({ campaignId, packageName }: { campaignId: string; pa
 export default function AdDetails({ data }: { data: AdResponse }) {
     const [payOpen, setPayOpen] = useState(false);
     const [extendOpen, setExtendOpen] = useState(false);
+    const [rejectOpen, setRejectOpen] = useState(false);
+    const { approveAdCommand, isPending: approving } = useAdApproveCommand();
+    const { rejectAdCommand, isPending: rejecting } = useAdRejectCommand();
+    const reviewing = approving || rejecting;
     // "Day X of Y" is worked out from when the page was opened.
     const [now] = useState(() => Date.now());
     const campaign = data?.adSet?.campaign;
@@ -162,7 +168,8 @@ export default function AdDetails({ data }: { data: AdResponse }) {
                     </Button>
                     {status === "draft" && <Button onClick={() => setPayOpen(true)}>Pay now</Button>}
                     {canExtend && <Button onClick={() => setExtendOpen(true)}>Extend</Button>}
-                    <AdsActions {...data} />
+                    {status === "pending" && <Button variant="outline" className="bg-card" disabled={reviewing} onClick={() => setRejectOpen(true)}>Reject</Button>}
+                    {status === "pending" && <Button disabled={reviewing} onClick={() => approveAdCommand(data.id)}>Approve</Button>}
                 </div>
             </header>
 
@@ -287,6 +294,18 @@ export default function AdDetails({ data }: { data: AdResponse }) {
             {status === "draft" && (
                 <PaymentDialog open={payOpen} onOpenChange={setPayOpen} campaignId={campaign.id} campaignName={campaign.name} amount={campaign.totalBudget} />
             )}
+            <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Reject this ad?</DialogTitle>
+                        <DialogDescription>{campaign.name} won't run. The advertiser is told it was rejected.</DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setRejectOpen(false)}>Keep it</Button>
+                        <Button variant="destructive" disabled={rejecting} onClick={async () => { await rejectAdCommand(data.id); setRejectOpen(false); }}>Reject</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
             {canExtend && extendOpen && (
                 <ExtendDialog campaign={campaign} isAdmin open={extendOpen} onOpenChange={setExtendOpen} />
             )}

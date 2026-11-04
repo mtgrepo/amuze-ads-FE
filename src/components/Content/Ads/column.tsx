@@ -1,10 +1,10 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/lib/utils";
 import type { AdResponse } from "../../../dto/response/content/adResponse";
 import { StatusBadge } from "../../Common/status_badge";
+import { AdRowActions } from "./ad_row_actions";
 import { parseLocalDate, placementLabel } from "../../Dashboard/admin/dashboard_utils";
 
 const GENDER: Record<string, string> = { all: "Everyone", male: "Men", female: "Women" };
@@ -52,13 +52,6 @@ export function paidSplit(ad: AdResponse): string {
     const c = ad.adSet.campaign;
     const plan = Number(c.planCost), objectives = Number(c.objectiveCost ?? 0);
     return objectives ? `${pts(plan)} package + ${pts(objectives)} objectives` : "Package only";
-}
-
-/** The one thing to do next with this ad, shown as the row's button. */
-export function nextStep(ad: AdResponse): string {
-    const c = ad.adSet.campaign;
-    const fixed: Record<string, string> = { draft: "Pay", pending: "Review", expired: "Restart", rejected: "View" };
-    return fixed[ad.status] ?? (runProgress(c.startDate, c.endDate) >= 80 ? "Extend" : "Open");
 }
 
 export const ctrText = (ad: AdResponse) =>
@@ -173,13 +166,9 @@ export function adColumns(onOpen: (ad: AdResponse) => void): ColumnDef<AdRespons
             cell: ({ row }) => <div className="text-right font-mono tabular-nums">{ctrText(row.original)}</div>,
         },
         {
-            id: "next",
-            header: () => <span className="sr-only">Next step</span>,
-            cell: ({ row }) => (
-                <div className="text-right">
-                    <Button variant="outline" size="sm" className="h-8 text-[13px]" onClick={() => onOpen(row.original)}>{nextStep(row.original)}</Button>
-                </div>
-            ),
+            id: "actions",
+            header: () => <span className="sr-only">Actions</span>,
+            cell: ({ row }) => <div className="text-right"><AdRowActions ad={row.original} /></div>,
         },
     ];
 }
