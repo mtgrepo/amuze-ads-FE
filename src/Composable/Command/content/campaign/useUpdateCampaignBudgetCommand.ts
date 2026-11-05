@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner";
 import { updateCampaignBudget } from "../../../../http/apis/content/campaignApi";
 import type { CampaignBudgetInput } from "../../../../dto/input/content/campaignBudgetInput";
+import { refreshAfterAdChange } from "../refreshAfterAdChange";
 
 export const useUpdateCampaignBudgetCommand = () => {
     const qc = useQueryClient();
@@ -13,10 +14,7 @@ export const useUpdateCampaignBudgetCommand = () => {
             return response?.data;
         },
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['campaign-list'] });
-            qc.invalidateQueries({ queryKey: ['ad-list'] });
-            qc.invalidateQueries({ queryKey: ['ad-details'] });
-            qc.invalidateQueries({ queryKey: ['payment-info'] });
+            refreshAfterAdChange(qc);
             toast.success('Package updated.');
         },
         onError: (error: Error) => {

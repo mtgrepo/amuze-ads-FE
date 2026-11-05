@@ -12,6 +12,7 @@ export const useAdvertiserCreateCommand = () => {
         },
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["advertisers"] });
+            qc.invalidateQueries({ queryKey: ["advertisers-list"] });
         }
     })
     return {

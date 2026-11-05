@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner";
 import { createFullCampaign } from "../../../../http/apis/content/campaignApi";
+import { refreshAfterAdChange } from "../refreshAfterAdChange";
 
 export const useCreateFullCampaignCommand = () => {
     const qc = useQueryClient();
@@ -12,8 +13,7 @@ export const useCreateFullCampaignCommand = () => {
             return response?.data;
         },
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['campaign-list'] });
-            qc.invalidateQueries({ queryKey: ['ad-list'] });
+            refreshAfterAdChange(qc);
             toast.success('Ad saved as draft.');
         },
         onError: (error: Error) => {

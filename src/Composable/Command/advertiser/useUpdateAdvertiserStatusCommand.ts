@@ -11,6 +11,7 @@ export const useUpdateAdvertiserStatusCommand = () => {
         },
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["advertiser-details"] });
+            qc.invalidateQueries({ queryKey: ["advertisers-list"] });
             qc.invalidateQueries({ queryKey: ["advertisers"] });
         }
     })

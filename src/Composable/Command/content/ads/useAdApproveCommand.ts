@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner";
 import { approveAd } from "../../../../http/apis/content/adApi";
+import { refreshAfterAdChange } from "../refreshAfterAdChange";
 
 export const useAdApproveCommand = () => {
     const qc = useQueryClient();
@@ -12,7 +13,7 @@ export const useAdApproveCommand = () => {
             return response?.data;
         },
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['ad-list'] });
+            refreshAfterAdChange(qc);
             toast.success('Ad approved successfully.');
         },
         onError: (error: Error) => {

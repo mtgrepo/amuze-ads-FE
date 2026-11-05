@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner";
 import { deleteCampaign } from "../../../../http/apis/content/campaignApi";
+import { refreshAfterAdChange } from "../refreshAfterAdChange";
 
 export const useCampaignDeleteCommand = () => {
     const qc = useQueryClient();
@@ -12,7 +13,7 @@ export const useCampaignDeleteCommand = () => {
             return response?.data;
         },
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['campaign-list'] });
+            refreshAfterAdChange(qc);
             toast.success('Campaign deleted successfully.');
         },
         onError: (error: Error) => {

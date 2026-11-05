@@ -14,6 +14,7 @@ export const useSystemConfigUpdateCommand = () => {
         onSuccess: () => {
             toast.success("System config updated successfully!");
             qc.invalidateQueries({ queryKey: ["system-configs"] });
+            qc.invalidateQueries({ queryKey: ["objective-prices"] });
         }
     })
     return {

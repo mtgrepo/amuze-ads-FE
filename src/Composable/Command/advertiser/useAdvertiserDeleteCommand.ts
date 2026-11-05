@@ -13,6 +13,10 @@ export const useAdvertiserDeleteCommand = () => {
         onSuccess: () => {
             toast.success("Advertiser deleted successfully!");
             qc.invalidateQueries({ queryKey: ["advertisers"] });
+            qc.invalidateQueries({ queryKey: ["advertisers-list"] });
+            qc.invalidateQueries({ queryKey: ["ad-list"] });
+            qc.invalidateQueries({ queryKey: ["campaign-list"] });
+            qc.invalidateQueries({ queryKey: ["points-ledger"] });
         }
     })
     return {

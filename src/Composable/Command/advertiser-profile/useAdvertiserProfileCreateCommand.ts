@@ -13,6 +13,8 @@ export const useAdvertiserProfileCreateCommand = () => {
         onSuccess: () => {
             toast.success("Advertiser profile created successfully!");
             qc.invalidateQueries({ queryKey: ["advertiser-profile-list"] });
+            qc.invalidateQueries({ queryKey: ["advertiser-details"] });
+            qc.invalidateQueries({ queryKey: ["advertisers"] });
         },
         onError: (error) => {
             toast.error(error?.message || 'Profile creation failed.');

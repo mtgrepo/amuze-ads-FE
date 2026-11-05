@@ -12,6 +12,7 @@ export const useSystemConfigActiveCommand = () => {
         },
         onSuccess: (_data, variables) => {
             qc.invalidateQueries({ queryKey: ["system-configs"] });
+            qc.invalidateQueries({ queryKey: ["objective-prices"] });
             toast.success(
                 variables.isActive
                     ? "System config activated successfully!"

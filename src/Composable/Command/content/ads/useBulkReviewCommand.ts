@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { approveAd, rejectAd } from "../../../../http/apis/content/adApi";
+import { refreshAfterAdChange } from "../refreshAfterAdChange";
 
 type Decision = "approve" | "reject";
 
@@ -23,7 +24,7 @@ export const useBulkReviewCommand = () => {
             return { done, failed, decision };
         },
         onSuccess: ({ done, failed, decision }) => {
-            ["ad-list", "dashboard-attention", "dashboard-summary"].forEach((key) => qc.invalidateQueries({ queryKey: [key] }));
+            refreshAfterAdChange(qc);
             const noun = (n: number) => `${n} ${n === 1 ? "ad" : "ads"}`;
             if (done) {
                 toast.success(`${noun(done)} ${decision === "approve" ? "approved" : "rejected"}`, {

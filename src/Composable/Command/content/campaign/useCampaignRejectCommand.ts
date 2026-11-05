@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner";
 import { rejectCampaign } from "../../../../http/apis/content/campaignApi";
+import { refreshAfterAdChange } from "../refreshAfterAdChange";
 
 export const useCampaignRejectCommand = () => {
     const qc = useQueryClient();
@@ -12,7 +13,7 @@ export const useCampaignRejectCommand = () => {
             return response?.data;
         },
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['campaign-list'] });
+            refreshAfterAdChange(qc);
             toast.success('Campaign rejected.');
         },
         onError: (error: Error) => {

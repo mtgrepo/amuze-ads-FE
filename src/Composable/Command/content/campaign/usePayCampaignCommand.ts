@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner";
 import { payCampaign } from "../../../../http/apis/content/campaignApi";
+import { refreshAfterAdChange } from "../refreshAfterAdChange";
 
 export const usePayCampaignCommand = () => {
     const qc = useQueryClient();
@@ -12,13 +13,7 @@ export const usePayCampaignCommand = () => {
             return response?.data;
         },
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['campaign-list'] });
-            qc.invalidateQueries({ queryKey: ['points-ledger'] });
-            qc.invalidateQueries({ queryKey: ['ad-list'] });
-            qc.invalidateQueries({ queryKey: ['ad-details'] });
-            qc.invalidateQueries({ queryKey: ['transaction-list'] });
-            qc.invalidateQueries({ queryKey: ['wallet'] });
-            qc.invalidateQueries({ queryKey: ['payment-info'] });
+            refreshAfterAdChange(qc);
             toast.success('Payment recorded.');
         },
         onError: (error: Error) => {

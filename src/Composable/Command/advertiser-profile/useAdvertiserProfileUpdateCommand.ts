@@ -13,6 +13,8 @@ export const useAdvertiserProfileUpdateCommand = () => {
         onSuccess: () => {
             toast.success("Advertiser profile updated successfully!");
             qc.invalidateQueries({ queryKey: ["advertiser-profile-list"] });
+            qc.invalidateQueries({ queryKey: ["advertiser-details"] });
+            qc.invalidateQueries({ queryKey: ["advertisers"] });
         }
     })
     return {

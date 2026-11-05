@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner";
 import { deleteAdSet } from "../../../../http/apis/content/adSetApi";
+import { refreshAfterAdChange } from "../refreshAfterAdChange";
 
 export const useAdSetDeleteCommand = () => {
     const qc = useQueryClient();
@@ -12,7 +13,7 @@ export const useAdSetDeleteCommand = () => {
             return response?.data;
         },
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['ad-set-list'] });
+            refreshAfterAdChange(qc);
             toast.success('Ad set deleted successfully.');
         },
         onError: (error: Error) => {
