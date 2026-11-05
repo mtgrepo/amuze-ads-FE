@@ -12,9 +12,9 @@ function pageList(page: number, count: number): (number | null)[] {
     return wanted.flatMap((p, i) => (i && p - wanted[i - 1] > 1 ? [null, p] : [p]));
 }
 
-/** The footer inside a table's card: what's showing on the left, rows per page and page buttons on the right. Hidden when it all fits on one page. */
+/** The footer inside a table's card: what's showing on the left, rows per page and page buttons on the right. Hidden only when the table is empty. */
 export function TablePagination({ total, pageIndex, pageSize, onChange }: PageState & { total: number; onChange: (next: PageState) => void }) {
-    if (total <= SIZES[0]) return null;
+    if (total === 0) return null;
 
     const count = Math.max(1, Math.ceil(total / pageSize));
     const page = Math.min(pageIndex + 1, count);
@@ -25,7 +25,7 @@ export function TablePagination({ total, pageIndex, pageSize, onChange }: PageSt
     return (
         <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-2.5 px-3.5 py-2.5 text-[13px] text-muted-foreground">
             <span>
-                Showing <span className="font-mono tabular-nums">{from}–{to}</span> of <span className="font-mono tabular-nums">{total.toLocaleString("en-US")}</span>
+                Showing <span className="font-mono tabular-nums">{from === to ? from : `${from}–${to}`}</span> of <span className="font-mono tabular-nums">{total.toLocaleString("en-US")}</span>
             </span>
             <div className="flex flex-wrap items-center gap-x-[18px] gap-y-2">
                 <div className="flex items-center gap-2">

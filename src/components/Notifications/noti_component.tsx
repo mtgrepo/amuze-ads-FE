@@ -125,7 +125,7 @@ export function NotiComponent({ data }: { data: NotificationsResponse[] }) {
                             );
                         })}
                         </div>
-                        {shown.length > PAGE && (
+                        {shown.length > 0 && (
                             <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-2.5 border-t px-3.5 py-2.5 text-[13px] text-muted-foreground">
                                 <span>
                                     Showing <span className="font-mono tabular-nums">{Math.min(limit, shown.length)}</span> of <span className="font-mono tabular-nums">{shown.length}</span>
