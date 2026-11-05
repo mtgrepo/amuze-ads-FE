@@ -15,7 +15,7 @@ const FILTERS: { key: Filter; label: string; test: (n: NotificationsResponse) =>
     { key: "extension", label: "Extensions", test: (n) => kindOf(n) === "extension" },
 ];
 
-const PAGE = 30;
+const PAGE = 20;
 
 function Tag({ kind }: { kind: Kind }) {
     return (
@@ -44,6 +44,13 @@ export function NotiComponent({ data }: { data: NotificationsResponse[] }) {
     );
     const test = FILTERS.find((f) => f.key === filter)!.test;
     const shown = sorted.filter(test);
+    const left = shown.length - Math.min(limit, shown.length);
+    const loadMore = () => setLimit(limit + PAGE);
+    // The list scrolls on its own, so the open message stays put; more load as you reach the bottom.
+    const onListScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        const el = e.currentTarget;
+        if (left > 0 && el.scrollTop + el.clientHeight >= el.scrollHeight - 80) loadMore();
+    };
     const open = shown.find((n) => n.id === openId) ?? shown[0] ?? null;
     const openKind = open ? kindOf(open) : null;
     const next = openKind ? NEXT[openKind] : undefined;
@@ -83,6 +90,7 @@ export function NotiComponent({ data }: { data: NotificationsResponse[] }) {
             ) : (
                 <div className="flex flex-wrap items-start gap-4">
                     <section aria-label="Inbox" className="min-w-0 flex-[1_1_380px] overflow-hidden rounded-[14px] border bg-card">
+                        <div key={filter} onScroll={onListScroll} className="max-h-[640px] overflow-y-auto">
                         {shown.slice(0, limit).map((n) => {
                             const current = n.id === open?.id;
                             return (
@@ -116,10 +124,16 @@ export function NotiComponent({ data }: { data: NotificationsResponse[] }) {
                                 </button>
                             );
                         })}
-                        {shown.length > limit && (
-                            <button type="button" onClick={() => setLimit((l) => l + PAGE)} className="w-full px-4 py-3 text-[13px] font-medium text-primary hover:bg-muted/40">
-                                Show {Math.min(PAGE, shown.length - limit)} more
-                            </button>
+                        </div>
+                        {shown.length > PAGE && (
+                            <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-2.5 border-t px-3.5 py-2.5 text-[13px] text-muted-foreground">
+                                <span>
+                                    Showing <span className="font-mono tabular-nums">{Math.min(limit, shown.length)}</span> of <span className="font-mono tabular-nums">{shown.length}</span>
+                                </span>
+                                {left > 0 && (
+                                    <Button variant="outline" size="sm" className="h-8 bg-card text-[13px]" onClick={loadMore}>Show {Math.min(PAGE, left)} more</Button>
+                                )}
+                            </div>
                         )}
                     </section>
 

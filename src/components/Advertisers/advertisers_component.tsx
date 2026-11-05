@@ -18,8 +18,7 @@ import type { AdvertisersResponse } from "../../dto/response/advertisers/adverti
 import { useBalancesQuery } from "../../Composable/Query/points/useBalancesQuery";
 import { useAdListQuery } from "../../Composable/Query/content/useAdListQuery";
 import { useAdvertiserDeleteCommand } from "../../Composable/Command/advertiser/useAdvertiserDeleteCommand";
-import { PageSizeComponent } from "../Common/Pagination/page-number";
-import Paginator from "../Common/Pagination/paginator";
+import { TablePagination } from "../Common/Pagination/table_pagination";
 import { AdvertiserAvatar, AdvertiserStatusPill } from "./advertiser_status";
 import { AddAdvertiserSheet } from "./add_advertiser_sheet";
 import { EditAdvertiserSheet } from "./edit_advertiser_sheet";
@@ -54,8 +53,9 @@ export function AdvertisersComponent({ data }: { data: AdvertisersResponse[] }) 
   const { deleteAdvertiserCommand, isPending: deleting } = useAdvertiserDeleteCommand();
 
   const rows = data.filter(TABS.find((t) => t.key === tab)!.test);
-  const pageCount = Math.max(1, Math.ceil(rows.length / pagination.pageSize));
-  const pageRows = rows.slice(pagination.pageIndex * pagination.pageSize, (pagination.pageIndex + 1) * pagination.pageSize);
+  // Step back if the rows on this page are gone, e.g. after deleting the last one.
+  const pageIndex = Math.min(pagination.pageIndex, Math.max(0, Math.ceil(rows.length / pagination.pageSize) - 1));
+  const pageRows = rows.slice(pageIndex * pagination.pageSize, (pageIndex + 1) * pagination.pageSize);
 
   const byId = (id?: string) => (id ? data.find((a) => a.id === id) : undefined);
   const editing = byId(dialogs.edit);
@@ -119,7 +119,8 @@ export function AdvertisersComponent({ data }: { data: AdvertisersResponse[] }) 
         })}
       </div>
 
-      <div className="overflow-x-auto rounded-[14px] border bg-card">
+      <div className="rounded-[14px] border bg-card">
+        <div className="overflow-x-auto rounded-t-[14px]">
         <Table className="min-w-[900px]">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
@@ -198,23 +199,9 @@ export function AdvertisersComponent({ data }: { data: AdvertisersResponse[] }) 
             )}
           </TableBody>
         </Table>
-      </div>
-
-      {rows.length > 10 && (
-        <div className="flex flex-wrap items-center justify-end gap-3">
-          <PageSizeComponent
-            pageSize={pagination.pageSize}
-            totalRows={rows.length}
-            onChange={(size) => setPagination({ pageIndex: 0, pageSize: size === "all" ? rows.length : size })}
-          />
-          <Paginator
-            currentPage={pagination.pageIndex + 1}
-            totalPages={pageCount}
-            onPageChange={(page) => setPagination((p) => ({ ...p, pageIndex: page - 1 }))}
-            showPreviousNext
-          />
         </div>
-      )}
+        <TablePagination total={rows.length} pageIndex={pageIndex} pageSize={pagination.pageSize} onChange={setPagination} />
+      </div>
 
       <AddAdvertiserSheet open={addOpen} onOpenChange={setAddOpen} advertisers={data} />
       {editing && <EditAdvertiserSheet key={editing.id} advertiser={editing} onClose={() => setDialogs({})} />}

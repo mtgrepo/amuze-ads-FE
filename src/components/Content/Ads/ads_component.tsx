@@ -24,8 +24,7 @@ import { AdSidePanel } from "./ad_side_panel";
 import { ExtendDialog } from "./campaign_extensions";
 import type { AdResponse } from "../../../dto/response/content/adResponse";
 import { EXTENDABLE_CAMPAIGN_STATUSES } from "../../../dto/response/campaignExtension/campaignExtensionResponse";
-import { PageSizeComponent } from "../../Common/Pagination/page-number";
-import Paginator from "../../Common/Pagination/paginator";
+import { TablePagination } from "../../Common/Pagination/table_pagination";
 import { statusLabel } from "../../../lib/status";
 import { daysUntil, placementLabel } from "../../Dashboard/admin/dashboard_utils";
 import { useBulkReviewCommand } from "../../../Composable/Command/content/ads/useBulkReviewCommand";
@@ -161,6 +160,9 @@ export function AdComponent({ data }: { data: AdResponse[] }) {
 
   const columns = React.useMemo(() => adColumns((ad) => setOpenId(ad.id)), []);
   const openAd = openId ? data.find((ad) => ad.id === openId) ?? null : null;
+  // Keep the page after a refetch; only step back when the rows on it are gone.
+  const lastPage = Math.max(0, Math.ceil(rows.length / pagination.pageSize) - 1);
+  const page = { ...pagination, pageIndex: Math.min(pagination.pageIndex, lastPage) };
   const table = useReactTable({
     data: rows,
     columns,
@@ -169,7 +171,8 @@ export function AdComponent({ data }: { data: AdResponse[] }) {
     getPaginationRowModel: getPaginationRowModel(),
     onRowSelectionChange: setRowSelection,
     onPaginationChange: setPagination,
-    state: { rowSelection, pagination },
+    autoResetPageIndex: false,
+    state: { rowSelection, pagination: page },
   });
 
   // Summary across every ad, whatever view is open.
@@ -255,10 +258,10 @@ export function AdComponent({ data }: { data: AdResponse[] }) {
             options={[...new Set(data.map(f.value))].sort()}
           />
         ))}
-        <span className="ml-auto text-[13px] text-muted-foreground">Showing {totalRows} of {data.length}</span>
       </div>
 
-      <div className="overflow-x-auto rounded-[14px] border bg-card">
+      <div className="rounded-[14px] border bg-card">
+        <div className="overflow-x-auto rounded-t-[14px]">
         <Table className="min-w-[1200px]">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -294,23 +297,9 @@ export function AdComponent({ data }: { data: AdResponse[] }) {
             )}
           </TableBody>
         </Table>
-      </div>
-
-      {totalRows > 0 && (
-        <div className="flex flex-wrap items-center justify-end gap-3">
-          <PageSizeComponent
-            pageSize={pagination.pageSize}
-            totalRows={totalRows}
-            onChange={(size) => setPagination(() => ({ pageIndex: 0, pageSize: size === "all" ? totalRows : size }))}
-          />
-          <Paginator
-            currentPage={table.getState().pagination.pageIndex + 1}
-            totalPages={table.getPageCount()}
-            onPageChange={(pageNumber) => table.setPageIndex(pageNumber - 1)}
-            showPreviousNext
-          />
         </div>
-      )}
+        <TablePagination total={totalRows} pageIndex={page.pageIndex} pageSize={page.pageSize} onChange={setPagination} />
+      </div>
 
       {selected.length > 0 && (
         <div role="toolbar" aria-label="Bulk actions" className="fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 flex-wrap items-center gap-2 rounded-xl bg-zinc-900 py-2 pl-4 pr-2 text-white shadow-[0_16px_40px_rgba(24,24,27,0.28)] ring-1 ring-white/10">

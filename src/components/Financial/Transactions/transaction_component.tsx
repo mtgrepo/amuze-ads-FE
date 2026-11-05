@@ -1,11 +1,12 @@
 import * as React from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { POINT_TYPE_LABELS, type AdminLedgerEntry } from "../../../dto/response/points/pointsResponse";
 import type { TransactionResponse } from "../../../dto/response/transactions/transactionResponse";
 
 const DAY = 86_400_000;
-const PAGE = 100;
+const DAYS_STEP = 7;
 
 type Kind = "topup" | "payment" | "extension" | "refund";
 type Filter = "all" | Kind;
@@ -26,6 +27,14 @@ const kindOf = (e: AdminLedgerEntry): Kind =>
 const num = (v: number) => Math.abs(v).toLocaleString("en-US");
 const signed = (v: number) => `${v >= 0 ? "+" : "−"}${num(v)}`;
 const time = (d: Date) => d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+const monthOf = (at: string) => {
+    const d = new Date(at);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+};
+const monthName = (key: string) => {
+    const [y, m] = key.split("-").map(Number);
+    return new Date(y, m - 1, 1).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+};
 const dayKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 
 /** What the entry was, e.g. "Payment · Ruby Mart weekend deals". */
@@ -84,7 +93,8 @@ function Total({ label, value, sub, tone }: { label: string; value: string; sub:
 export function TransactionComponent({ entries, payments }: { entries: AdminLedgerEntry[]; payments: TransactionResponse[] }) {
     const [now] = React.useState(() => Date.now());
     const [type, setType] = React.useState<Filter>("all");
-    const [limit, setLimit] = React.useState(PAGE);
+    const [monthKey, setMonthKey] = React.useState<string | null>(null);
+    const [dayLimit, setDayLimit] = React.useState(DAYS_STEP);
 
     // Paid credits link to the money transaction behind them, which knows how it was paid.
     const methods = React.useMemo(() => new Map(payments.map((t) => [t.id, t.paymentMethod])), [payments]);
@@ -98,9 +108,17 @@ export function TransactionComponent({ entries, payments }: { entries: AdminLedg
     const outWeek = week.reduce((s, r) => s + Math.min(0, Number(r.e.amount)), 0);
     const net = inWeek + outWeek;
 
-    const shown = rows.filter((r) => type === "all" || r.kind === type);
+    // Months with activity, newest first, so the arrows never land on an empty one.
+    const months = [...new Set(rows.map((r) => monthOf(r.e.createdAt)))].sort().reverse();
+    const month = monthKey && months.includes(monthKey) ? monthKey : months[0];
+    const monthIndex = months.indexOf(month);
+    const older: string | undefined = months[monthIndex + 1];
+    const newer: string | undefined = monthIndex > 0 ? months[monthIndex - 1] : undefined;
+    const goToMonth = (key: string) => { setMonthKey(key); setDayLimit(DAYS_STEP); };
+
+    const shown = rows.filter((r) => monthOf(r.e.createdAt) === month && (type === "all" || r.kind === type));
     const days: { key: string; label: string; sum: number; items: typeof rows }[] = [];
-    for (const r of shown.slice(0, limit)) {
+    for (const r of shown) {
         const d = new Date(r.e.createdAt);
         const key = dayKey(d);
         let day = days[days.length - 1];
@@ -108,6 +126,11 @@ export function TransactionComponent({ entries, payments }: { entries: AdminLedg
         day.sum += Number(r.e.amount);
         day.items.push(r);
     }
+    // Whole days only, so a day's net always covers all of that day.
+    const visibleDays = days.slice(0, dayLimit);
+    const entriesShown = visibleDays.reduce((sum, d) => sum + d.items.length, 0);
+    const daysLeft = days.length - visibleDays.length;
+    const nextDays = Math.min(DAYS_STEP, daysLeft);
 
     return (
         <div className="mx-auto flex w-full min-w-0 flex-col gap-[18px]">
@@ -125,6 +148,7 @@ export function TransactionComponent({ entries, payments }: { entries: AdminLedg
                 <Total label="Net" value={signed(net)} sub={`${net >= 0 ? "more" : "fewer"} points held than a week ago`} />
             </section>
 
+            <div className="flex flex-wrap items-center justify-between gap-3">
             <div role="group" aria-label="Type" className="flex flex-wrap gap-2">
                 {TYPES.map((t) => {
                     const on = t.key === type;
@@ -133,7 +157,7 @@ export function TransactionComponent({ entries, payments }: { entries: AdminLedg
                             key={t.key}
                             type="button"
                             aria-pressed={on}
-                            onClick={() => { setType(t.key); setLimit(PAGE); }}
+                            onClick={() => { setType(t.key); setDayLimit(DAYS_STEP); }}
                             className={cn(
                                 "inline-flex h-8 items-center gap-1.5 rounded-full border border-input bg-card px-3 text-[13px] font-medium text-foreground/80 hover:text-foreground",
                                 on && "border-foreground bg-foreground text-background hover:text-background"
@@ -144,16 +168,24 @@ export function TransactionComponent({ entries, payments }: { entries: AdminLedg
                     );
                 })}
             </div>
+            {month && (
+                <div role="group" aria-label="Month" className="flex items-center gap-1">
+                    <Button variant="ghost" size="icon" className="size-8" aria-label="Older month" disabled={!older} onClick={() => older && goToMonth(older)}><ChevronLeft /></Button>
+                    <span className="min-w-[124px] text-center text-[13px] font-medium">{monthName(month)}</span>
+                    <Button variant="ghost" size="icon" className="size-8" aria-label="Newer month" disabled={!newer} onClick={() => newer && goToMonth(newer)}><ChevronRight /></Button>
+                </div>
+            )}
+            </div>
 
             <div className="overflow-hidden rounded-[14px] border bg-card">
                 {days.length === 0 ? (
                     <div className="flex flex-col items-center gap-2 px-5 py-12 text-center">
-                        <span className="font-medium">{rows.length === 0 ? "No points activity yet" : "Nothing of this type"}</span>
+                        <span className="font-medium">{rows.length === 0 ? "No points activity yet" : `Nothing of this type in ${monthName(month)}`}</span>
                         <span className="text-sm text-muted-foreground">
-                            {rows.length === 0 ? "Top-ups, ad payments and refunds show up here." : "Try another type."}
+                            {rows.length === 0 ? "Top-ups, ad payments and refunds show up here." : "Try another type or month."}
                         </span>
                     </div>
-                ) : days.map((d) => (
+                ) : visibleDays.map((d) => (
                     <div key={d.key}>
                         <div className="flex justify-between border-b bg-muted/40 px-[18px] py-2.5 text-xs text-muted-foreground">
                             <span className="font-medium text-foreground/80">{d.label}</span>
@@ -186,14 +218,21 @@ export function TransactionComponent({ entries, payments }: { entries: AdminLedg
                         })}
                     </div>
                 ))}
+                {days.length > 0 && (
+                    <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-2.5 px-3.5 py-2.5 text-[13px] text-muted-foreground">
+                        <span>
+                            Showing {visibleDays.length} of {days.length} {days.length === 1 ? "day" : "days"} · {entriesShown.toLocaleString("en-US")} of {shown.length.toLocaleString("en-US")} {shown.length === 1 ? "entry" : "entries"}
+                        </span>
+                        {daysLeft > 0 ? (
+                            <Button variant="outline" size="sm" className="h-8 bg-card text-[13px]" onClick={() => setDayLimit((l) => l + DAYS_STEP)}>
+                                Show {nextDays} more {nextDays === 1 ? "day" : "days"}
+                            </Button>
+                        ) : older && (
+                            <Button variant="outline" size="sm" className="h-8 bg-card text-[13px]" onClick={() => goToMonth(older)}>Go to {monthName(older)}</Button>
+                        )}
+                    </div>
+                )}
             </div>
-
-            {shown.length > limit && (
-                <div className="flex items-center justify-center gap-3">
-                    <span className="text-[13px] text-muted-foreground">Showing {limit.toLocaleString("en-US")} of {shown.length.toLocaleString("en-US")}</span>
-                    <Button variant="outline" className="bg-card" onClick={() => setLimit((l) => l + PAGE)}>Show more</Button>
-                </div>
-            )}
         </div>
     );
 }

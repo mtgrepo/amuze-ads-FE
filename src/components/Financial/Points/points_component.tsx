@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn } from "@/lib/utils";
 import type { PointsLedgerResponse } from "../../../dto/response/points/pointsResponse";
 import type { AdvertisersResponse } from "../../../dto/response/advertisers/advertisersResponse";
+import { TablePagination } from "../../Common/Pagination/table_pagination";
 import { AddPointsDialog } from "./add_points_dialog";
 
 const DAY = 86_400_000;
@@ -31,6 +32,7 @@ const runwayText = (days: number | null) =>
 export function PointsComponent({ ledger, advertisers }: { ledger: PointsLedgerResponse; advertisers: AdvertisersResponse[] }) {
     const [now] = React.useState(() => Date.now());
     const [topUp, setTopUp] = React.useState<{ id: string; name: string } | null>(null);
+    const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 });
 
     const { wallets, totals } = React.useMemo(() => {
         const monthStart = new Date(new Date(now).getFullYear(), new Date(now).getMonth(), 1).getTime();
@@ -81,6 +83,9 @@ export function PointsComponent({ ledger, advertisers }: { ledger: PointsLedgerR
         };
     }, [ledger, advertisers, now]);
 
+    const pageIndex = Math.min(pagination.pageIndex, Math.max(0, Math.ceil(wallets.length / pagination.pageSize) - 1));
+    const pageWallets = wallets.slice(pageIndex * pagination.pageSize, (pageIndex + 1) * pagination.pageSize);
+
     return (
         <div className="mx-auto flex w-full min-w-0 flex-col gap-[18px]">
             <header className="flex flex-col gap-1">
@@ -92,7 +97,8 @@ export function PointsComponent({ ledger, advertisers }: { ledger: PointsLedgerR
                 {totals.map((t) => <Total key={t.label} {...t} />)}
             </section>
 
-            <div className="overflow-x-auto rounded-[14px] border bg-card">
+            <div className="rounded-[14px] border bg-card">
+                <div className="overflow-x-auto rounded-t-[14px]">
                 <Table className="min-w-[860px]">
                     <TableHeader>
                         <TableRow className="hover:bg-transparent">
@@ -104,7 +110,7 @@ export function PointsComponent({ ledger, advertisers }: { ledger: PointsLedgerR
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {wallets.length ? wallets.map((w) => (
+                        {pageWallets.length ? pageWallets.map((w) => (
                             <TableRow key={w.id} className="hover:bg-transparent">
                                 <TableCell className="p-3">
                                     <div className="flex flex-col gap-0.5">
@@ -140,6 +146,8 @@ export function PointsComponent({ ledger, advertisers }: { ledger: PointsLedgerR
                         )}
                     </TableBody>
                 </Table>
+                </div>
+                <TablePagination total={wallets.length} pageIndex={pageIndex} pageSize={pagination.pageSize} onChange={setPagination} />
             </div>
             <span className="text-xs text-muted-foreground">Agency clients don't have wallets; their agency pays.</span>
 
