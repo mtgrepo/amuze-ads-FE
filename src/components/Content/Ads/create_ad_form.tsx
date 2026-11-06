@@ -1,3 +1,4 @@
+import { startOfToday } from "date-fns";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, type FieldErrors } from "react-hook-form";
@@ -29,7 +30,7 @@ const formSchema = z
     name: z.string().min(1, { message: "Campaign name is required." }),
     packageId: z.string().min(1, { message: "Pick a package." }),
     packageQuantity: z.number().int().min(1, { message: "Buy at least 1." }),
-    startDate: z.date({ message: "Start date is required." }),
+    startDate: z.date({ message: "Start date is required." }).refine((d) => d >= startOfToday(), { message: "The start date can't be in the past." }),
     creativeName: z.string().min(1, { message: "Creative name is required." }),
     assetType: z.string().min(1, { message: "Asset type is required." }),
     destinationLink: z

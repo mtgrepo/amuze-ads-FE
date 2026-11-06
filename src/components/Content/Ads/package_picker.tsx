@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { addYears, format, startOfToday } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,7 +79,7 @@ export function PackagePicker({ value, onChange, current, saved, disabled, error
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar mode="single" selected={value.startDate} onSelect={(d) => set({ startDate: d ?? undefined })} captionLayout="dropdown" />
+                        <Calendar mode="single" selected={value.startDate} onSelect={(d) => set({ startDate: d ?? undefined })} captionLayout="dropdown" disabled={{ before: startOfToday() }} startMonth={startOfToday()} endMonth={addYears(startOfToday(), 2)} />
                     </PopoverContent>
                 </Popover>
                 {errors?.startDate && <p className="text-destructive text-sm">{errors.startDate}</p>}

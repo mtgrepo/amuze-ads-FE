@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { UseFormReturn } from "react-hook-form";
-import { format } from "date-fns";
+import { addYears, format, startOfToday } from "date-fns";
 import { CalendarIcon, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -425,7 +425,7 @@ export function BudgetStep({
                   </FormControl>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={field.value} onSelect={(d) => field.onChange(d ?? undefined)} captionLayout="dropdown" />
+                  <Calendar mode="single" selected={field.value} onSelect={(d) => field.onChange(d ?? undefined)} captionLayout="dropdown" disabled={{ before: startOfToday() }} startMonth={startOfToday()} endMonth={addYears(startOfToday(), 2)} />
                 </PopoverContent>
               </Popover>
               {summary.tooLong ? (
