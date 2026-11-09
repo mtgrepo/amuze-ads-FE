@@ -20,4 +20,11 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // shadcn/ui files export variants next to components, and the entry file exports nothing.
+    files: ['src/components/ui/**/*.{ts,tsx}', 'src/main.tsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])

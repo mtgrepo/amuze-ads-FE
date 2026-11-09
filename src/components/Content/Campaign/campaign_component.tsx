@@ -147,7 +147,7 @@ export function CampaignComponent
                                 <SelectContent>
                                     <SelectItem value="all">All</SelectItem>
                                     {objectiveOptions
-                                        ?.map((ob: any) => (
+                                        ?.map((ob) => (
                                             <SelectItem key={ob.value} value={String(ob.value)}>
                                                {ob.label}
                                             </SelectItem>
@@ -175,9 +175,9 @@ export function CampaignComponent
                                 <SelectContent>
                                     <SelectItem value="all">All</SelectItem>
                                     {statusOptions
-                                        ?.map((st: any) => (
+                                        ?.map((st) => (
                                             <SelectItem key={st.value} value={String(st.value)}>
-                                                {st.icon}  {st.label}
+                                                {st.label}
                                             </SelectItem>
                                         ))}
                                 </SelectContent>

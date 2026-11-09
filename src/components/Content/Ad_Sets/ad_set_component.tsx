@@ -108,7 +108,7 @@ export function AdSetComponent({ data }: AdSetProps) {
                                 <SelectContent>
                                     <SelectItem value="all">All</SelectItem>
                                     {gender
-                                        ?.map((st: any) => (
+                                        ?.map((st) => (
                                             <SelectItem key={st.value} value={String(st.value)}>
                                                 {st.label}
                                             </SelectItem>

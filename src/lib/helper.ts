@@ -30,7 +30,7 @@ export function decryptAuthData(dataStr: string): AuthData | null {
   try {
     const data = JSON.parse(atob(dataStr));
     return data;
-  } catch (error) {
+  } catch {
     return null;
   }
 }

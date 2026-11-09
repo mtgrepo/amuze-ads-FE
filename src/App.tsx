@@ -14,9 +14,9 @@ import { AttentionBell } from "./components/Common/Layout/attention_bell"
 
 type MatchType = {
   pathname: string
-  data?: any
+  data?: unknown
   handle?: {
-    crumb: string | string[] | ((data: any) => string | string[])
+    crumb: string | string[] | ((data: unknown) => string | string[])
   }
 }
 function App() {

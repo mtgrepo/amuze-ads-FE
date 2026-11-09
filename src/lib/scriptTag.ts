@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 import { z } from "zod"
-import type { UseFormReturn, Path } from "react-hook-form"
+import type { FieldValues, UseFormReturn, Path, PathValue } from "react-hook-form"
 
 // Matches:
 // HTML tags like <script>, <img ...>, <iframe>, <svg>, etc.
@@ -35,7 +35,7 @@ export const safeString = (base = z.string()) =>
  * Hook that automatically clears any input when script/HTML is typed
  * and shows the message under that input via <FormMessage />
  */
-export function usePreventScriptTag<T extends Record<string, any>>(
+export function usePreventScriptTag<T extends FieldValues>(
   form: UseFormReturn<T>
 ) {
   useEffect(() => {
@@ -45,7 +45,7 @@ export function usePreventScriptTag<T extends Record<string, any>>(
 
       if (typeof currentValue === "string" && hasScriptTag(currentValue)) {
         // Clear the input box automatically
-        form.setValue(name as Path<T>, "" as any, { shouldValidate: false })
+        form.setValue(name as Path<T>, "" as PathValue<T, Path<T>>, { shouldValidate: false })
 
         // Show the message right under the related input (<FormMessage />)
         form.setError(name as Path<T>, {

@@ -14,7 +14,11 @@ import { AMUZE_ADMIN_PORTAL_URL, goToAmuzeAdmin } from "../../lib/amuze"
 export default function SsoPage() {
     const dispatch = useDispatch()
     const navigate = useNavigate()
-    const [error, setError] = useState<string | null>(null)
+    const [error, setError] = useState<string | null>(() =>
+        new URLSearchParams(window.location.hash.slice(1)).get("token")
+            ? null
+            : "No sign-in token was provided. Open the Ad portal from the AMUZE admin portal."
+    )
     // React StrictMode runs effects twice in development; sign in only once.
     const started = useRef(false)
 
@@ -26,10 +30,7 @@ export default function SsoPage() {
         // Drop the token from the address bar and browser history right away.
         window.history.replaceState(null, "", window.location.pathname)
 
-        if (!token) {
-            setError("No sign-in token was provided. Open the Ad portal from the AMUZE admin portal.")
-            return
-        }
+        if (!token) return
 
         adminSso(token)
             .then((response) => {
