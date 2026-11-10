@@ -1,0 +1,80 @@
+name: Deploy to UAT
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+# Never run two UAT deploys at the same time; a newer push cancels the older one.
+concurrency:
+  group: deploy-uat
+  cancel-in-progress: true
+
+jobs:
+  # Quick check on GitHub so obviously broken code never reaches the server.
+  # (No build here — the build happens on the server.)
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+  deploy:
+    name: Build & Deploy on UAT Server
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+      - name: Build & publish on server
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          BRANCH: develop
+          APP_DIR: ${{ vars.UAT_APP_DIR }}
+          DEPLOY_PATH: ${{ vars.UAT_DEPLOY_PATH }}
+        with:
+          host: ${{ secrets.UAT_SSH_HOST }}
+          username: ${{ secrets.UAT_SSH_USERNAME }}
+          key: ${{ secrets.UAT_SSH_KEY }}
+          envs: BRANCH,APP_DIR,DEPLOY_PATH
+          command_timeout: 20m
+          script: |
+            set -e
+            if [ -z "$APP_DIR" ] || [ -z "$DEPLOY_PATH" ]; then
+              echo "UAT_APP_DIR and UAT_DEPLOY_PATH variables must be set"; exit 1
+            fi
+
+            # Node from nvm, if the server uses it
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+            # Get exactly what's on the branch (discards edits made on the server
+            # to tracked files; untracked files like .env are kept)
+            cd "$APP_DIR"
+            git fetch origin "$BRANCH"
+            git reset --hard "origin/$BRANCH"
+
+            # Build — uses the .env file in APP_DIR
+            npm ci
+            npm run build
+
+            # Only after a successful build: swap the new files into the folder
+            # nginx serves, so the live site never breaks mid-build.
+            sudo mkdir -p "$DEPLOY_PATH"
+            sudo rsync -a --delete dist/ "$DEPLOY_PATH"/
+            sudo systemctl reload nginx || echo "Nginx reload skipped"
+
+            echo "UAT deployment completed: $(git rev-parse --short HEAD) -> $DEPLOY_PATH"
