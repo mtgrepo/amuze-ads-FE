@@ -12,6 +12,7 @@ import {
   Settings2,
   ShieldCheck,
   Users,
+  Wallet,
 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { useSelector } from "react-redux"
@@ -51,6 +52,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     {
       label: "Accounts",
       items: [
+        { title: "Income", url: "/income", icon: Wallet },
         { title: "Advertisers", url: "/advertisers", icon: Users },
         { title: "Points", url: "/points", icon: Coins },
         { title: "Transactions", url: "/transactions", icon: ArrowLeftRight },

@@ -19,6 +19,7 @@ import NotificationsPage from "../features/Notifications/notifications"
 import DailyAdStats from "@/features/Performance/daily_ad_stats"
 import TransactionsPage from "../features/Financial/Transactions/transactions"
 import PointsPage from "../features/Financial/Points/points"
+import IncomePage from "../features/Financial/Income/income"
 import AdPackagesPage from "../features/AdPackages/ad_packages"
 import CalendarPage from "../features/Calendar/calendar"
 import ActivityLogPage from "../features/Activity/activity_log"
@@ -140,6 +141,12 @@ const router = createBrowserRouter([
                 path: "packages",
                 element: <AdPackagesPage />,
                 handle: { crumb: ["Ad management", "Packages"] },
+            },
+            // income
+            {
+                path: "income",
+                element: <IncomePage />,
+                handle: { crumb: ["Accounts", "Income"] },
             },
             // points
             {

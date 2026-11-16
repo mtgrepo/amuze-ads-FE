@@ -44,3 +44,42 @@ export interface DashboardSummaryResponse {
         received: RevenueFigure;
     };
 }
+
+/** One period's money. All amounts are MMK (1 point = 1 MMK). */
+export interface IncomePeriod {
+    /** Money customers paid for points: KBZPay purchases plus top-ups paid to an admin. */
+    received: { total: number; kbzpay: number; offline: number };
+    /** Points spent on ads minus refunds for ads that never ran (total = packages + objectives + extensions − refunded). */
+    earned: { total: number; packages: number; objectives: number; extensions: number; refunded: number };
+    /** Free points given. A cost, not income. */
+    bonus: number;
+}
+
+export interface IncomeCustomer {
+    advertiserId: string;
+    name: string;
+    type: "agency" | "advertiser";
+    earned: number;
+    received: number;
+}
+
+export interface IncomePackage {
+    packageName: string;
+    earned: number;
+    ads: number;
+}
+
+export interface IncomeResponse {
+    fromDate: string;
+    toDate: string;
+    current: IncomePeriod;
+    /** The same-length period just before. */
+    previous: IncomePeriod;
+    /** Held in wallets right now, not limited to the range. */
+    unspent: { points: number; wallets: number };
+    /** Every day in the range, zeros included. */
+    daily: { date: string; received: number; earned: number }[];
+    /** Top 10 by earned. */
+    topCustomers: IncomeCustomer[];
+    byPackage: IncomePackage[];
+}
