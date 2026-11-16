@@ -14,7 +14,9 @@ import { LiveNow } from "./admin/live_now"
 import { PlacementsCard } from "./admin/placements_card"
 import { ActivityPanel } from "./admin/activity_panel"
 import { CommandPalette } from "./admin/command_palette"
-import { toLocalDateString, type DateRange } from "./admin/dashboard_utils"
+import { isLiveToday, toLocalDateString, type DateRange } from "./admin/dashboard_utils"
+import { useAdListQuery } from "../../Composable/Query/content/useAdListQuery"
+import type { AdResponse } from "../../dto/response/content/adResponse"
 
 type Range = "7d" | "30d" | "90d"
 
@@ -47,6 +49,9 @@ export default function DashboardComponent() {
   const monthStart = new Date()
   monthStart.setDate(1)
   const { summary: month } = useDashboardSummaryQuery(toLocalDateString(monthStart), toLocalDateString(new Date()))
+  // Same count as the Live now card: ads showing in the app today.
+  const { adListData } = useAdListQuery()
+  const liveCount = adListData ? ((adListData as AdResponse[]).filter(isLiveToday)).length : undefined
 
   return (
     <div className="flex w-full flex-col gap-7 px-4 py-6 lg:px-8">
@@ -55,7 +60,8 @@ export default function DashboardComponent() {
           <h1 className="text-[26px] font-semibold tracking-tight">{greeting()}{user?.name ? `, ${user.name}` : ""}</h1>
           <p className="text-muted-foreground">
             {format(new Date(), "EEEE, d MMMM")}
-            {month && <> · <span className="font-mono">{month.campaigns.active}</span> ads live · <span className="font-mono">{month.revenue.earned.inRange.toLocaleString()}</span> pts spent this month</>}
+            {liveCount !== undefined && <> · <span className="font-mono">{liveCount}</span> {liveCount === 1 ? "ad" : "ads"} live</>}
+            {month && <> · <span className="font-mono">{month.revenue.earned.inRange.toLocaleString()}</span> pts spent this month</>}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">

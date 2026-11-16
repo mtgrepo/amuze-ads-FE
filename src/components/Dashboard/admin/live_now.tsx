@@ -6,7 +6,7 @@ import { getCampaignObjectives } from "../../../http/apis/campaignObjective/camp
 import type { AdResponse } from "../../../dto/response/content/adResponse";
 import type { ObjectiveProgress } from "../../../dto/response/campaignObjective/campaignObjectiveResponse";
 import { runProgress } from "../../Content/Ads/column";
-import { daysUntil, placementLabel } from "./dashboard_utils";
+import { daysUntil, isLiveToday, placementLabel } from "./dashboard_utils";
 
 const dateOnly = (value: Date | string) => String(value).slice(0, 10);
 
@@ -16,8 +16,8 @@ const dateOnly = (value: Date | string) => String(value).slice(0, 10);
  */
 export function LiveNow() {
     const { adListData } = useAdListQuery();
-    const live = ((adListData ?? []) as AdResponse[])
-        .filter((ad) => ad.status === "active")
+    const allLive = ((adListData ?? []) as AdResponse[]).filter(isLiveToday);
+    const live = [...allLive]
         .sort((a, b) => dateOnly(a.adSet.campaign.endDate).localeCompare(dateOnly(b.adSet.campaign.endDate)))
         .slice(0, 5);
 
@@ -31,8 +31,17 @@ export function LiveNow() {
     return (
         <section aria-labelledby="live" className="flex min-w-0 flex-col gap-1 rounded-xl border bg-card px-5 py-[18px]">
             <div className="mb-2 flex items-center justify-between gap-3">
-                <h2 id="live" className="text-[15px] font-semibold">Live now</h2>
-                <Link to="/ads?status=active" className="text-[13px] text-primary hover:underline">All live ads →</Link>
+                <h2 id="live" className="flex items-center gap-2 text-[15px] font-semibold">
+                    Live now
+                    {adListData && (
+                        <span className="rounded-full bg-success-soft px-2 py-px font-mono text-xs font-medium text-success-soft-foreground" aria-label={`${allLive.length} ads live`}>
+                            {allLive.length}
+                        </span>
+                    )}
+                </h2>
+                <Link to="/ads?status=active" className="text-[13px] text-primary hover:underline">
+                    {allLive.length > 5 ? `All ${allLive.length} live ads →` : "All live ads →"}
+                </Link>
             </div>
             {live.length === 0 && <div className="flex min-h-40 items-center justify-center text-sm text-muted-foreground">No ads are live right now</div>}
             {live.map((ad, i) => {
