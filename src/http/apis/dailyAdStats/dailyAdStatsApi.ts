@@ -66,3 +66,20 @@ export const getPlacementBreakdown = async (fromDate?: string, toDate?: string, 
         throw new Error("An unexpected error occurred");
     }
 };
+
+export const getDemographics = async (fromDate?: string, toDate?: string, advertiserId?: string, adId?: string) => {
+    try {
+        const params = new URLSearchParams();
+        if (fromDate) params.set("fromDate", fromDate);
+        if (toDate) params.set("toDate", toDate);
+        if (advertiserId) params.set("advertiserId", advertiserId);
+        if (adId) params.set("adId", adId);
+        const response = await axiosInstance.get(`/daily-ad-stats/admin/demographics?${params}`);
+        return response.data;
+    } catch (error) {
+        if (error instanceof AxiosError) {
+            throw new Error(error.response?.data.message || "Failed to fetch the audience breakdown");
+        }
+        throw new Error("An unexpected error occurred");
+    }
+};

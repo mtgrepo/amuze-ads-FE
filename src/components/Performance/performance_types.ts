@@ -73,3 +73,7 @@ export function rangeForDays(days: number): DateRange {
     from.setDate(from.getDate() - (days - 1));
     return { from: toLocalDateString(from), to: toLocalDateString(to) };
 }
+
+/** "male" → "Men", "25-34" stays, "unknown" → "Unknown": labels for the audience breakdown and targeting. */
+const GENDER_LABEL: Record<string, string> = { male: "Men", female: "Women", unknown: "Unknown", all: "Everyone" };
+export const groupLabel = (group: string) => GENDER_LABEL[group] ?? (group === "unknown" ? "Unknown" : group);

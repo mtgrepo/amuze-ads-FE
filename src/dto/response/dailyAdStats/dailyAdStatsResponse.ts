@@ -48,3 +48,17 @@ export interface PlacementBreakdownItem {
     completions: number;
     engagements: number;
 }
+
+/** One age group or gender: what the viewers in it saw and did. */
+export interface DemographicRow {
+    group: string;
+    impressions: number;
+    clicks: number;
+    watches: number;
+    completions: number;
+}
+
+export interface DemographicsResponse {
+    byAge: DemographicRow[];
+    byGender: DemographicRow[];
+}
