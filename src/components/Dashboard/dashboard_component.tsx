@@ -13,6 +13,7 @@ import { DeliveryCard } from "./admin/delivery_card"
 import { LiveNow } from "./admin/live_now"
 import { PlacementsCard } from "./admin/placements_card"
 import { ActivityPanel } from "./admin/activity_panel"
+import { IncomeCard } from "./admin/income_card"
 import { CommandPalette } from "./admin/command_palette"
 import { isLiveToday, toLocalDateString, type DateRange } from "./admin/dashboard_utils"
 import { useAdListQuery } from "../../Composable/Query/content/useAdListQuery"
@@ -91,6 +92,8 @@ export default function DashboardComponent() {
       <NeedsYou />
 
       <MetricTiles range={range} previousLabel={selected.previous} />
+
+      <IncomeCard range={range} previousLabel={selected.previous} />
 
       <div className="flex flex-wrap items-stretch gap-4">
         <div className="min-w-0 flex-[2_1_560px]"><DeliveryCard range={range} rangeLabel={selected.title} /></div>
