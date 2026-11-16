@@ -37,9 +37,10 @@ export const approveAd = async (adId: string) => {
     }
 }
 
-export const rejectAd = async (adId: string) => {
+// The reason (required, up to 500 characters) goes to the advertiser and into the ad's history.
+export const rejectAd = async (adId: string, reason: string) => {
     try {
-        const response = await axiosInstance.post(`/ads/${adId}/reject`)
+        const response = await axiosInstance.post(`/ads/${adId}/reject`, { reason })
         return response.data
     } catch (error) {
         if(error instanceof AxiosError) {

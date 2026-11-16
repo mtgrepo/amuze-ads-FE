@@ -13,6 +13,7 @@ export const useCreatePackageCommand = () => {
         },
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["ad-packages"] });
+            qc.invalidateQueries({ queryKey: ["activity"] });
             toast.success("Package created");
         },
         onError: (error: Error) => {

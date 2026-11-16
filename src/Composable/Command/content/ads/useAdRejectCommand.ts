@@ -8,8 +8,8 @@ export const useAdRejectCommand = () => {
 
     const adRejectMutation = useMutation({
         mutationKey: ['reject-ad'],
-        mutationFn: async (id: string) => {
-            const response = await rejectAd(id);
+        mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
+            const response = await rejectAd(id, reason);
             return response?.data;
         },
         onSuccess: () => {

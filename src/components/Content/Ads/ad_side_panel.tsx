@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import type { AdResponse } from "../../../dto/response/content/adResponse";
 import { EXTENDABLE_CAMPAIGN_STATUSES } from "../../../dto/response/campaignExtension/campaignExtensionResponse";
 import { useAdDetailQuery } from "../../../Composable/Query/content/useAdDetailQuery";
 import { useCampaignObjectivesQuery } from "../../../Composable/Query/campaignObjective/useCampaignObjectivesQuery";
-import { useCampaignExtensionsQuery } from "../../../Composable/Query/campaignExtension/useCampaignExtensionsQuery";
+import { useActivityQuery } from "../../../Composable/Query/activity/useActivityQuery";
 import { useAdApproveCommand } from "../../../Composable/Command/content/ads/useAdApproveCommand";
 import { useAdRejectCommand } from "../../../Composable/Command/content/ads/useAdRejectCommand";
 import { OBJECTIVE_LABELS } from "../../../dto/response/campaignObjective/campaignObjectiveResponse";
@@ -17,7 +16,11 @@ import { ownerName, paidSplit, pts, runDates, runProgress, tileColor } from "./c
 import { ExtendDialog } from "./campaign_extensions";
 import PaymentDialog from "../Payment/payment_dialog";
 import AdsActions from "./ads_actions";
-import { adHistory, historyDate, HISTORY_DOT } from "./ad_history";
+import { RejectReasonDialog } from "../../Common/reject_reason_dialog";
+import { ActivityList, ActivityListLoading } from "../../Activity/activity_list";
+import { ACTIVITY_EMPTY } from "../../../lib/activity";
+
+const HISTORY_PREVIEW = 5;
 
 const GENDER: Record<string, string> = { all: "Everyone", male: "Men", female: "Women" };
 
@@ -34,10 +37,14 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 export function AdSidePanel({ ad, onClose }: { ad: AdResponse | null; onClose: () => void }) {
     const [payOpen, setPayOpen] = useState(false);
     const [extendOpen, setExtendOpen] = useState(false);
+    const [rejectOpen, setRejectOpen] = useState(false);
     const { adDetail } = useAdDetailQuery(ad?.id ?? "");
     const campaign = ad?.adSet.campaign;
     const { objectives } = useCampaignObjectivesQuery(campaign?.id);
-    const { extensions } = useCampaignExtensionsQuery(campaign?.id);
+    const { activity, total: historyTotal, isLoading: historyLoading } = useActivityQuery(
+        { campaignId: campaign?.id, page: 1, limit: HISTORY_PREVIEW },
+        !!campaign?.id,
+    );
     const { approveAdCommand, isPending: approving } = useAdApproveCommand();
     const { rejectAdCommand, isPending: rejecting } = useAdRejectCommand();
 
@@ -45,11 +52,10 @@ export function AdSidePanel({ ad, onClose }: { ad: AdResponse | null; onClose: (
 
     const creative = adDetail?.id === ad.id ? adDetail.adCreative : undefined;
     const picked = objectives.filter((o) => o.selected);
-        const canExtend = EXTENDABLE_CAMPAIGN_STATUSES.includes(campaign.status);
-    const history = adHistory(ad, extensions);
+    const canExtend = EXTENDABLE_CAMPAIGN_STATUSES.includes(campaign.status);
 
     const approve = async () => { await approveAdCommand(ad.id); onClose(); };
-    const reject = async () => { await rejectAdCommand(ad.id); onClose(); };
+    const reject = async (reason: string) => { await rejectAdCommand({ id: ad.id, reason }); onClose(); };
 
     return (
         <>
@@ -112,16 +118,15 @@ export function AdSidePanel({ ad, onClose }: { ad: AdResponse | null; onClose: (
                         </section>
 
                         <section className="flex flex-col gap-2.5">
-                            <h3 className="text-[13px] font-semibold text-muted-foreground">History</h3>
-                            <ol className="flex flex-col gap-2.5">
-                                {history.map((h, i) => (
-                                    <li key={i} className="flex gap-2.5 text-[13px]">
-                                        <span className={cn("mt-1.5 size-[7px] shrink-0 rounded-full", HISTORY_DOT[h.tone])} aria-hidden="true" />
-                                        <span className="flex-1">{h.text}</span>
-                                        <span className="whitespace-nowrap text-muted-foreground">{historyDate(h.when)}</span>
-                                    </li>
-                                ))}
-                            </ol>
+                            <div className="flex items-center justify-between gap-2.5">
+                                <h3 className="text-[13px] font-semibold text-muted-foreground">History</h3>
+                                {historyTotal > 0 && (
+                                    <Link to={`/ads/${ad.id}`} className="text-[13px] font-medium text-primary hover:underline">See all</Link>
+                                )}
+                            </div>
+                            {historyLoading ? <ActivityListLoading />
+                                : activity.length === 0 ? <p className="text-[13px] text-muted-foreground">{ACTIVITY_EMPTY}</p>
+                                : <ActivityList items={activity} />}
                         </section>
                     </div>
 
@@ -129,7 +134,7 @@ export function AdSidePanel({ ad, onClose }: { ad: AdResponse | null; onClose: (
                         <Button variant="outline" asChild><Link to={`/daily-ads-status?ad=${ad.id}`}>View performance</Link></Button>
                         {canExtend && <Button variant="outline" onClick={() => setExtendOpen(true)}>Extend</Button>}
                         <div className="ml-auto flex gap-2">
-                            {ad.status === "pending" && <Button variant="outline" disabled={rejecting} onClick={reject}>Reject</Button>}
+                            {ad.status === "pending" && <Button variant="outline" disabled={rejecting} onClick={() => setRejectOpen(true)}>Reject</Button>}
                             {ad.status === "pending" && <Button disabled={approving} onClick={approve}>Approve</Button>}
                             {ad.status === "draft" && <Button onClick={() => setPayOpen(true)}>Pay now</Button>}
                             {ad.status === "expired" && <Button onClick={() => setExtendOpen(true)}>Extend to restart</Button>}
@@ -144,6 +149,14 @@ export function AdSidePanel({ ad, onClose }: { ad: AdResponse | null; onClose: (
                 <PaymentDialog open={payOpen} onOpenChange={setPayOpen} campaignId={campaign.id} campaignName={campaign.name} amount={campaign.totalBudget} />
             )}
             {canExtend && extendOpen && <ExtendDialog campaign={campaign} isAdmin open={extendOpen} onOpenChange={setExtendOpen} />}
+            <RejectReasonDialog
+                open={rejectOpen}
+                onOpenChange={setRejectOpen}
+                title="Reject this ad?"
+                description={<>{campaign.name} won't run and its points are refunded.</>}
+                pending={rejecting}
+                onConfirm={reject}
+            />
         </>
     );
 }

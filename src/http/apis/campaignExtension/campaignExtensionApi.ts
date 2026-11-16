@@ -55,9 +55,10 @@ export const approveExtension = async (id: string) => {
     }
 };
 
-export const rejectExtension = async (id: string) => {
+// The reason (required, up to 500 characters) goes to the advertiser and into the ad's history.
+export const rejectExtension = async (id: string, reason: string) => {
     try {
-        const response = await axiosInstance.post(`/campaign-extensions/${id}/reject`);
+        const response = await axiosInstance.post(`/campaign-extensions/${id}/reject`, { reason });
         return response.data;
     } catch (error) {
         fail(error, "Couldn't reject the extension");

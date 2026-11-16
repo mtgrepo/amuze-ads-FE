@@ -21,6 +21,7 @@ import TransactionsPage from "../features/Financial/Transactions/transactions"
 import PointsPage from "../features/Financial/Points/points"
 import AdPackagesPage from "../features/AdPackages/ad_packages"
 import CalendarPage from "../features/Calendar/calendar"
+import ActivityLogPage from "../features/Activity/activity_log"
 
 const router = createBrowserRouter([
     {
@@ -121,6 +122,12 @@ const router = createBrowserRouter([
                 path: "system-configs",
                 element: <SystemConfigs />,
                 handle: { crumb: ["Settings", "System configs"] },
+            },
+            // activity log
+            {
+                path: "activity-log",
+                element: <ActivityLogPage />,
+                handle: { crumb: ["Settings", "Activity log"] },
             },
             // daily ads stats
             {

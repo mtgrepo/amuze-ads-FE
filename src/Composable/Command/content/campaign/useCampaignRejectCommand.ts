@@ -8,8 +8,8 @@ export const useCampaignRejectCommand = () => {
 
     const campaignRejectMutation = useMutation({
         mutationKey: ['reject-campaign'],
-        mutationFn: async (id: string) => {
-            const response = await rejectCampaign(id);
+        mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
+            const response = await rejectCampaign(id, reason);
             return response?.data;
         },
         onSuccess: () => {

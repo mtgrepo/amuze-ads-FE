@@ -29,6 +29,7 @@ import { statusLabel } from "../../../lib/status";
 import { daysUntil, placementLabel } from "../../Dashboard/admin/dashboard_utils";
 import { useBulkReviewCommand } from "../../../Composable/Command/content/ads/useBulkReviewCommand";
 import { downloadExcel, excelSheet, type ExcelColumn } from "@/lib/excel";
+import { RejectReasonDialog } from "../../Common/reject_reason_dialog";
 
 type View = "all" | "pending" | "active" | "ending" | "draft" | "expired";
 
@@ -146,6 +147,7 @@ export function AdComponent({ data }: { data: AdResponse[] }) {
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 });
   const [openId, setOpenId] = React.useState<string | null>(null);
   const [extending, setExtending] = React.useState(false);
+  const [rejecting, setRejecting] = React.useState(false);
   const { bulkReview, isReviewing } = useBulkReviewCommand();
 
   const setFilter = (key: FilterKey, value: string | null) => {
@@ -191,8 +193,8 @@ export function AdComponent({ data }: { data: AdResponse[] }) {
   const selected = data.filter((ad) => rowSelection[ad.id]);
   const reviewable = selected.filter((ad) => ad.status === "pending");
   const extendable = selected.length === 1 && EXTENDABLE_CAMPAIGN_STATUSES.includes(selected[0].adSet.campaign.status) ? selected[0] : null;
-  const review = async (decision: "approve" | "reject") => {
-    await bulkReview({ ids: reviewable.map((ad) => ad.id), decision });
+  const review = async (decision: "approve" | "reject", reason?: string) => {
+    await bulkReview({ ids: reviewable.map((ad) => ad.id), decision, reason });
     setRowSelection({});
   };
 
@@ -309,7 +311,7 @@ export function AdComponent({ data }: { data: AdResponse[] }) {
           <span className="mr-1.5 font-mono text-[13px]">{selected.length} selected</span>
           {[
             { label: "Approve", disabled: isReviewing || reviewable.length === 0, onClick: () => review("approve"), title: "Only ads waiting for review can be approved" },
-            { label: "Reject", disabled: isReviewing || reviewable.length === 0, onClick: () => review("reject"), title: "Only ads waiting for review can be rejected" },
+            { label: "Reject", disabled: isReviewing || reviewable.length === 0, onClick: () => setRejecting(true), title: "Only ads waiting for review can be rejected" },
             { label: "Extend…", disabled: !extendable, onClick: () => setExtending(true), title: "Select one live or expired ad to extend" },
             { label: "Export", disabled: false, onClick: () => void exportAds(selected, "selected-ads"), title: undefined },
           ].map((b) => (
@@ -323,6 +325,15 @@ export function AdComponent({ data }: { data: AdResponse[] }) {
       )}
 
       {openAd && <AdSidePanel key={openAd.id} ad={openAd} onClose={() => setOpenId(null)} />}
+      <RejectReasonDialog
+        open={rejecting}
+        onOpenChange={setRejecting}
+        title={`Reject ${reviewable.length} ${reviewable.length === 1 ? "ad" : "ads"}?`}
+        description="They won't run and their points are refunded. Every advertiser gets the same reason."
+        confirmLabel={`Reject ${reviewable.length}`}
+        pending={isReviewing}
+        onConfirm={(reason) => review("reject", reason)}
+      />
       {extendable && extending && (
         <ExtendDialog campaign={extendable.adSet.campaign} isAdmin open={extending} onOpenChange={(o) => { setExtending(o); if (!o) setRowSelection({}); }} />
       )}
