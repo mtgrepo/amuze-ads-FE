@@ -19,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { adColumns, ctrText, ownerName, paidSplit, runDates } from "./column";
+import { adColumns, ownerName } from "./column";
 import { AdSidePanel } from "./ad_side_panel";
 import { ExtendDialog } from "./campaign_extensions";
 import type { AdResponse } from "../../../dto/response/content/adResponse";
@@ -28,6 +28,7 @@ import { TablePagination } from "../../Common/Pagination/table_pagination";
 import { statusLabel } from "../../../lib/status";
 import { daysUntil, placementLabel } from "../../Dashboard/admin/dashboard_utils";
 import { useBulkReviewCommand } from "../../../Composable/Command/content/ads/useBulkReviewCommand";
+import { downloadExcel, excelSheet, type ExcelColumn } from "@/lib/excel";
 
 type View = "all" | "pending" | "active" | "ending" | "draft" | "expired";
 
@@ -101,27 +102,29 @@ function SummaryCard({ label, value, note, warn }: { label: string; value: strin
   );
 }
 
-const csvCell = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
+const GENDER_LABEL: Record<string, string> = { all: "Everyone", male: "Men", female: "Women" };
 
-function exportCsv(ads: AdResponse[], filename: string) {
-  const header = ["Ad", "Advertiser", "Status", "Placement", "Audience", "Package", "Paid (pts)", "Paid for", "Runs", "Impressions", "Clicks", "CTR"];
-  const lines = ads.map((ad) => {
-    const c = ad.adSet.campaign;
-    return [
-      c.name, ownerName(ad), statusLabel(ad.status), placementLabel(ad.placementKey),
-      `${ad.adSet.gender}, ${ad.adSet.ageMin}–${ad.adSet.ageMax}`, `${c.packageQuantity} × ${c.packageName}`,
-      Number(c.planCost) + Number(c.objectiveCost ?? 0), paidSplit(ad), runDates(ad),
-      ad.totalImpressions ?? 0, ad.totalClicks ?? 0, ctrText(ad),
-    ].map(csvCell).join(",");
-  });
-  const blob = new Blob([[header.map(csvCell).join(","), ...lines].join("\n")], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
+const AD_COLUMNS: ExcelColumn<AdResponse>[] = [
+  { header: "Ad", value: (ad) => ad.adSet.campaign.name },
+  { header: "Advertiser", value: (ad) => ownerName(ad) },
+  { header: "Status", value: (ad) => statusLabel(ad.status) },
+  { header: "Placement", value: (ad) => placementLabel(ad.placementKey) },
+  { header: "Ad type", value: (ad) => ad.adType },
+  { header: "Audience", value: (ad) => GENDER_LABEL[ad.adSet.gender] ?? ad.adSet.gender },
+  { header: "Age from", value: (ad) => ad.adSet.ageMin, format: "number" },
+  { header: "Age to", value: (ad) => ad.adSet.ageMax, format: "number" },
+  { header: "Package", value: (ad) => `${ad.adSet.campaign.packageQuantity} × ${ad.adSet.campaign.packageName}` },
+  { header: "Package (pts)", value: (ad) => Number(ad.adSet.campaign.planCost), format: "number" },
+  { header: "Objectives (pts)", value: (ad) => Number(ad.adSet.campaign.objectiveCost ?? 0), format: "number" },
+  { header: "Total paid (pts)", value: (ad) => Number(ad.adSet.campaign.planCost) + Number(ad.adSet.campaign.objectiveCost ?? 0), format: "number" },
+  { header: "Start date", value: (ad) => String(ad.adSet.campaign.startDate).slice(0, 10), format: "date" },
+  { header: "End date", value: (ad) => String(ad.adSet.campaign.endDate).slice(0, 10), format: "date" },
+  { header: "Impressions", value: (ad) => ad.totalImpressions ?? 0, format: "number" },
+  { header: "Clicks", value: (ad) => ad.totalClicks ?? 0, format: "number" },
+  { header: "CTR", value: (ad) => (ad.totalImpressions ? (ad.totalClicks ?? 0) / ad.totalImpressions : null), format: "percent" },
+];
+
+const exportAds = (ads: AdResponse[], name: string) => downloadExcel(name, [excelSheet("Ads", AD_COLUMNS, ads)]);
 
 export function AdComponent({ data }: { data: AdResponse[] }) {
   // ?status=pending (from the dashboard or the bell) opens that view.
@@ -201,7 +204,7 @@ export function AdComponent({ data }: { data: AdResponse[] }) {
           <p className="text-muted-foreground">Each ad is one campaign: its package, audience and creative together. Click an ad to see it without leaving the list.</p>
         </div>
         <div className="flex gap-2.5">
-          <Button variant="outline" className="bg-card" onClick={() => exportCsv(rows, "ads.csv")}>Export CSV</Button>
+          <Button variant="outline" className="bg-card" onClick={() => void exportAds(rows, "ads")} disabled={rows.length === 0}>Export Excel</Button>
           <Button asChild><Link to="/ads/create"><Plus /> Create ad</Link></Button>
         </div>
       </header>
@@ -308,7 +311,7 @@ export function AdComponent({ data }: { data: AdResponse[] }) {
             { label: "Approve", disabled: isReviewing || reviewable.length === 0, onClick: () => review("approve"), title: "Only ads waiting for review can be approved" },
             { label: "Reject", disabled: isReviewing || reviewable.length === 0, onClick: () => review("reject"), title: "Only ads waiting for review can be rejected" },
             { label: "Extend…", disabled: !extendable, onClick: () => setExtending(true), title: "Select one live or expired ad to extend" },
-            { label: "Export", disabled: false, onClick: () => exportCsv(selected, "selected-ads.csv"), title: undefined },
+            { label: "Export", disabled: false, onClick: () => void exportAds(selected, "selected-ads"), title: undefined },
           ].map((b) => (
             <button key={b.label} type="button" disabled={b.disabled} onClick={b.onClick} title={b.disabled ? b.title : undefined}
               className="h-[34px] rounded-lg bg-white/10 px-3 text-[13px] font-medium hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white/10">

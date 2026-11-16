@@ -11,7 +11,7 @@ import { useAdvertiserOptionsQuery } from "../../Composable/Query/dailyAdStats/u
 import { usePlacementBreakdownQuery } from "../../Composable/Query/dailyAdStats/usePlacementBreakdownQuery";
 import { useAdDetailQuery } from "../../Composable/Query/content/useAdDetailQuery";
 import type { PlacementBreakdownItem } from "../../dto/response/dailyAdStats/dailyAdStatsResponse";
-import { eachDay, parseLocalDate, priorRange, rate, type DateRange } from "../../components/Dashboard/admin/dashboard_utils";
+import { placementLabel, eachDay, parseLocalDate, priorRange, type DateRange } from "../../components/Dashboard/admin/dashboard_utils";
 import { AdFilter } from "../../components/Performance/ad_filter";
 import { RangeControl, type RangeKey } from "../../components/Performance/range_control";
 import { TotalsTrend } from "../../components/Performance/totals_trend";
@@ -19,6 +19,7 @@ import { FunnelCard } from "../../components/Performance/funnel_card";
 import { PlacementTable } from "../../components/Performance/placement_table";
 import { DayTable } from "../../components/Performance/day_table";
 import { CRUMB_TRIGGER, rangeForDays, toDayTotals, type DayTotals, type Metric } from "../../components/Performance/performance_types";
+import { downloadExcel, excelSheet, type ExcelColumn } from "@/lib/excel";
 
 const ALL = "all";
 
@@ -26,22 +27,34 @@ function periodLabel(range: DateRange): string {
     return `${format(parseLocalDate(range.from), "d MMM")} – ${format(parseLocalDate(range.to), "d MMM")}`;
 }
 
-const csvCell = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
+const DAY_COLUMNS: ExcelColumn<DayTotals>[] = [
+    { header: "Date", value: (d) => d.date, format: "date" },
+    { header: "Impressions", value: (d) => d.impressions, format: "number" },
+    { header: "Reach", value: (d) => d.reach, format: "number" },
+    { header: "Clicks", value: (d) => d.clicks, format: "number" },
+    { header: "CTR", value: (d) => (d.impressions ? d.clicks / d.impressions : null), format: "percent" },
+    { header: "Watches", value: (d) => d.watches, format: "number" },
+    { header: "Completions", value: (d) => d.completions, format: "number" },
+    { header: "VCR", value: (d) => (d.watches ? d.completions / d.watches : null), format: "percent" },
+    { header: "Engagements", value: (d) => d.engagements, format: "number" },
+];
 
-function downloadReport(days: DayTotals[], range: DateRange) {
-    const header = ["Date", "Impressions", "Reach", "Clicks", "CTR", "Watches", "Completions", "VCR", "Engagements"];
-    const lines = [...days].reverse().map((d) => [
-        d.date, d.impressions, d.reach, d.clicks, rate(d.clicks, d.impressions),
-        d.watches, d.completions, rate(d.completions, d.watches), d.engagements,
-    ].map(csvCell).join(","));
-    const blob = new Blob([[header.map(csvCell).join(","), ...lines].join("\n")], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `performance-${range.from}-to-${range.to}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("Report downloaded", { description: `${days.length} ${days.length === 1 ? "day" : "days"}, ${periodLabel(range)}` });
+const PLACEMENT_COLUMNS: ExcelColumn<PlacementBreakdownItem>[] = [
+    { header: "Placement", value: (p) => placementLabel(p.placementKey) },
+    { header: "Impressions", value: (p) => p.impressions, format: "number" },
+    { header: "Reach", value: (p) => p.reach, format: "number" },
+    { header: "Clicks", value: (p) => p.clicks, format: "number" },
+    { header: "CTR", value: (p) => (p.impressions ? p.clicks / p.impressions : null), format: "percent" },
+    { header: "Watches", value: (p) => p.watches, format: "number" },
+    { header: "VCR", value: (p) => (p.watches ? p.completions / p.watches : null), format: "percent" },
+];
+
+async function downloadReport(days: DayTotals[], placements: PlacementBreakdownItem[], range: DateRange) {
+    const done = await downloadExcel(`performance-${range.from}-to-${range.to}`, [
+        excelSheet("Day by day", DAY_COLUMNS, [...days].reverse()),
+        excelSheet("By placement", PLACEMENT_COLUMNS, placements),
+    ]);
+    if (done) toast.success("Report downloaded", { description: `${days.length} ${days.length === 1 ? "day" : "days"}, ${periodLabel(range)}` });
 }
 
 export default function DailyAdStats() {
@@ -140,7 +153,7 @@ export default function DailyAdStats() {
                     <label className="inline-flex cursor-pointer items-center gap-2 text-[13px] text-foreground/80">
                         <Checkbox checked={compare} onCheckedChange={(v) => setCompare(!!v)} /> Compare with previous period
                     </label>
-                    <Button variant="outline" className="bg-card" onClick={() => downloadReport(current, range)}>Download report</Button>
+                    <Button variant="outline" className="bg-card" onClick={() => void downloadReport(current, placements, range)}>Download report</Button>
                 </div>
             </header>
 
