@@ -1,5 +1,6 @@
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { POINT_TYPE_LABELS, type AdminLedgerEntry } from "../../../dto/response/points/pointsResponse";
@@ -193,7 +194,7 @@ export function TransactionComponent({ entries, payments }: { entries: AdminLedg
                             const plus = amount > 0;
                             const at = new Date(e.createdAt);
                             return (
-                                <div key={e.id} className="flex flex-wrap items-center gap-3.5 border-b px-[18px] py-3 last:border-b-0">
+                                <Link key={e.id} to={`/transactions/${e.id}`} className="flex flex-wrap items-center gap-3.5 border-b px-[18px] py-3 last:border-b-0 hover:bg-muted/40">
                                     <span aria-hidden="true" className={cn(
                                         "inline-flex size-8 flex-none items-center justify-center rounded-full font-semibold",
                                         plus ? "bg-success-soft text-success-soft-foreground" : "bg-destructive-soft text-destructive-soft-foreground"
@@ -210,7 +211,7 @@ export function TransactionComponent({ entries, payments }: { entries: AdminLedg
                                         {signed(amount)} pts
                                     </span>
                                     <span className="w-[130px] text-right font-mono text-xs tabular-nums text-muted-foreground">bal. {num(Number(e.balanceAfter))}</span>
-                                </div>
+                                </Link>
                             );
                         })}
                     </div>

@@ -26,6 +26,19 @@ export const topUpPoints = async (accountId: string, data: TopUpInput) => {
     }
 }
 
+/** One transaction with what it links to (admin). */
+export const getLedgerEntry = async (id: string) => {
+    try {
+        const response = await axiosInstance.get(`/points/ledger/${id}`)
+        return response.data
+    } catch (error) {
+        if(error instanceof AxiosError) {
+            throw new Error(error.response?.data.message || "Failed to fetch the transaction")
+        }
+        throw new Error ("An unexpected error occurred")
+    }
+}
+
 /** Every wallet's points history (admin). */
 export const getPointsLedger = async () => {
     try {

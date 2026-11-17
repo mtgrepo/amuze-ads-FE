@@ -18,6 +18,7 @@ import CampaignPage from "../features/Content/Campaign/campaign"
 import NotificationsPage from "../features/Notifications/notifications"
 import DailyAdStats from "@/features/Performance/daily_ad_stats"
 import TransactionsPage from "../features/Financial/Transactions/transactions"
+import TransactionDetailPage from "../features/Financial/Transactions/transaction_detail"
 import PointsPage from "../features/Financial/Points/points"
 import IncomePage from "../features/Financial/Income/income"
 import AdPackagesPage from "../features/AdPackages/ad_packages"
@@ -159,6 +160,11 @@ const router = createBrowserRouter([
                 path: "transactions",
                 element: <TransactionsPage />,
                 handle: { crumb: ["Accounts", "Transactions"] },
+            },
+            {
+                path: "transactions/:id",
+                element: <TransactionDetailPage />,
+                handle: { crumb: ["Accounts", { label: "Transactions", href: "/transactions" }, { label: "Details" }] },
             },
             {
                 path: "*",
