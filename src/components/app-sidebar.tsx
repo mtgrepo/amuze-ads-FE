@@ -8,6 +8,7 @@ import {
   History,
   LayoutDashboard,
   Megaphone,
+  MonitorPlay,
   Package,
   Settings2,
   ShieldCheck,
@@ -67,6 +68,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       items: [
         { title: "Admin users", url: "/admin-users", icon: ShieldCheck },
         { title: "System configs", url: "/system-configs", icon: Settings2 },
+        { title: "Ad display rules", url: "/ad-display-rules", icon: MonitorPlay },
         { title: "Activity log", url: "/activity-log", icon: History },
       ],
     },

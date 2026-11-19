@@ -66,6 +66,12 @@ const FIELDS: Record<string, Field> = {
     configValue: { label: "Value", show: shortJson },
     category: { label: "Category" },
     configKey: { label: "Key" },
+    enabled: { label: "Shown", show: (v) => (v === true || v === "true" ? "On" : "Off") },
+    everyMin: { label: "Every (from)", show: num },
+    everyMax: { label: "Every (to)", show: num },
+    cooldownMinutes: { label: "Wait after closing", show: (v) => `${num(v)} min` },
+    videoPosition: { label: "Where in the video", show: (v) => ({ start: "Start", middle: "Middle", either: "Start or middle" }[String(v)] ?? String(v)) },
+    modules: { label: "Modules", show: (v) => (Array.isArray(v) ? (v.length ? v.join(", ") : "none") : String(v)) },
 };
 
 /** "packageQuantity" / "package_quantity" → "Package quantity". */
@@ -128,5 +134,5 @@ export const ACTIVITY_TYPES: { key: string; label: string; value?: string }[] = 
     { key: "advertisers", label: "Advertisers", value: "advertiser" },
     { key: "points", label: "Points", value: "points" },
     { key: "packages", label: "Packages", value: "package" },
-    { key: "settings", label: "Settings", value: "system_config" },
+    { key: "settings", label: "Settings", value: "system_config,ad_display_rule" },
 ];

@@ -12,6 +12,7 @@ import AdvertiserDetailsPage from "../features/Advertisers/advertiser_details"
 import { ProtectedRoute } from "./guard"
 import AdminUsers from "../features/System/AdminUsers/admin_users"
 import SystemConfigs from "../features/System/SystemConfigs/system_configs"
+import DisplayRules from "../features/System/DisplayRules/display_rules"
 import ProfilePage from "../features/AdvertiserProfile/profile"
 import AdSetPage from "../features/Content/AdSet/ad_set"
 import CampaignPage from "../features/Content/Campaign/campaign"
@@ -124,6 +125,12 @@ const router = createBrowserRouter([
                 path: "system-configs",
                 element: <SystemConfigs />,
                 handle: { crumb: ["Settings", "System configs"] },
+            },
+            // when the app shows each ad slot
+            {
+                path: "ad-display-rules",
+                element: <DisplayRules />,
+                handle: { crumb: ["Settings", "Ad display rules"] },
             },
             // activity log
             {
