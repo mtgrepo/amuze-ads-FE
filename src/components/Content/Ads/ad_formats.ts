@@ -1,7 +1,7 @@
 /**
  * Which placements each ad type can run in, and which asset types each placement takes.
  * Mirrors src/ads/ad-formats.ts in the backend, which rejects any other combination.
- * A placement key can appear under several ad types (home_feed is both a banner slot and the Muze interstitial).
+ * A placement key can appear under several ad types (home_feed is a banner, the Muze interstitial and a native slot).
  */
 export type AssetType = "image" | "video";
 
@@ -35,10 +35,12 @@ export const DISPLAY_FORMATS: Record<string, readonly PlacementOption[]> = {
         { label: "Free Content Episodes", value: "free_content_episodes", types: ["video"] },
     ],
     native: [
-        { label: "Sponsored Placement", value: "sponsored_placement", types: ["image", "video"] },
+        { label: "Home Page", value: "home_feed", types: ["image", "video"] },
+        { label: "Explore Page", value: "explore_feed", types: ["image", "video"] },
     ],
     pop_ups: [
         { label: "App Open", value: "app_open", types: ["image"] },
+        { label: "Page Navigation", value: "page_navigation", types: ["image"] },
     ],
 };
 
