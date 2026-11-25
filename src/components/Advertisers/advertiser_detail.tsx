@@ -17,9 +17,10 @@ import { EditAdvertiserSheet } from "./edit_advertiser_sheet";
 import { TopUpDialog } from "./top_up_dialog";
 import { DeactivateDialog } from "./deactivate_dialog";
 import { useAdvertiserActions } from "./use_advertiser_actions";
+import { AdvertiserActivity } from "./advertiser_activity";
 import { isActive, kindOf, pts, typeLabel } from "./advertiser_utils";
 
-type Tab = "ads" | "tx" | "profile";
+type Tab = "ads" | "tx" | "profile" | "activity";
 // The details endpoint sends lastLogin; the list type calls it last_login.
 type Detail = AdvertisersResponse & { lastLogin?: string | null };
 
@@ -132,8 +133,8 @@ export default function AdvertiserDetail({ data }: { data: Detail }) {
     const lastLogin = data.lastLogin ?? data.last_login;
 
     const tabs: [Tab, string][] = kind === "client"
-        ? [["ads", "Ads"], ["profile", "Business profile"]]
-        : [["ads", "Ads"], ["tx", "Transactions"], ["profile", "Business profile"]];
+        ? [["ads", "Ads"], ["profile", "Business profile"], ["activity", "Activity"]]
+        : [["ads", "Ads"], ["tx", "Transactions"], ["profile", "Business profile"], ["activity", "Activity"]];
 
     return (
         <div className="flex flex-col gap-5">
@@ -244,6 +245,8 @@ export default function AdvertiserDetail({ data }: { data: Detail }) {
                     )}
                 </section>
             )}
+
+            {tab === "activity" && <AdvertiserActivity advertiserId={data.id} ads={ads} />}
 
             {editOpen && <EditAdvertiserSheet advertiser={data} onClose={() => setEditOpen(false)} />}
             {kind !== "client" && <TopUpDialog accountId={data.id} name={data.name} open={topUpOpen} onOpenChange={setTopUpOpen} />}

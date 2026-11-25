@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 import type { AdminUserResponse } from "../../../dto/response/system/adminUserResponse";
 import type { RootState } from "../../../redux/store/store";
 import { tileColor } from "../../Content/Ads/column";
+import { downloadExcel, excelSheet, type ExcelColumn } from "@/lib/excel";
+import { Button } from "@/components/ui/button";
 
 const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 
@@ -40,9 +42,19 @@ export function AdminComponent({ data }: { data: AdminUserResponse[] }) {
 
     return (
         <div className="mx-auto flex w-full min-w-0 flex-col gap-[18px] pb-12">
-            <header className="flex flex-col gap-1">
-                <h1 className="text-[26px] font-semibold tracking-tight">Admin users</h1>
-                <p className="text-muted-foreground">People who can use this portal.</p>
+            <header className="flex flex-wrap items-end justify-between gap-4">
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-[26px] font-semibold tracking-tight">Admin users</h1>
+                    <p className="text-muted-foreground">People who can use this portal.</p>
+                </div>
+                <Button variant="outline" className="bg-card" disabled={rows.length === 0} onClick={() => void downloadExcel("admin-users", [excelSheet("Admin users", [
+                    { header: "Name", value: (a) => a.name },
+                    { header: "Email", value: (a) => a.email ?? "" },
+                    { header: "Phone", value: (a) => a.phone ?? "" },
+                    { header: "Status", value: (a) => (a.isActive ? "Active" : "Removed in AMUZE") },
+                    { header: "Last sign-in", value: (a) => a.lastLogin, format: "datetime" },
+                    { header: "First sign-in", value: (a) => a.createdAt, format: "date" },
+                ] satisfies ExcelColumn<AdminUserResponse>[], rows)])}>Export Excel</Button>
             </header>
 
             <div className="flex items-start gap-3.5 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3.5 leading-normal text-info-soft-foreground">

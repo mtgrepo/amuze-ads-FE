@@ -23,6 +23,7 @@ import { useCampaignRejectCommand } from "../../../Composable/Command/content/ca
 import { useCampaignDeleteCommand } from "../../../Composable/Command/content/campaign/useCampaignDeleteCommand";
 import { cn } from "../../../lib/utils";
 import type { CampaignResponse } from "../../../dto/response/content/campaignResponse";
+import { RejectReasonDialog } from "../../Common/reject_reason_dialog";
 
 import { statusLabel } from "../../../lib/status";
 export default function CampaignActions({
@@ -56,11 +57,6 @@ export default function CampaignActions({
     const handleApprove = async () => {
         await approveCampaignCommand(id!);
         setApproveOpen(false);
-    };
-
-    const handleReject = async () => {
-        await rejectCampaignCommand(id!);
-        setRejectOpen(false);
     };
 
     /*  STATUS STYLES  */
@@ -216,29 +212,14 @@ export default function CampaignActions({
             </Dialog>
 
             {/* REJECT DIALOG */}
-            <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
-                <DialogContent className="sm:max-w-md rounded-2xl">
-                    <DialogHeader>
-                        <DialogTitle>Reject campaign?</DialogTitle>
-                        <DialogDescription>
-                            Are you sure you want to reject{" "}
-                            <span className="font-medium text-foreground">
-                                {name}
-                            </span>
-                            ? This will set the campaign status to rejected.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <DialogFooter className="gap-2">
-                        <Button variant="outline" onClick={() => setRejectOpen(false)}>
-                            Cancel
-                        </Button>
-                        <Button variant="destructive" onClick={handleReject} disabled={isRejecting}>
-                            {isRejecting ? 'Rejecting...' : 'Reject'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <RejectReasonDialog
+                open={rejectOpen}
+                onOpenChange={setRejectOpen}
+                title="Reject campaign?"
+                description={<><span className="font-medium text-foreground">{name}</span> will be set to rejected.</>}
+                pending={isRejecting}
+                onConfirm={(reason) => rejectCampaignCommand({ id: id!, reason })}
+            />
 
             {/* DETAIL VIEW */}
             <Dialog open={detailOpen} onOpenChange={setDetailOpen}>

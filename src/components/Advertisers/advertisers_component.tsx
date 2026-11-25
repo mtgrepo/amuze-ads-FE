@@ -26,6 +26,7 @@ import { TopUpDialog } from "./top_up_dialog";
 import { DeactivateDialog } from "./deactivate_dialog";
 import { useAdvertiserActions } from "./use_advertiser_actions";
 import { isActive, kindOf, liveAdCounts, LOW_BALANCE, pts, since, typeLabel } from "./advertiser_utils";
+import { downloadExcel, excelSheet, type ExcelColumn } from "@/lib/excel";
 
 type Tab = "all" | "advertiser" | "agency" | "client" | "unverified";
 const TABS: { key: Tab; label: string; test: (a: AdvertisersResponse) => boolean }[] = [
@@ -56,6 +57,19 @@ export function AdvertisersComponent({ data }: { data: AdvertisersResponse[] }) 
   // Step back if the rows on this page are gone, e.g. after deleting the last one.
   const pageIndex = Math.min(pagination.pageIndex, Math.max(0, Math.ceil(rows.length / pagination.pageSize) - 1));
   const pageRows = rows.slice(pageIndex * pagination.pageSize, (pageIndex + 1) * pagination.pageSize);
+
+  // Exports the rows of the open tab, every page of them.
+  const exportAdvertisers = () => downloadExcel(`advertisers-${tab}`, [excelSheet(TABS.find((t) => t.key === tab)!.label, [
+    { header: "Name", value: (a) => a.name },
+    { header: "Type", value: (a) => typeLabel(a, data) },
+    { header: "Email", value: (a) => a.email ?? "" },
+    { header: "Phone", value: (a) => a.phone ?? "" },
+    { header: "Balance (pts)", value: (a) => (kindOf(a) === "client" ? null : balances.get(a.id) ?? null), format: "number" },
+    { header: "Live ads", value: (a) => live.get(a.id) ?? 0, format: "number" },
+    { header: "Status", value: (a) => (isActive(a) ? "Active" : "Inactive") },
+    { header: "Verified", value: (a) => (a.verified ? "Yes" : "No") },
+    { header: "Joined", value: (a) => a.createdAt, format: "date" },
+  ] satisfies ExcelColumn<AdvertisersResponse>[], rows)]);
 
   const byId = (id?: string) => (id ? data.find((a) => a.id === id) : undefined);
   const editing = byId(dialogs.edit);
@@ -92,7 +106,10 @@ export function AdvertisersComponent({ data }: { data: AdvertisersResponse[] }) 
           <h1 className="text-[26px] font-semibold tracking-tight">Advertisers</h1>
           <p className="text-muted-foreground">Businesses that buy ads, and the agencies that buy for their clients. Use ⋯ on a row to edit, verify or deactivate.</p>
         </div>
-        <Button onClick={() => setAddOpen(true)}>Add advertiser</Button>
+        <div className="flex gap-2.5">
+          <Button variant="outline" className="bg-card" onClick={() => void exportAdvertisers()} disabled={rows.length === 0}>Export Excel</Button>
+          <Button onClick={() => setAddOpen(true)}>Add advertiser</Button>
+        </div>
       </header>
 
       <div role="tablist" aria-label="Type" className="flex gap-[22px] overflow-x-auto overflow-y-hidden border-b">

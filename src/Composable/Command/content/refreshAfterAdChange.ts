@@ -19,6 +19,7 @@ const AFFECTED_QUERIES = [
     ["dashboard-summary"],
     ["dashboard-points"],
     ["notifications"],
+    ["activity"],
 ];
 
 /** Shared by every ad and campaign command. Not a hook: it takes the query client they already have. */

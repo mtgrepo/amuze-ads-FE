@@ -18,9 +18,12 @@ import CampaignPage from "../features/Content/Campaign/campaign"
 import NotificationsPage from "../features/Notifications/notifications"
 import DailyAdStats from "@/features/Performance/daily_ad_stats"
 import TransactionsPage from "../features/Financial/Transactions/transactions"
+import TransactionDetailPage from "../features/Financial/Transactions/transaction_detail"
 import PointsPage from "../features/Financial/Points/points"
+import IncomePage from "../features/Financial/Income/income"
 import AdPackagesPage from "../features/AdPackages/ad_packages"
 import CalendarPage from "../features/Calendar/calendar"
+import ActivityLogPage from "../features/Activity/activity_log"
 
 const router = createBrowserRouter([
     {
@@ -122,6 +125,12 @@ const router = createBrowserRouter([
                 element: <SystemConfigs />,
                 handle: { crumb: ["Settings", "System configs"] },
             },
+            // activity log
+            {
+                path: "activity-log",
+                element: <ActivityLogPage />,
+                handle: { crumb: ["Settings", "Activity log"] },
+            },
             // daily ads stats
             {
                 path: "daily-ads-status",
@@ -134,6 +143,12 @@ const router = createBrowserRouter([
                 element: <AdPackagesPage />,
                 handle: { crumb: ["Ad management", "Packages"] },
             },
+            // income
+            {
+                path: "income",
+                element: <IncomePage />,
+                handle: { crumb: ["Accounts", "Income"] },
+            },
             // points
             {
                 path: "points",
@@ -145,6 +160,11 @@ const router = createBrowserRouter([
                 path: "transactions",
                 element: <TransactionsPage />,
                 handle: { crumb: ["Accounts", "Transactions"] },
+            },
+            {
+                path: "transactions/:id",
+                element: <TransactionDetailPage />,
+                handle: { crumb: ["Accounts", { label: "Transactions", href: "/transactions" }, { label: "Details" }] },
             },
             {
                 path: "*",

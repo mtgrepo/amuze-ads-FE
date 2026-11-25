@@ -1,9 +1,11 @@
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { POINT_TYPE_LABELS, type AdminLedgerEntry } from "../../../dto/response/points/pointsResponse";
 import type { TransactionResponse } from "../../../dto/response/transactions/transactionResponse";
+import { downloadExcel, excelSheet, type ExcelColumn } from "@/lib/excel";
 
 const DAY = 86_400_000;
 const DAYS_STEP = 7;
@@ -62,22 +64,18 @@ function dayLabel(d: Date, now: number): string {
     return `${weekday}, ${d.getDate()} ${month}${d.getFullYear() === today.getFullYear() ? "" : ` ${d.getFullYear()}`}`;
 }
 
-const csvCell = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
+type LedgerRow = { e: AdminLedgerEntry; what: string; method?: string };
 
-function exportCsv(rows: { e: AdminLedgerEntry; what: string; method?: string }[]) {
-    const header = ["Date", "Wallet", "Type", "What", "Points", "Balance after", "Payment method", "Note"];
-    const lines = rows.map(({ e, what, method }) => [
-        new Date(e.createdAt).toISOString(), e.advertiser?.name ?? "", POINT_TYPE_LABELS[e.type] ?? e.type, what,
-        Number(e.amount), Number(e.balanceAfter), method ?? "", e.note ?? "",
-    ].map(csvCell).join(","));
-    const blob = new Blob([[header.map(csvCell).join(","), ...lines].join("\n")], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "transactions.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-}
+const LEDGER_COLUMNS: ExcelColumn<LedgerRow>[] = [
+    { header: "Date", value: ({ e }) => e.createdAt, format: "datetime" },
+    { header: "Wallet", value: ({ e }) => e.advertiser?.name ?? "" },
+    { header: "Type", value: ({ e }) => POINT_TYPE_LABELS[e.type] ?? e.type },
+    { header: "What", value: ({ what }) => what },
+    { header: "Points", value: ({ e }) => Number(e.amount), format: "number" },
+    { header: "Balance after", value: ({ e }) => Number(e.balanceAfter), format: "number" },
+    { header: "Payment method", value: ({ method }) => method ?? "" },
+    { header: "Note", value: ({ e }) => e.note ?? "" },
+];
 
 function Total({ label, value, sub, tone }: { label: string; value: string; sub: string; tone?: "in" | "out" }) {
     return (
@@ -139,7 +137,7 @@ export function TransactionComponent({ entries, payments }: { entries: AdminLedg
                     <h1 className="text-[26px] font-semibold tracking-tight">Transactions</h1>
                     <p className="text-muted-foreground">Every point in and out, newest first.</p>
                 </div>
-                <Button variant="outline" className="bg-card" onClick={() => exportCsv(shown)} disabled={shown.length === 0}>Export CSV</Button>
+                <Button variant="outline" className="bg-card" onClick={() => void downloadExcel(`transactions-${month ?? "all"}`, [excelSheet(month ? monthName(month) : "Transactions", LEDGER_COLUMNS, shown)])} disabled={shown.length === 0}>Export Excel</Button>
             </header>
 
             <section aria-label="This period" className="flex flex-wrap gap-3">
@@ -196,7 +194,7 @@ export function TransactionComponent({ entries, payments }: { entries: AdminLedg
                             const plus = amount > 0;
                             const at = new Date(e.createdAt);
                             return (
-                                <div key={e.id} className="flex flex-wrap items-center gap-3.5 border-b px-[18px] py-3 last:border-b-0">
+                                <Link key={e.id} to={`/transactions/${e.id}`} className="flex flex-wrap items-center gap-3.5 border-b px-[18px] py-3 last:border-b-0 hover:bg-muted/40">
                                     <span aria-hidden="true" className={cn(
                                         "inline-flex size-8 flex-none items-center justify-center rounded-full font-semibold",
                                         plus ? "bg-success-soft text-success-soft-foreground" : "bg-destructive-soft text-destructive-soft-foreground"
@@ -213,7 +211,7 @@ export function TransactionComponent({ entries, payments }: { entries: AdminLedg
                                         {signed(amount)} pts
                                     </span>
                                     <span className="w-[130px] text-right font-mono text-xs tabular-nums text-muted-foreground">bal. {num(Number(e.balanceAfter))}</span>
-                                </div>
+                                </Link>
                             );
                         })}
                     </div>

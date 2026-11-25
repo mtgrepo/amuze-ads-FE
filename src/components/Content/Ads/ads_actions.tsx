@@ -25,6 +25,7 @@ import PaymentDialog from "../Payment/payment_dialog";
 import BudgetForm from "./budget_form";
 import { ExtendDialog } from "./campaign_extensions";
 import { EXTENDABLE_CAMPAIGN_STATUSES } from "../../../dto/response/campaignExtension/campaignExtensionResponse";
+import { RejectReasonDialog } from "../../Common/reject_reason_dialog";
 
 export default function AdsActions({ id, status, adSet, adCreative }: AdResponse) {
     const navigate = useNavigate();
@@ -41,11 +42,6 @@ export default function AdsActions({ id, status, adSet, adCreative }: AdResponse
     const handleApprove = async () => {
         await approveAdCommand(id);
         setApproveOpen(false);
-    };
-
-    const handleReject = async () => {
-        await rejectAdCommand(id);
-        setRejectOpen(false);
     };
 
     return (
@@ -139,25 +135,14 @@ export default function AdsActions({ id, status, adSet, adCreative }: AdResponse
             </Dialog>
 
             {/* REJECT DIALOG */}
-            <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
-                <DialogContent className="sm:max-w-md rounded-2xl">
-                    <DialogHeader>
-                        <DialogTitle>Reject ad?</DialogTitle>
-                        <DialogDescription>
-                            This will set the ad status to rejected.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <DialogFooter className="gap-2">
-                        <Button variant="outline" onClick={() => setRejectOpen(false)}>
-                            Cancel
-                        </Button>
-                        <Button variant="destructive" onClick={handleReject} disabled={isRejecting}>
-                            {isRejecting ? 'Rejecting...' : 'Reject'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <RejectReasonDialog
+                open={rejectOpen}
+                onOpenChange={setRejectOpen}
+                title="Reject ad?"
+                description={<>{adSet?.campaign?.name ?? "This ad"} won't run and its points are refunded.</>}
+                pending={isRejecting}
+                onConfirm={(reason) => rejectAdCommand({ id, reason })}
+            />
 
             {/* EDIT BUDGET DIALOG — drafts only; the budget is locked after payment */}
             {status === "draft" && adSet?.campaign && (

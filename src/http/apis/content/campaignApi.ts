@@ -51,9 +51,10 @@ export const updateCampaign = async (id: string, data: CampaignInput) => {
     }
 }
 
-export const changeCampaignStatus = async (id: string, status: string) => {
+// Setting status "rejected" needs a reason too.
+export const changeCampaignStatus = async (id: string, status: string, reason?: string) => {
     try {
-        const response = await axiosInstance.patch(`/campaigns/${id}/change-status`, { status })
+        const response = await axiosInstance.patch(`/campaigns/${id}/change-status`, reason ? { status, reason } : { status })
         return response.data
     } catch (error) {
         if(error instanceof AxiosError) {
@@ -75,9 +76,10 @@ export const approveCampaign = async (id: string) => {
     }
 }
 
-export const rejectCampaign = async (id: string) => {
+// The reason (required, up to 500 characters) goes to the advertiser and into the ad's history.
+export const rejectCampaign = async (id: string, reason: string) => {
     try {
-        const response = await axiosInstance.post(`/campaigns/${id}/reject`)
+        const response = await axiosInstance.post(`/campaigns/${id}/reject`, { reason })
         return response.data
     } catch (error) {
         if(error instanceof AxiosError) {

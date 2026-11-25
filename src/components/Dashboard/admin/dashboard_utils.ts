@@ -76,6 +76,16 @@ export function placementLabel(key: string): string {
     return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
+/**
+ * Live means showing in the app today: approved and paid (status active) and between its start and end dates,
+ * the same rule ad serving uses. An approved ad that starts next week isn't live yet.
+ */
+export function isLiveToday(ad: { status: string; adSet: { campaign: { startDate: Date | string; endDate: Date | string } } }): boolean {
+    const today = toLocalDateString(new Date());
+    const { startDate, endDate } = ad.adSet.campaign;
+    return ad.status === "active" && String(startDate).slice(0, 10) <= today && String(endDate).slice(0, 10) >= today;
+}
+
 export function daysUntil(dateString: string): number {
     const today = parseLocalDate(toLocalDateString(new Date()));
     return Math.round((parseLocalDate(dateString).getTime() - today.getTime()) / 86_400_000);

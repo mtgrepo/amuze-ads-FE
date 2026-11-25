@@ -13,6 +13,7 @@ export const useUpdatePackageCommand = () => {
         },
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["ad-packages"] });
+            qc.invalidateQueries({ queryKey: ["activity"] });
             toast.success("Package updated");
         },
         onError: (error: Error) => {

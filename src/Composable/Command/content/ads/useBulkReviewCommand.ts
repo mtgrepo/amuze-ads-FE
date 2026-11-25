@@ -5,17 +5,17 @@ import { refreshAfterAdChange } from "../refreshAfterAdChange";
 
 type Decision = "approve" | "reject";
 
-/** Approves or rejects several ads one after another, then reports once. */
+/** Approves or rejects several ads one after another, then reports once. A rejection sends the same reason for every ad. */
 export const useBulkReviewCommand = () => {
     const qc = useQueryClient();
     const mutation = useMutation({
         mutationKey: ["bulk-review-ads"],
-        mutationFn: async ({ ids, decision }: { ids: string[]; decision: Decision }) => {
+        mutationFn: async ({ ids, decision, reason = "" }: { ids: string[]; decision: Decision; reason?: string }) => {
             let done = 0;
             const failed: string[] = [];
             for (const id of ids) {
                 try {
-                    await (decision === "approve" ? approveAd(id) : rejectAd(id));
+                    await (decision === "approve" ? approveAd(id) : rejectAd(id, reason));
                     done++;
                 } catch (error) {
                     failed.push(error instanceof Error ? error.message : String(error));

@@ -7,6 +7,7 @@ import type { PointsLedgerResponse } from "../../../dto/response/points/pointsRe
 import type { AdvertisersResponse } from "../../../dto/response/advertisers/advertisersResponse";
 import { TablePagination } from "../../Common/Pagination/table_pagination";
 import { AddPointsDialog } from "./add_points_dialog";
+import { downloadExcel, excelSheet, type ExcelColumn } from "@/lib/excel";
 
 const DAY = 86_400_000;
 const TOP_UPS = new Set(["purchase", "admin_paid", "admin_bonus"]);
@@ -88,9 +89,19 @@ export function PointsComponent({ ledger, advertisers }: { ledger: PointsLedgerR
 
     return (
         <div className="mx-auto flex w-full min-w-0 flex-col gap-[18px]">
-            <header className="flex flex-col gap-1">
-                <h1 className="text-[26px] font-semibold tracking-tight">Points</h1>
-                <p className="text-muted-foreground">Who has points, who is running low, and how long their balance lasts at the current spend.</p>
+            <header className="flex flex-wrap items-end justify-between gap-4">
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-[26px] font-semibold tracking-tight">Points</h1>
+                    <p className="text-muted-foreground">Who has points, who is running low, and how long their balance lasts at the current spend.</p>
+                </div>
+                <Button variant="outline" className="bg-card" disabled={wallets.length === 0} onClick={() => void downloadExcel("wallets", [excelSheet("Wallets", [
+                    { header: "Wallet owner", value: (w) => w.name },
+                    { header: "Type", value: (w) => w.type },
+                    { header: "Balance (pts)", value: (w) => w.bal, format: "number" },
+                    { header: "Spent, last 30 days (pts)", value: (w) => w.used, format: "number" },
+                    { header: "Lasts about (days)", value: (w) => w.days, format: "number" },
+                    { header: "Running low", value: (w) => (w.low ? "Yes" : "No") },
+                ] satisfies ExcelColumn<(typeof wallets)[number]>[], wallets)])}>Export Excel</Button>
             </header>
 
             <section aria-label="Totals" className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">

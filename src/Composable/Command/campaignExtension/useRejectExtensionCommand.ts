@@ -6,7 +6,7 @@ import { refreshAfterExtensionChange } from "./refreshAfterExtensionChange";
 export const useRejectExtensionCommand = () => {
     const qc = useQueryClient();
     const mutation = useMutation({
-        mutationFn: (id: string) => rejectExtension(id),
+        mutationFn: ({ id, reason }: { id: string; reason: string }) => rejectExtension(id, reason),
         onSuccess: () => {
             refreshAfterExtensionChange(qc);
             toast.success("Extension rejected and refunded");

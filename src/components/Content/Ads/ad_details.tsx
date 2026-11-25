@@ -17,11 +17,17 @@ import { parseLocalDate, placementLabel, rate, toLocalDateString } from "../../D
 import BudgetForm from "./budget_form";
 import { ExtendDialog } from "./campaign_extensions";
 import PaymentDialog from "../Payment/payment_dialog";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../../ui/dialog";
 import { useAdApproveCommand } from "../../../Composable/Command/content/ads/useAdApproveCommand";
 import { useAdRejectCommand } from "../../../Composable/Command/content/ads/useAdRejectCommand";
 import { pts, tileColor } from "./column";
-import { adHistory, historyDate, HISTORY_DOT } from "./ad_history";
+import { useActivityQuery } from "../../../Composable/Query/activity/useActivityQuery";
+import { RejectReasonDialog } from "../../Common/reject_reason_dialog";
+import { ActivityList, ActivityListLoading } from "../../Activity/activity_list";
+import { ACTIVITY_EMPTY, shortDate } from "../../../lib/activity";
+import type { CampaignExtensionResponse } from "../../../dto/response/campaignExtension/campaignExtensionResponse";
+
+/** The API's page limit; an ad's history rarely gets near it. */
+const HISTORY_LIMIT = 100;
 
 const GENDER: Record<string, string> = { all: "Everyone", male: "Men", female: "Women" };
 const dateOnly = (value: Date | string) => String(value).slice(0, 10);
@@ -54,6 +60,7 @@ function ExtensionsSection({ campaignId, packageName }: { campaignId: string; pa
     const { extensions } = useCampaignExtensionsQuery(campaignId);
     const { approveExtension, isApproving } = useApproveExtensionCommand();
     const { rejectExtension, isRejecting } = useRejectExtensionCommand();
+    const [rejecting, setRejecting] = useState<CampaignExtensionResponse | null>(null);
     const busy = isApproving || isRejecting;
 
     return (
@@ -78,12 +85,12 @@ function ExtensionsSection({ campaignId, packageName }: { campaignId: string; pa
                                     <td className="whitespace-nowrap border-b px-3 py-3">{e.quantity} × {packageName}</td>
                                     <td className="whitespace-nowrap border-b px-3 py-3 text-right font-mono tabular-nums">{pts(e.amount)}</td>
                                     <td className="border-b px-3 py-3">
-                                        {e.status === "approved" && <span className="text-success">Approved {historyDate(e.reviewedAt ?? e.createdAt)}</span>}
-                                        {e.status === "rejected" && <span className="text-destructive">Rejected {historyDate(e.reviewedAt ?? e.createdAt)}</span>}
+                                        {e.status === "approved" && <span className="text-success">Approved {shortDate(e.reviewedAt ?? e.createdAt)}</span>}
+                                        {e.status === "rejected" && <span className="text-destructive">Rejected {shortDate(e.reviewedAt ?? e.createdAt)}</span>}
                                         {e.status === "pending" && (
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <span className="text-warning">Waiting for review</span>
-                                                <Button size="sm" variant="outline" className="h-7" disabled={busy} onClick={() => rejectExtension(e.id).catch(() => undefined)}>Reject</Button>
+                                                <Button size="sm" variant="outline" className="h-7" disabled={busy} onClick={() => setRejecting(e)}>Reject</Button>
                                                 <Button size="sm" className="h-7" disabled={busy} onClick={() => approveExtension(e.id).catch(() => undefined)}>Approve</Button>
                                             </div>
                                         )}
@@ -94,6 +101,14 @@ function ExtensionsSection({ campaignId, packageName }: { campaignId: string; pa
                     </table>
                 </div>
             )}
+            <RejectReasonDialog
+                open={!!rejecting}
+                onOpenChange={(open) => !open && setRejecting(null)}
+                title="Reject this extension?"
+                description={rejecting ? <>+{rejecting.quantity} × {packageName} won't be added and its {pts(rejecting.amount)} are refunded. The current run isn't affected.</> : null}
+                pending={isRejecting}
+                onConfirm={(reason) => rejectExtension({ id: rejecting!.id, reason })}
+            />
         </Section>
     );
 }
@@ -112,7 +127,10 @@ export default function AdDetails({ data }: { data: AdResponse }) {
     // Reach for the whole run so far.
     const { overviewData } = useAdminOverviewQuery(campaign ? dateOnly(campaign.startDate) : undefined, toLocalDateString(new Date()), undefined, data?.id);
     const { objectives } = useCampaignObjectivesQuery(campaign?.id);
-    const { extensions } = useCampaignExtensionsQuery(campaign?.id);
+    const { activity, total: historyTotal, isLoading: historyLoading } = useActivityQuery(
+        { campaignId: campaign?.id, limit: HISTORY_LIMIT },
+        !!campaign?.id,
+    );
     // Agencies pay for their clients, so a client's ads draw on the agency's wallet.
     const walletOwner = advertiser?.agencyId ?? advertiser?.id ?? "";
     const { wallet } = useWalletQuery(walletOwner);
@@ -127,7 +145,6 @@ export default function AdDetails({ data }: { data: AdResponse }) {
     const canExtend = EXTENDABLE_CAMPAIGN_STATUSES.includes(campaign.status);
     const plan = Number(campaign.planCost), objectiveCost = Number(campaign.objectiveCost ?? 0);
     const picked = objectives.filter((o) => o.selected);
-    const history = adHistory(data, extensions);
     const isVideo = adCreative?.assetType === "video";
 
     const impressions = data.totalImpressions ?? 0, clicks = data.totalClicks ?? 0, watches = data.totalWatches ?? 0;
@@ -264,15 +281,12 @@ export default function AdDetails({ data }: { data: AdResponse }) {
                     </Section>
 
                     <Section title="History">
-                        <ol className="flex flex-col gap-3">
-                            {history.map((h, i) => (
-                                <li key={i} className="flex gap-2.5 text-[13px]">
-                                    <span className={cn("mt-1.5 size-[7px] shrink-0 rounded-full", HISTORY_DOT[h.tone])} aria-hidden="true" />
-                                    <span className="flex-1 leading-snug">{h.text}</span>
-                                    <span className="whitespace-nowrap text-xs text-muted-foreground">{historyDate(h.when)}</span>
-                                </li>
-                            ))}
-                        </ol>
+                        {historyLoading ? <ActivityListLoading />
+                            : activity.length === 0 ? <p className="text-sm text-muted-foreground">{ACTIVITY_EMPTY}</p>
+                            : <ActivityList items={activity} />}
+                        {historyTotal > activity.length && (
+                            <p className="text-xs text-muted-foreground">Showing the latest {activity.length} of <span className="font-mono tabular-nums">{historyTotal.toLocaleString("en-US")}</span>.</p>
+                        )}
                     </Section>
 
                     <Section title="Advertiser">
@@ -294,18 +308,14 @@ export default function AdDetails({ data }: { data: AdResponse }) {
             {status === "draft" && (
                 <PaymentDialog open={payOpen} onOpenChange={setPayOpen} campaignId={campaign.id} campaignName={campaign.name} amount={campaign.totalBudget} />
             )}
-            <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Reject this ad?</DialogTitle>
-                        <DialogDescription>{campaign.name} won't run. The advertiser is told it was rejected.</DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setRejectOpen(false)}>Keep it</Button>
-                        <Button variant="destructive" disabled={rejecting} onClick={async () => { await rejectAdCommand(data.id); setRejectOpen(false); }}>Reject</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <RejectReasonDialog
+                open={rejectOpen}
+                onOpenChange={setRejectOpen}
+                title="Reject this ad?"
+                description={<>{campaign.name} won't run and its points are refunded. The advertiser is told why.</>}
+                pending={rejecting}
+                onConfirm={(reason) => rejectAdCommand({ id: data.id, reason })}
+            />
             {canExtend && extendOpen && (
                 <ExtendDialog campaign={campaign} isAdmin open={extendOpen} onOpenChange={setExtendOpen} />
             )}
